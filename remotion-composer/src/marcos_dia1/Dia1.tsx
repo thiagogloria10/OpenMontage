@@ -215,11 +215,11 @@ const Person: React.FC<{ c: Ch; look: Look; t: number }> = ({ c, look, t }) => {
         </g>
       );
     const cap = look.style === "juliana"
-      ? `M${hd[0] - 90},${hd[1] + 40} Q${hd[0] - 84},${hd[1] - 40} ${hd[0] - 30},${hd[1] - 62} Q${hd[0] + 40},${hd[1] - 78} ${hd[0] + 80},${hd[1] - 30} Q${hd[0] + 30},${hd[1] - 46} ${hd[0] - 10},${hd[1] - 22} Q${hd[0] - 44},${hd[1] - 4} ${hd[0] - 62},${hd[1] + 40} Z`
+      ? `M${hd[0] - 92},${hd[1] + 60} L${hd[0] - 92},${hd[1] - 100} L${hd[0] + 92},${hd[1] - 100} L${hd[0] + 92},${hd[1] + 60} Q${hd[0] + 70},${hd[1] - 4} ${hd[0] + 8},${hd[1] - 48} L${hd[0]},${hd[1] - 42} L${hd[0] - 8},${hd[1] - 48} Q${hd[0] - 70},${hd[1] - 4} ${hd[0] - 92},${hd[1] + 60} Z`
       : `M${hd[0] - 90},${hd[1] - 16 + f.ly * 6} Q${hd[0] - 50 + f.lx * 14},${hd[1] - 60 + f.ly * 10} ${hd[0] + 10 + f.lx * 18},${hd[1] - 50 + f.ly * 10} Q${hd[0] + 55 + f.lx * 10},${hd[1] - 54 + f.ly * 8} ${hd[0] + 90},${hd[1] - 22 + f.ly * 6} L${hd[0] + 90},${hd[1] - 100} L${hd[0] - 90},${hd[1] - 100} Z`;
     return (
       <g>
-        {look.style === "juliana" ? <path d={cap} fill={look.hair} stroke={INK} strokeWidth={4} strokeLinejoin="round" /> : <g clipPath={`url(#hc${id})`}><path d={cap} fill={look.hair} /></g>}
+        <g clipPath={`url(#hc${id})`}><path d={cap} fill={look.hair} />{look.style === "juliana" && <path d={`M${hd[0] + 40},${hd[1] - 56} Q${hd[0] + 66},${hd[1] - 20} ${hd[0] + 74},${hd[1] + 20} M${hd[0] - 40},${hd[1] - 56} Q${hd[0] - 66},${hd[1] - 20} ${hd[0] - 74},${hd[1] + 20}`} stroke="#6a3e26" strokeWidth={4} fill="none" />}</g>
         {look.style === "lucas" && [-40, -18, 6, 28].map((o, i) => (
           <path key={i} d={`M${hd[0] + o - 12},${hd[1] - 62} L${hd[0] + o + 4},${hd[1] - 92 - (i % 2) * 8} L${hd[0] + o + 12},${hd[1] - 60} Z`} fill={look.hair} stroke={INK} strokeWidth={3} strokeLinejoin="round" />
         ))}
@@ -542,7 +542,16 @@ const S1 = (t0: number) => {
       <path d={pathOf(bl)} fill="#5a6aa8" stroke={INK} strokeWidth={5} strokeLinejoin="round" />
       <path d={`M${pt(mixV([520, 760], [640, 790], up))} Q${pt(mixV([600, 770], [700, 784], up))} ${pt(mixV([700, 762], [780, 790], up))}`} stroke="#3e4a80" strokeWidth={4} fill="none" />
       {/* braço de fora por cima do cobertor quando deitado */}
-      {up < 0.3 && <g opacity={1 - up / 0.3}><path d="M470,724 Q540,716 590,722" stroke={INK} strokeWidth={36} strokeLinecap="round" fill="none" /><path d="M470,724 Q540,716 590,722" stroke={SKIN} strokeWidth={27} strokeLinecap="round" fill="none" /><path d="M470,724 Q500,719 520,719" stroke={INK} strokeWidth={42} strokeLinecap="butt" fill="none" /><path d="M470,724 Q500,719 520,719" stroke={MARCOS.shirt} strokeWidth={33} strokeLinecap="butt" fill="none" /><ellipse cx={600} cy={722} rx={20} ry={16} fill={SKIN} stroke={INK} strokeWidth={4.5} /></g>}
+      {up < 0.3 && (
+        <g opacity={1 - up / 0.3}>
+          {/* braço saindo do ombro, dobrado, com a mão descansando na barriga por cima do cobertor */}
+          <path d="M418,716 Q470,684 530,700 Q560,708 584,718" stroke={INK} strokeWidth={37} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <path d="M418,716 Q470,684 530,700 Q560,708 584,718" stroke={SKIN} strokeWidth={28} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <path d="M418,716 Q446,698 478,694" stroke={INK} strokeWidth={43} strokeLinecap="butt" fill="none" />
+          <path d="M418,716 Q446,698 478,694" stroke={MARCOS.shirt} strokeWidth={34} strokeLinecap="butt" fill="none" />
+          <g transform="translate(590,720) rotate(20)"><ellipse cx={0} cy={-13} rx={9} ry={7} fill={SKIN} stroke={INK} strokeWidth={4} transform="rotate(-30)" /><ellipse cx={6} cy={0} rx={21} ry={16} fill={SKIN} stroke={INK} strokeWidth={4.5} /></g>
+        </g>
+      )}
       {t0 < 2.1 && <g opacity={1 - ramp(t0, 1.8, 2.1)}><Tag x={340} y={570} txt="MARCOS" p={t0 - 0.35} /></g>}
       {t > 1.25 && t < 2.6 && <text x={520} y={360} fontFamily={BARLOW} fontWeight={700} fontSize={130} fill={RED} stroke={INK} strokeWidth={5} opacity={1 - ramp(t, 2.3, 2.6)}>!</text>}
     </g>
@@ -596,8 +605,13 @@ const CAM2 = (t: number): Cam => ({ z: kf(t, [[0, 2.2], [3.0, 2.3], [3.7, 1.0]])
 const PAX1: Look = { id: "p1", shirt: "#5a8a5a", shirt2: "#4a744a", pants: "#3a3a44", shoes: "#222", hair: "#9a9a9a", style: "chefe", sleeve: 0.86, width: 0.9 };
 const PAX2: Look = { id: "p2", shirt: "#7a5aa0", shirt2: "#64488a", pants: "#2e3040", shoes: "#222", hair: "#1a1a1a", style: "juliana", sleeve: 0.86, width: 0.72 };
 const PAX3: Look = { id: "p3", shirt: "#d07a3a", shirt2: "#b0642c", pants: "#3f4a6a", shoes: "#222", hair: "#2a1a10", style: "marcos", sleeve: 0.86, width: 0.82 };
+const strapAng = (t: number, i: number) => Math.sin(t * 3.1 + i * 0.7) * 8;
+// centro da argola da alça i (pendurada em x, no teto y=196)
+const ringPos = (x: number, t: number, i: number): V => { const a = (strapAng(t, i) * Math.PI) / 180; return [x - Math.sin(a) * 90, 196 + Math.cos(a) * 90]; };
+const STRAPS = [250, 576, 862];
+const toLocal = (w: V, cx: number, cy: number, k: number): V => [(w[0] - cx) / k, (w[1] - cy) / k];
 const Strap: React.FC<{ x: number; t: number; i: number }> = ({ x, t, i }) => {
-  const a = Math.sin(t * 3.1 + i * 0.7) * 8;
+  const a = strapAng(t, i);
   return (
     <g transform={`rotate(${a} ${x} 196)`}>
       <rect x={x - 5} y={196} width={10} height={70} fill="#3a3a44" stroke={INK} strokeWidth={3} />
@@ -610,11 +624,11 @@ const S3 = (t: number) => {
   const sw = (x: number, o = 0) => Math.sin(x * 3.1 + o);
   const m = follow((x) => base({
     x: 540 + sw(x) * 8, y: 690, k: 1, lean: sw(x) * 10, tilt: sw(x) * 3,
-    hands: [[-86, -14], [36 + sw(x) * 6, -420]],
+    hands: [[-86, -14], toLocal(ringPos(STRAPS[1], x, 1), 540 + sw(x) * 8, 690, 1)],
     face: F({ worry: 0.6, curve: -0.45, open: 0.8 - blinkAt(x, 2.4, 0.1) * 0.7, lx: -0.25, ly: 0.1, px: -0.4 }),
   }), t);
-  const p3 = follow((x) => base({ x: 270 + sw(x, 0.6) * 8, y: 704, k: 0.94, lean: sw(x, 0.6) * 9, hands: [[-30 + sw(x, 0.6) * 6, -430], [86, -14]], face: F({ lx: 0.4, px: 0.5, curve: -0.1, open: 0.85 - blinkAt(x, 3.1, 1) * 0.7 }) }), t);
-  const p2 = follow((x) => base({ x: 830 + sw(x, 1.2) * 8, y: 716, k: 0.9, lean: sw(x, 1.2) * 9, hands: [[-60, -170], [40 + sw(x, 1.2) * 6, -430]], holdL: <PhoneS />, face: F({ ly: 0.5, py: 1, lx: -0.2, curve: 0.05 }) }), t);
+  const p3 = follow((x) => base({ x: 280 + sw(x, 0.6) * 8, y: 704, k: 0.94, lean: sw(x, 0.6) * 9, hands: [toLocal(ringPos(STRAPS[0], x, 0), 280 + sw(x, 0.6) * 8, 704, 0.94), [86, -14]], face: F({ lx: 0.4, px: 0.5, curve: -0.1, open: 0.85 - blinkAt(x, 3.1, 1) * 0.7 }) }), t);
+  const p2 = follow((x) => base({ x: 820 + sw(x, 1.2) * 8, y: 716, k: 0.9, lean: sw(x, 1.2) * 9, hands: [[-60, -170], toLocal(ringPos(STRAPS[2], x, 2), 820 + sw(x, 1.2) * 8, 716, 0.9)], holdL: <PhoneS />, face: F({ ly: 0.5, py: 1, lx: -0.2, curve: 0.05 }) }), t);
   const p1 = follow((x) => base({ x: 120, y: 790, k: 0.9, sit: 1, hands: [[-40, -110], [40, -110]], holdR: <rect x={-60} y={-40} width={100} height={70} fill="#ecead8" stroke={INK} strokeWidth={4} transform="rotate(-6)" />, face: F({ ly: 0.6, py: 1, curve: -0.1, open: 0.7 }) }), t);
   return (
     <g>
@@ -627,7 +641,7 @@ const S3 = (t: number) => {
       {/* faixa de anúncios e barra do teto */}
       {[0, 1, 2].map((i) => <rect key={i} x={70 + i * 340} y={240} width={260} height={56} rx={8} fill={["#e8b84a", "#7cc4ff", "#ff9a8a"][i]} stroke={INK} strokeWidth={4} opacity={0.9} />)}
       <rect x={-400} y={186} width={1880} height={18} rx={8} fill="#c8c8c0" stroke={INK} strokeWidth={4} />
-      {[180, 420, 660, 900].map((x, i) => <Strap key={x} x={x} t={t} i={i} />)}
+      {STRAPS.map((x, i) => <Strap key={x} x={x} t={t} i={i} />)}
       {/* bancos do fundo */}
       {[0, 1].map((i) => <g key={i}><rect x={40 + i * 160} y={640} width={140} height={160} rx={18} fill="#3f6aa8" stroke={INK} strokeWidth={5} /><rect x={30 + i * 160} y={790} width={160} height={40} rx={10} fill="#355a90" stroke={INK} strokeWidth={5} /></g>)}
       <Person c={p1} look={PAX1} t={t} />
@@ -636,6 +650,7 @@ const S3 = (t: number) => {
       <Person c={p3} look={PAX3} t={t} />
       <Person c={p2} look={PAX2} t={t} />
       <Person c={m} look={MARCOS} t={t} />
+      {STRAPS.map((x, i) => { const r = ringPos(x, t, i); return <ellipse key={i} cx={r[0]} cy={r[1] - 4} rx={18} ry={8} fill="none" stroke="#e8e4d8" strokeWidth={6} />; })}
       {/* barras amarelas e botão de parada em primeiro plano */}
       {[110, 960].map((x) => <rect key={x} x={x} y={196} width={22} height={900} rx={8} fill="#e8c840" stroke={INK} strokeWidth={5} />)}
       <rect x={946} y={600} width={50} height={60} rx={10} fill="#c43d30" stroke={INK} strokeWidth={4} />
@@ -690,7 +705,7 @@ const bossAt = (x: number): Ch => {
   const slam = er(x, 1.6, 1.75) * (1 - er(x, 1.95, 2.25));
   const w = walkPose((1220 - wx) / 1.04, v, -1);
   return base({
-    x: wx, y: 620, k: 1.04, feet: w.feet, kneeDir: -1, lean: -12, sy: w.sy,
+    x: wx, y: 690, k: 1.04, feet: w.feet, kneeDir: -1, lean: -12, sy: w.sy,
     hands: x < 1.0 ? w.hands : [mixV([-86, -14], [-150, -170 + slam * 120], er(x, 1.4, 1.6)), mixV([86, -14], [92 + Math.sin(x * 9) * 10, -200 + Math.sin(x * 9) * 20], er(x, 1.3, 1.6))],
     face: F({ lx: -0.7, px: -1, worry: -0.9, raise: -0.2, mo: x > 1.55 ? yell : 0, curve: -0.4, eyeS: 1.1 }),
     red: er(x, 1.5, 1.9), tremble: x > 1.7 ? 0.6 : 0,
@@ -712,14 +727,16 @@ const S5 = (t: number) => {
     <g>
       <Office t={x} />
       <Person c={m} look={MARCOS} t={x} />
+      <Person c={ch} look={CHEFE} t={x} />
       <DeskOffice papers={papers} envelope={0} phoneBuzz={-1} t={x} />
       {/* cena congelada: tudo escurece e dessatura, só o chefe fica em destaque */}
       <rect x={-400} y={-400} width={1880} height={2400} fill="#0a0e18" opacity={fz * 0.62} />
-      <Person c={ch} look={CHEFE} t={x} />
+      <defs><clipPath id="aboveDesk"><rect x={-400} y={-400} width={1880} height={1252} /></clipPath></defs>
+      {fz > 0 && <g clipPath="url(#aboveDesk)"><Person c={ch} look={CHEFE} t={x} /></g>}
       {fz > 0 && (
         <g opacity={fz}>
           {[0, 1].map((i) => <rect key={i} x={-400} y={i ? 1140 : -400} width={1880} height={i ? 600 : 460} fill="#000" opacity={0.7} />)}
-          <g transform={`translate(${ch.x - 330},${300}) scale(${backPop(pop)})`}>
+          <g transform={`translate(${ch.x - 262},${300}) scale(${0.85 * backPop(pop)})`}>
             <rect x={-190} y={-62} width={380} height={124} rx={16} fill="#14100c" stroke={GOLD} strokeWidth={6} />
             <text x={0} y={-6} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={62} fill={WHITE} letterSpacing={2}>SEU ROBERTO</text>
             <text x={0} y={44} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={38} fill={GOLD} letterSpacing={3}>O CHEFE</text>
@@ -730,7 +747,7 @@ const S5 = (t: number) => {
     </g>
   );
 };
-const CAM5 = (t: number): Cam => ({ z: kf(t, [[0, 1.0], [FREEZE, 1.0], [FREEZE + 0.4, 1.3]]), fx: kf(t, [[0, 600], [FREEZE, 600], [FREEZE + 0.4, 760]]), fy: kf(t, [[0, 640], [FREEZE, 640], [FREEZE + 0.4, 520]]) });
+const CAM5 = (t: number): Cam => ({ z: kf(t, [[0, 1.0], [FREEZE, 1.0], [FREEZE + 0.4, 1.3]]), fx: kf(t, [[0, 600], [FREEZE, 600], [FREEZE + 0.4, 760]]), fy: kf(t, [[0, 640], [FREEZE, 640], [FREEZE + 0.4, 560]]) });
 // S5b: descongela e vem a bronca (mesmo tempo da cena, a partir do congelamento)
 const S5b = (t: number) => {
   const x = t + FREEZE + 0.1;
@@ -739,8 +756,8 @@ const S5b = (t: number) => {
     <g>
       <Office t={x} />
       <Person c={m} look={MARCOS} t={x} />
-      <DeskOffice papers={papers} envelope={0} phoneBuzz={-1} t={x} />
       <Person c={ch} look={CHEFE} t={x} />
+      <DeskOffice papers={papers} envelope={0} phoneBuzz={-1} t={x} />
       {x > 1.65 && [0, 1, 2].map((i) => <path key={i} d={`M${700 - i * 10},${300 + i * 40} l-${40 + i * 10},-${20 - i * 10}`} stroke={RED} strokeWidth={8} strokeLinecap="round" opacity={0.5 + 0.5 * Math.sin(x * 20 + i)} />)}
       {x > 1.7 && <text x={300} y={290} fontFamily={BARLOW} fontWeight={700} fontSize={90} fill={RED} stroke={INK} strokeWidth={4} transform={`rotate(-8 300 290) scale(${1 + Math.sin(x * 18) * 0.03})`}>!!!</text>}
     </g>
@@ -763,15 +780,15 @@ const S6 = (t: number) => {
     const wx = kf(x, [[0, 860], [0.5, 860], [1.2, 1240]]);
     const v = x > 0.5 ? 1 : 0;
     const w = walkPose((wx - 860) / 1.04, v, 1);
-    return base({ x: wx, y: 620, k: 1.04, feet: w.feet, kneeDir: 1, sy: w.sy, lean: w.lean, hands: x < 0.5 ? [[-86, -14], kv(x, [[0, [92, -200]], [0.35, [60, -60]]])] : w.hands, face: F({ lx: x < 0.5 ? -0.7 : 0.7, worry: -0.5, curve: -0.3 }) });
+    return base({ x: wx, y: 690, k: 1.04, feet: w.feet, kneeDir: 1, sy: w.sy, lean: w.lean, hands: x < 0.5 ? [[-86, -14], kv(x, [[0, [92, -200]], [0.35, [60, -60]]])] : w.hands, face: F({ lx: x < 0.5 ? -0.7 : 0.7, worry: -0.5, curve: -0.3 }) });
   }, t);
   const note = backPop(t - 1.2) * (1 - er(t, 3.0, 3.3));
   return (
     <g>
       <Office t={t} />
       <Person c={m} look={MARCOS} t={t} />
-      <DeskOffice papers={14} envelope={0} phoneBuzz={t < 1.6 ? buzz : -1} t={t} />
       {t < 1.3 && <Person c={ch} look={CHEFE} t={t} />}
+      <DeskOffice papers={14} envelope={0} phoneBuzz={t < 1.6 ? buzz : -1} t={t} />
       {note > 0 && (
         <g transform={`translate(540,330) scale(${note})`}>
           <rect x={-250} y={-58} width={500} height={116} rx={22} fill="#fdfbf4" stroke={INK} strokeWidth={6} />
@@ -840,7 +857,7 @@ const S7 = (t: number) => {
     </g>
   );
 };
-const CAM7 = (t: number): Cam => ({ z: kf(t, [[0, 1.05], [6.6, 1.0]]), fx: 540, fy: 600 });
+const CAM7 = (t: number): Cam => ({ z: kf(t, [[0, 1.12], [6.6, 1.05]]), fx: 470, fy: 640 });
 
 // Lucas entra pela porta da direita e fica ao lado do pai
 const LUCAS_X = 760, LUCAS_Y = FLOOR_N - 296 * 0.68;
@@ -873,13 +890,13 @@ const S8 = (t: number) => {
   const l = follow((x) => lucasAt(x, "run"), t);
   return (<g><HouseNight t={t} door={door} /><NightChair /><Person c={m} look={MARCOS} t={t} /><NightTable papers={6} /><Person c={l} look={LUCAS} t={t} />{lightRoom(0.5)}</g>);
 };
-const CAM8 = (t: number): Cam => ({ z: 1.0, fx: kf(t, [[0, 600], [1.8, 560]]), fy: 620 });
+const CAM8 = (t: number): Cam => ({ z: 1.12, fx: kf(t, [[0, 680], [1.8, 640]]), fy: 660 });
 const S9 = (t: number) => {
   const m = follow((x) => { const c = marcosLooks(x, 1); c.face = F({ lx: 0.7, px: 1, curve: lerp(0.3, 0.05, er(x, 2.2, 3.2)), worry: lerp(0.2, 0.55, er(x, 2.2, 3.2)), open: 1 - blinkAt(x, 2.4, 0.9), raise: 0.2 }); return c; }, t);
   const l = follow((x) => lucasAt(x, "ask"), t);
   return (<g><HouseNight t={t} door={1} /><NightChair /><Person c={m} look={MARCOS} t={t} /><NightTable papers={6} /><Person c={l} look={LUCAS} t={t} />{lightRoom(0.5)}</g>);
 };
-const CAM9 = (t: number): Cam => ({ z: kf(t, [[0, 1.05], [4.6, 1.2]]), fx: kf(t, [[0, 600], [4.6, 640]]), fy: kf(t, [[0, 640], [4.6, 600]]) });
+const CAM9 = (t: number): Cam => ({ z: kf(t, [[0, 1.25], [4.6, 1.4]]), fx: 655, fy: kf(t, [[0, 680], [4.6, 660]]) });
 
 // --- S10/S11: o extrato no celular
 const S10 = (t: number, zerado: boolean) => {
@@ -930,7 +947,7 @@ const S12 = (t: number) => {
   const l = follow((x) => lucasAt(x, "sad"), t);
   return (<g><HouseNight t={t} door={1} /><NightChair /><Person c={m} look={MARCOS} t={t} /><NightTable papers={6} /><Person c={l} look={LUCAS} t={t} />{lightRoom(0.4)}</g>);
 };
-const CAM12 = (t: number): Cam => ({ z: kf(t, [[0, 1.12], [2.6, 1.22]]), fx: 650, fy: 640 });
+const CAM12 = (t: number): Cam => ({ z: kf(t, [[0, 1.3], [2.6, 1.42]]), fx: 655, fy: 670 });
 
 // --- S13 o olhar da Juliana (na porta da direita, chegando do trabalho)
 const JUL_Y = FLOOR_N - 296 * 0.95;
