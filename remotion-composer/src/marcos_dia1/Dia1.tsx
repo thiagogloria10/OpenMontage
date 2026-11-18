@@ -18,11 +18,15 @@ const MONO = "'JetBrains Mono', 'DejaVu Sans Mono', monospace";
 const SKIN = "#f3efe7", SKIN2 = "#d9d2c5";
 
 // ------------------------------------------------------------------ cenas (duração em s) e falas
-const DUR = [4.4, 6.4, 3.4, 3.4, 3.4, 3.0, 3.2, 6.6, 3.0, 4.6, 1.9, 1.8, 2.6, 4.4, 4.6, 3.8];
+const DUR = [2.7, 1.2, 1.2, 4.4, 6.4, 3.4, 3.4, 3.4, 3.0, 3.2, 6.6, 3.0, 4.6, 1.9, 1.8, 2.6, 4.4, 4.6, 3.8];
 const ST: number[] = DUR.reduce<number[]>((a, d, i) => [...a, i === 0 ? 0 : a[i - 1] + DUR[i - 1]], []);
 export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
 // [texto, arquivo, início relativo à cena, duração da fala]
-const LINES: [string, number, number, number][] = [
+type LineT = [string, number, number, number] | null;
+const LINES: LineT[] = [
+  ["Pai, posso ir no passeio? É cem reais.", 90, 0.15, 2.41],
+  ["Zerado.", 91, 0.15, 0.59],
+  null,
   ["Esse é o Marcos. Ele sempre acorda atrasado.", 1, 0.3, 2.53],
   ["O Lucas, o filho, já foi pra escola. A Juliana, a esposa, pro trabalho.", 2, 0.4, 4.31],
   ["Ônibus lotado. Como todo dia.", 3, 0.4, 1.9],
@@ -40,7 +44,7 @@ const LINES: [string, number, number, number][] = [
   ["É ali que Marcos decide: alguma coisa vai mudar.", 15, 0.4, 2.71],
   ["O que Marcos irá fazer? Segue pra ver a parte dois.", 16, 0.3, 2.9],
 ];
-const KEY = ["roberto", "bronca", "marcos", "lucas", "esse", "atrasado", "dia", "lotado", "chefe", "pagamento", "contas", "cem", "reais", "zerado", "não", "juliana", "mudar", "dois", "remédios"];
+const KEY = ["passeio", "cem", "roberto", "bronca", "marcos", "lucas", "esse", "atrasado", "dia", "lotado", "chefe", "pagamento", "contas", "cem", "reais", "zerado", "não", "juliana", "mudar", "dois", "remédios"];
 
 // ------------------------------------------------------------------ utilidades
 type V = [number, number];
@@ -1039,7 +1043,36 @@ const S14 = (t: number, end: boolean) => {
 const CAM14 = (t: number): Cam => ({ z: kf(t, [[0, 1.25], [2.2, 1.35], [3.3, 1.6], [4.6, 1.8]]), fx: SEAT_X, fy: kf(t, [[0, 600], [2.2, 590], [3.3, 470], [4.6, 450]]) });
 const CAM15 = (t: number): Cam => ({ z: 1.8 + t * 0.02, fx: SEAT_X, fy: 450 });
 
+// ---- abertura: o momento mais forte, depois rebobina para a manhã (o resto é a v9)
+const COLD = (t: number) => {
+  const m = follow((x) => { const c = marcosLooks(x + 2, 1); c.face = F({ lx: 0.7, px: 1, curve: lerp(0.15, -0.1, er(x, 1.5, 2.5)), worry: lerp(0.3, 0.7, er(x, 1.5, 2.5)), open: 1 - blinkAt(x, 2.4, 0.9), raise: 0.2 }); return c; }, t);
+  const l = follow((x) => lucasAt(x + 2.0, "ask"), t);
+  return (<g><HouseNight t={t} door={1} /><NightChair /><Person c={m} look={MARCOS_HOME} t={t} /><NightTable papers={6} /><Person c={l} look={LUCAS} t={t} />{lightRoom(0.5)}</g>);
+};
+const CAMC = (t: number): Cam => ({ z: kf(t, [[0, 1.3], [2.7, 1.4]]), fx: 690, fy: 660 });
+const REW: [number, number][] = [[11, 2.5], [10, 5.0], [9, 2.0], [8, 1.5], [7, 2.2], [5, 2.0], [4, 5.2]];
+const Rewind = (t: number) => {
+  const k = Math.min(REW.length - 1, Math.floor((t / 1.2) * REW.length));
+  const [si, lt0] = REW[k];
+  const lt = lt0 - (t * 3) % 0.5;
+  const [draw, cam] = SCENES[si];
+  const c = cam(lt);
+  const jit = Math.sin(t * 90) * 8;
+  return (
+    <g>
+      <rect x={-400} y={-400} width={1880} height={2400} fill="#000" />
+      <g transform={`translate(${jit},0) translate(540,630) scale(${c.z}) translate(${-c.fx},${-c.fy})`} opacity={0.92}>{draw(lt)}</g>
+      <rect x={-400} y={-400} width={1880} height={2400} fill="#5a78a8" opacity={0.18} style={{ mixBlendMode: "screen" }} />
+      {Array.from({ length: 70 }).map((_, i) => <rect key={i} x={0} y={i * 18} width={1080} height={4} fill="#000" opacity={0.28} />)}
+      {[0, 1, 2].map((i) => { const y = ((t * 1400 + i * 420) % 1300) - 40; return <rect key={i} x={0} y={y} width={1080} height={26} fill="#fff" opacity={0.14} />; })}
+      <g transform="translate(150,190)"><path d="M60,0 L0,34 L60,68 Z M130,0 L70,34 L130,68 Z" fill="#fff" stroke={INK} strokeWidth={4} /></g>
+    </g>
+  );
+};
+const CAMR = (_t: number): Cam => ({ z: 1, fx: 540, fy: 630 });
+
 const SCENES: [(t: number) => React.ReactNode, (t: number) => Cam][] = [
+  [COLD, CAMC], [(t) => S10(t + 0.2, true), CAM11], [Rewind, CAMR],
   [S1, CAM1], [S2, CAM2], [S3, CAM3], [S4, CAM4], [S5, CAM5], [S5b, CAM5b], [S6, CAM6], [S7, CAM7], [S8, CAM8],
   [S9, CAM9], [(t) => S10(t, false), CAM10], [(t) => S10(t, true), CAM11], [S12, CAM12], [S13, CAM13], [(t) => S14(t, false), CAM14], [(t) => S14(t, true), CAM15],
 ];
@@ -1047,7 +1080,9 @@ const SCENES: [(t: number) => React.ReactNode, (t: number) => Cam][] = [
 // ------------------------------------------------------------------ legenda palavra por palavra
 const Caption: React.FC<{ t: number }> = ({ t }) => {
   const s = sceneOf(t);
-  const [txt, , st, dur] = LINES[s];
+  const ln = LINES[s];
+  if (!ln || s === 1) return null;
+  const [txt, , st, dur] = ln;
   const t0 = ST[s] + st;
   const words = txt.split(" ");
   const total = txt.replace(/ /g, "").length;
@@ -1089,12 +1124,14 @@ export const MarcosDia1: React.FC = () => {
   const [draw, cam] = SCENES[s];
   const c = cam(lt);
   const flash = s > 0 ? Math.max(0, 1 - lt / 0.14) * 0.18 : 0;
-  const endP = s === 15 ? er(lt, 0.3, 0.8) : 0;
-  const endP2 = s === 15 ? er(lt, 1.4, 1.9) : 0;
+  const LAST = SCENES.length - 1;
+  const endP = s === LAST ? er(lt, 0.3, 0.8) : 0;
+  const endP2 = s === LAST ? er(lt, 1.4, 1.9) : 0;
+  const morning = s === 3 ? er(lt, 0.0, 0.25) * (1 - er(lt, 1.5, 1.8)) : 0;
   return (
     <AbsoluteFill style={{ background: "#0a0605" }}>
-      {LINES.map(([, n, st], i) => (
-        <Sequence key={n} from={Math.round((ST[i] + st) * fps)}><Audio src={staticFile(`marcos_dia1/fala/n${n}.wav`)} /></Sequence>
+      {LINES.map((ln, i) => ln && (
+        <Sequence key={i} from={Math.round((ST[i] + ln[2]) * fps)}><Audio src={staticFile(`marcos_dia1/fala/n${ln[1]}.wav`)} /></Sequence>
       ))}
       <Audio src={staticFile("marcos_dia1/sfx.wav")} volume={0.45} />
       <div style={{ position: "absolute", left: 0, top: SCENE_Y, width: 1080, height: SCENE_H, overflow: "hidden" }}>
@@ -1116,8 +1153,14 @@ export const MarcosDia1: React.FC = () => {
         <div style={{ color: WHITE }}>{HOOK[0]}</div>
         <div style={{ color: GOLD }}>{HOOK[1]}</div>
       </div>
-      {s < 15 && <Caption t={t} />}
-      {s === 15 && (
+      {morning > 0 && (
+        <div style={{ position: "absolute", left: 120, right: 120, top: 470, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, letterSpacing: 2, opacity: morning, transform: `translateY(${(1 - morning) * 12}px)` }}>
+          <div style={{ fontSize: 84, color: GOLD, WebkitTextStroke: "10px #0a0605", paintOrder: "stroke fill" }}>07:48.</div>
+          <div style={{ fontSize: 70, color: WHITE, WebkitTextStroke: "10px #0a0605", paintOrder: "stroke fill" }}>NAQUELA MANHÃ…</div>
+        </div>
+      )}
+      {s < LAST && <Caption t={t} />}
+      {s === LAST && (
         <div style={{ position: "absolute", left: 120, right: 120, top: 1270, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, letterSpacing: 2 }}>
           <div style={{ fontSize: 70, color: WHITE, opacity: endP, transform: `translateY(${(1 - endP) * 16}px)`, WebkitTextStroke: "10px #0a0605", paintOrder: "stroke fill" }}>O QUE MARCOS IRÁ FAZER?</div>
           <div style={{ fontSize: 60, color: GOLD, marginTop: 6, opacity: endP2, transform: `translateY(${(1 - endP2) * 16}px)`, WebkitTextStroke: "9px #0a0605", paintOrder: "stroke fill" }}>SEGUE PRA VER A PARTE 2 →</div>
