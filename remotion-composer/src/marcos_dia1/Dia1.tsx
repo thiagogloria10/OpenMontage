@@ -92,7 +92,7 @@ type Ch = {
   x: number; y: number; k: number; // quadril na cena + escala
   lean: number; sy: number; hx: number; hy: number; tilt: number; face: Face;
   hands: [V, V]; feet: [V, V]; back?: boolean; legs?: boolean; tremble?: number; sweat?: number; red?: number;
-  holdR?: React.ReactNode; holdL?: React.ReactNode; rot?: number;
+  holdR?: React.ReactNode; holdL?: React.ReactNode; rot?: number; kneeDir?: number; socks?: boolean;
 };
 const HEAD_R = 74, TORSO = 230;
 const STAND_FEET: [V, V] = [[-40, 296], [40, 296]];
@@ -106,7 +106,7 @@ const Person: React.FC<{ c: Ch; look: Look; t: number }> = ({ c, look, t }) => {
   const shL: V = [-70 * W + c.lean + tr, S + 12], shR: V = [70 * W + c.lean + tr, S + 12];
   const elL = ik(shL, c.hands[0], 106, 100, -1), elR = ik(shR, c.hands[1], 106, 100, 1);
   const hipL: V = [-34 * W, c.sy * 0.15], hipR: V = [34 * W, c.sy * 0.15];
-  const knL = ik(hipL, c.feet[0], 152, 148, -1), knR = ik(hipR, c.feet[1], 152, 148, 1);
+  const knL = ik(hipL, c.feet[0], 152, 148, c.kneeDir ?? -1), knR = ik(hipR, c.feet[1], 152, 148, c.kneeDir ?? 1);
   const arm = (sh: V, el: V, h: V, i: number) => {
     const q: V = [2 * el[0] - (sh[0] + h[0]) / 2, 2 * el[1] - (sh[1] + h[1]) / 2];
     const at = (u: number): V => [(1 - u) * (1 - u) * sh[0] + 2 * (1 - u) * u * q[0] + u * u * h[0], (1 - u) * (1 - u) * sh[1] + 2 * (1 - u) * u * q[1] + u * u * h[1]];
@@ -145,7 +145,7 @@ const Person: React.FC<{ c: Ch; look: Look; t: number }> = ({ c, look, t }) => {
           <g key={i}>
             <path d={d} stroke={INK} strokeWidth={52} fill="none" strokeLinecap="round" />
             <path d={d} stroke={look.pants} strokeWidth={43} fill="none" strokeLinecap="round" />
-            <path d={`M${f[0] - 26 + sd * 6},${f[1] - 6} Q${f[0] - 28 + sd * 6},${f[1] + 18} ${f[0] + sd * 6},${f[1] + 18} L${f[0] + 22 + sd * 10},${f[1] + 18} Q${f[0] + 36 + sd * 10},${f[1] + 16} ${f[0] + 26 + sd * 8},${f[1] - 6} Z`} fill={look.shoes} stroke={INK} strokeWidth={5} strokeLinejoin="round" />
+            <path d={`M${f[0] - 26 + sd * 6},${f[1] - 6} Q${f[0] - 28 + sd * 6},${f[1] + 18} ${f[0] + sd * 6},${f[1] + 18} L${f[0] + 22 + sd * 10},${f[1] + 18} Q${f[0] + 36 + sd * 10},${f[1] + 16} ${f[0] + 26 + sd * 8},${f[1] - 6} Z`} fill={c.socks ? "#e8e4dc" : look.shoes} stroke={INK} strokeWidth={5} strokeLinejoin="round" />
           </g>
         );
       })}
@@ -385,6 +385,24 @@ const follow = (fn: (x: number) => Ch, t: number): Ch => {
   });
   return { ...c, hands: [[a[0] / sw, a[1] / sw], [a[2] / sw, a[3] / sw]] };
 };
+// caminhada com pé apoiado parado no chão (sem patinar), joelho dobrando para o lado em que anda
+// d = distância andada (px locais), amp 0..1 (para parar suave), dir = +1 direita / -1 esquerda
+const walkPose = (d: number, amp: number, dir: number) => {
+  const L = 130;
+  const foot = (i: number) => {
+    const u = (((d / L + i * 0.5) % 1) + 1) % 1;
+    let rel: number, lift = 0;
+    if (u < 0.6) rel = 0.3 * L - (u / 0.6) * 0.6 * L;
+    else { const q = (u - 0.6) / 0.4; rel = -0.3 * L + smooth(q) * 0.6 * L; lift = Math.sin(q * Math.PI) * 42; }
+    return { rel: rel * amp, lift: lift * amp };
+  };
+  const f0 = foot(0), f1 = foot(1);
+  const bx = lerp(40, 20, amp);
+  const feet: [V, V] = [[-bx + dir * f0.rel, 296 - f0.lift], [bx + dir * f1.rel, 296 - f1.lift]];
+  const hands: [V, V] = [[-84 + dir * f1.rel * 0.55, -14 - Math.abs(f1.rel) * 0.08], [84 + dir * f0.rel * 0.55, -14 - Math.abs(f0.rel) * 0.08]];
+  const sy = -Math.cos((d / L) * Math.PI * 4) * 5 * amp;
+  return { feet, hands, sy, lean: dir * 7 * amp, kneeDir: dir };
+};
 const walkFeet = (ph: number, amp: number): [V, V] => [
   [-40 + Math.sin(ph) * 34 * amp, 296 - Math.max(0, Math.cos(ph)) * 34 * amp],
   [40 - Math.sin(ph) * 34 * amp, 296 - Math.max(0, -Math.cos(ph)) * 34 * amp],
@@ -399,8 +417,9 @@ const S1 = (t: number) => {
     const u = er(x, 0.55, 1.05);
     const bl = blinkAt(x, 2.6, 0.5);
     return base({
-      x: 600, y: 770, k: 0.92, rot: lerp(-84, 0, u), legs: false,
-      hands: u < 0.5 ? [[-60, -60], [60, -60]] : [mixV([-90, 10], [-120, -170], er(x, 1.4, 1.7) * (1 - er(x, 2.6, 3.0))), [90, 10]],
+      x: 600, y: 770, k: 0.92, rot: lerp(-84, 0, u), socks: true, kneeDir: 1,
+      feet: (() => { const r = (lerp(-84, 0, u) * Math.PI) / 180; const loc = (p: V): V => { const dx = (p[0] - 600) / 0.92, dy = (p[1] - 770) / 0.92; return [dx * Math.cos(-r) - dy * Math.sin(-r), dx * Math.sin(-r) + dy * Math.cos(-r)]; }; return [loc([870, 772]), loc([902, 760])] as [V, V]; })(),
+      hands: u < 0.5 ? [[-84, -20], [84, -20]] : [mixV([-90, 10], [-120, -170], er(x, 1.4, 1.7) * (1 - er(x, 2.6, 3.0))), [90, 10]],
       face: F({ open: u < 0.3 ? 0.06 : 1 - bl * 0.6, eyeS: lerp(1, 1.4, u), pupil: lerp(1, 0.6, u), raise: u * 1.1, mo: u * 0.8 * (1 - er(x, 2.2, 2.8)), lx: er(x, 1.2, 1.5) * -0.85, px: er(x, 1.2, 1.5) * -1, worry: er(x, 2.0, 2.6) * 0.6 }),
       sweat: ramp(x, 1.3, 3.0), tremble: u > 0.9 && x < 1.5 ? 1 : 0, sy: u * -6,
     });
@@ -422,7 +441,7 @@ const S1 = (t: number) => {
       <ellipse cx={340} cy={735} rx={80} ry={34} fill="#eceaf6" stroke={INK} strokeWidth={5} />
       <Person c={m} look={MARCOS} t={t} />
       {/* cobertor */}
-      <path d={`M${lerp(380, 400, up)},${lerp(700, 770, up)} Q${600},${lerp(670, 760, up)} 940,${lerp(720, 770, up)} L940,830 L${lerp(380, 400, up)},830 Z`} fill="#5a6aa8" stroke={INK} strokeWidth={5} strokeLinejoin="round" />
+      <path d={`M${lerp(380, 430, up)},${lerp(700, 772, up)} Q${600},${lerp(668, 742, up)} 790,${lerp(712, 748, up)} Q812,790 790,830 L${lerp(380, 430, up)},830 Z`} fill="#5a6aa8" stroke={INK} strokeWidth={5} strokeLinejoin="round" />
       {t > 1.25 && t < 2.6 && <text x={470} y={360} fontFamily={BARLOW} fontWeight={700} fontSize={130} fill={RED} stroke={INK} strokeWidth={5} opacity={1 - ramp(t, 2.3, 2.6)}>!</text>}
     </g>
   );
@@ -452,10 +471,10 @@ const S2 = (t: number) => {
     const grab = er(x, 2.0, 2.4);
     const bl = blinkAt(x, 2.8, 0.2);
     return base({
-      x: wx, y: 630, k: 1, lean: 0, feet: walkFeet(ph, v), sy: -Math.abs(Math.cos(ph)) * 6 * v,
-      hands: v > 0.05 ? walkHands(ph, v) : [HANG[0], mixV(HANG[1], [60, -150], grab)],
+      x: wx, y: 630, k: 1, ...(() => { const w = walkPose(wx - 200, v, 1); return { feet: w.feet, sy: w.sy, lean: w.lean, kneeDir: w.kneeDir }; })(),
+      hands: v > 0.05 ? walkPose(wx - 200, v, 1).hands : [HANG[0], mixV(HANG[1], [60, -150], grab)],
       holdR: grab > 0.5 ? <Note /> : undefined,
-      face: F({ lx: x < 2.0 ? kf(x, [[0, 0.6], [1.0, -0.6], [1.6, 0.6]]) : 0.2, ly: grab * 0.5, py: grab * 0.9, open: 1 - bl, curve: lerp(0.1, -0.35, er(x, 2.8, 3.4)), worry: er(x, 2.8, 3.4) * 0.6 }),
+      face: F({ lx: x < 2.0 ? kf(x, [[0, 0.65], [0.9, 0.65], [1.3, -0.4], [1.7, 0.5]]) : 0.2, ly: grab * 0.5, py: grab * 0.9, open: 1 - bl, curve: lerp(0.1, -0.35, er(x, 2.8, 3.4)), worry: er(x, 2.8, 3.4) * 0.6 }),
     });
   };
   const m = follow(mk, t);
@@ -547,7 +566,7 @@ const S5 = (t: number) => {
     const yell = 0.6 + 0.4 * Math.sin(x * 18);
     const slam = er(x, 0.75, 0.9) * (1 - er(x, 1.1, 1.4));
     return base({
-      x: wx, y: 620, k: 1.04, feet: walkFeet((wx - 860) / 30, v), lean: -12,
+      x: wx, y: 620, k: 1.04, feet: walkPose((1220 - wx) / 1.04, v, -1).feet, kneeDir: -1, lean: -12, sy: walkPose((1220 - wx) / 1.04, v, -1).sy,
       hands: [mixV([-86, -14], [-150, -170 + slam * 120], er(x, 0.6, 0.8)), [92 + Math.sin(x * 9) * 10, -200 + Math.sin(x * 9) * 20]],
       face: F({ lx: -0.7, px: -1, worry: -0.9, raise: -0.2, mo: x > 0.7 ? yell : 0.2, curve: -0.4, eyeS: 1.1 }),
       red: er(x, 0.6, 1.0), tremble: x > 0.8 ? 0.6 : 0,
@@ -581,7 +600,8 @@ const S6 = (t: number) => {
   const ch = follow((x) => {
     const wx = kf(x, [[0, 860], [0.5, 860], [1.2, 1240]]);
     const v = x > 0.5 ? 1 : 0;
-    return base({ x: wx, y: 620, k: 1.04, feet: walkFeet((wx - 860) / 30, v), hands: x < 0.5 ? [[-86, -14], kv(x, [[0, [92, -200]], [0.35, [60, -60]]])] : walkHands((wx - 860) / 30, v), face: F({ lx: x < 0.5 ? -0.7 : 0.7, worry: -0.5, curve: -0.3 }) });
+    const w = walkPose((wx - 860) / 1.04, v, 1);
+    return base({ x: wx, y: 620, k: 1.04, feet: w.feet, kneeDir: 1, sy: w.sy, lean: w.lean, hands: x < 0.5 ? [[-86, -14], kv(x, [[0, [92, -200]], [0.35, [60, -60]]])] : w.hands, face: F({ lx: x < 0.5 ? -0.7 : 0.7, worry: -0.5, curve: -0.3 }) });
   }, t);
   const note = backPop(t - 1.2) * (1 - er(t, 3.0, 3.3));
   return (
@@ -652,7 +672,9 @@ const lucasAt = (x: number, mode: "run" | "ask" | "sad", s0: number): Ch => {
     const wx = kf(x - s0, [[0, 120], [1.6, 820]]);
     const v = x - s0 < 1.6 ? 1 - er(x - s0, 1.3, 1.6) : 0;
     const ph = (wx - 120) / 22;
-    return base({ x: wx, y: 760, k: 0.68, feet: walkFeet(ph, v * 1.2), sy: -Math.abs(Math.cos(ph)) * 10 * v, hands: walkHands(ph, v * 1.3), face: F({ lx: v > 0.1 ? 0.6 : -0.5, curve: 0.9, mo: 0.45, raise: 0.4, open: 1 - bl }) });
+    const w = walkPose((wx - 120) / 0.68, v, 1);
+    void ph;
+    return base({ x: wx, y: 760, k: 0.68, feet: w.feet, kneeDir: 1, sy: w.sy * 1.6, lean: w.lean * 1.4, hands: w.hands, face: F({ lx: v > 0.1 ? 0.6 : -0.5, curve: 0.9, mo: 0.45, raise: 0.4, open: 1 - bl }) });
   }
   if (mode === "ask") {
     const bounce = Math.abs(Math.sin((x - s0) * 7)) * 10;
