@@ -338,11 +338,52 @@ const Door: React.FC<{ x: number; y: number; open: number }> = ({ x, y, open }) 
     </g>
   </g>
 );
+// foto da família: Marcos (cabelo curto, camisa azul), Juliana (cabelo comprido, blusa vinho, brincos) e Lucas (cabelo espetado, listrado amarelo)
+const MiniFace: React.FC<{ x: number; y: number; r: number; kid?: boolean }> = ({ x, y, r, kid }) => (
+  <g>
+    {[-1, 1].map((sd) => <circle key={sd} cx={x + sd * r * 0.38} cy={y - r * 0.05} r={r * (kid ? 0.13 : 0.11)} fill={INK} />)}
+    <path d={`M${x - r * 0.36},${y + r * 0.3} Q${x},${y + r * 0.62} ${x + r * 0.36},${y + r * 0.3}`} stroke={INK} strokeWidth={r * 0.1} fill="none" strokeLinecap="round" />
+    {[-1, 1].map((sd) => <ellipse key={sd} cx={x + sd * r * 0.58} cy={y + r * 0.25} rx={r * 0.16} ry={r * 0.1} fill="#e7a28a" opacity={0.7} />)}
+  </g>
+);
 const Frame: React.FC<{ x: number; y: number }> = ({ x, y }) => (
-  <g transform={`translate(${x},${y}) rotate(-2)`}>
-    <rect x={0} y={0} width={150} height={120} rx={6} fill="#8a5a36" stroke={INK} strokeWidth={5} />
-    <rect x={12} y={12} width={126} height={96} fill="#f0e2c8" />
-    {[[42, 60, 18], [75, 52, 20], [108, 70, 13]].map(([cx, cy, r], i) => <g key={i}><circle cx={cx} cy={cy} r={r} fill="#f3efe7" stroke={INK} strokeWidth={3} /><rect x={cx - r} y={cy + r - 2} width={r * 2} height={30} rx={8} fill={["#4c6b92", "#a8485e", "#e0a33a"][i]} stroke={INK} strokeWidth={3} /></g>)}
+  <g transform={`translate(${x},${y}) rotate(-1.5)`}>
+    <defs>
+      <linearGradient id="photoBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#9ed0f0" /><stop offset="0.62" stopColor="#d8eef8" /><stop offset="0.63" stopColor="#8cc070" /><stop offset="1" stopColor="#6aa050" /></linearGradient>
+      <clipPath id="photoClip"><rect x={14} y={14} width={192} height={152} /></clipPath>
+    </defs>
+    <rect x={0} y={0} width={220} height={180} rx={8} fill="#8a5a36" stroke={INK} strokeWidth={5} />
+    <rect x={14} y={14} width={192} height={152} fill="url(#photoBg)" stroke={INK} strokeWidth={3} />
+    <g clipPath="url(#photoClip)">
+      <circle cx={180} cy={40} r={14} fill="#fff1c0" />
+      {/* Marcos */}
+      <rect x={34} y={104} width={60} height={70} rx={18} fill="#4c6b92" stroke={INK} strokeWidth={3} />
+      <path d="M54,104 L64,118 L74,104" fill="#e9e6de" stroke={INK} strokeWidth={2.5} />
+      <circle cx={64} cy={78} r={24} fill={SKIN} stroke={INK} strokeWidth={3} />
+      <path d="M40,74 Q44,50 66,52 Q86,52 88,72 Q76,62 64,64 Q50,62 40,74 Z" fill="#3b2a1e" stroke={INK} strokeWidth={2} />
+      <MiniFace x={64} y={82} r={22} />
+      {/* Juliana */}
+      <path d="M92,74 Q88,120 96,128 L140,128 Q146,118 142,74 Q118,46 92,74 Z" fill="#4a2a1a" stroke={INK} strokeWidth={2.5} />
+      <rect x={92} y={110} width={52} height={64} rx={16} fill="#a8485e" stroke={INK} strokeWidth={3} />
+      <path d="M106,110 Q118,122 130,110" fill={SKIN} stroke={INK} strokeWidth={2.5} />
+      <circle cx={118} cy={86} r={22} fill={SKIN} stroke={INK} strokeWidth={3} />
+      <path d="M96,84 Q98,62 118,62 Q140,62 140,82 Q128,70 112,74 Q102,76 96,84 Z" fill="#4a2a1a" />
+      <circle cx={97} cy={94} r={3} fill={GOLD} stroke={INK} strokeWidth={1.2} />
+      <circle cx={139} cy={94} r={3} fill={GOLD} stroke={INK} strokeWidth={1.2} />
+      <MiniFace x={118} y={90} r={20} />
+      {/* Lucas */}
+      <rect x={148} y={126} width={46} height={50} rx={14} fill="#e0a33a" stroke={INK} strokeWidth={3} />
+      {[138, 150, 162].map((yy) => <line key={yy} x1={150} y1={yy} x2={192} y2={yy} stroke="#f4d27a" strokeWidth={5} />)}
+      <circle cx={171} cy={106} r={19} fill={SKIN} stroke={INK} strokeWidth={3} />
+      {[156, 165, 174, 183].map((xx, i) => <path key={xx} d={`M${xx - 5},${92} L${xx + 1},${80 - (i % 2) * 4} L${xx + 6},${92} Z`} fill="#5a3a22" stroke={INK} strokeWidth={1.8} strokeLinejoin="round" />)}
+      <path d="M153,100 Q156,86 171,86 Q186,86 189,100 Q178,94 171,95 Q162,94 153,100 Z" fill="#5a3a22" />
+      <MiniFace x={171} y={110} r={17} kid />
+      {/* braço do Marcos no ombro da Juliana */}
+      <path d="M90,116 Q104,104 116,112" stroke="#4c6b92" strokeWidth={9} fill="none" strokeLinecap="round" />
+      <circle cx={117} cy={112} r={5} fill={SKIN} stroke={INK} strokeWidth={2} />
+    </g>
+    <rect x={14} y={14} width={192} height={152} fill="none" stroke={INK} strokeWidth={3} />
+    <path d="M24,22 L60,22 L24,52 Z" fill="#fff" opacity={0.25} />
   </g>
 );
 const Bill: React.FC<{ label: string; val: string; icon: string; paid: number; pop: number }> = ({ label, val, icon, paid, pop }) => (
@@ -470,7 +511,7 @@ const House: React.FC<{ t: number; door: number; night: number }> = ({ t, door, 
   <g>
     <Wall a="#5a3a28" b="#7a5238" floor={930} fa="#5a3a24" fb="#2a1a10" />
     <Window x={760} y={250} w={230} h={220} day={night > 0.5 ? 0 : 1} t={t} />
-    <Frame x={430} y={260} />
+    <Frame x={400} y={232} />
     <Door x={60} y={510} open={door} />
     <g transform="translate(300,600)">
       <path d="M0,0 l0,-20 m-6,6 l6,-6 l6,6" stroke={INK} strokeWidth={4} fill="none" />
@@ -505,11 +546,11 @@ const S2 = (t: number) => {
       <Table x={620} y={892} w={460} />
       <g transform="translate(730,898)"><ellipse cx={0} cy={0} rx={46} ry={14} fill="#f3efe7" stroke={INK} strokeWidth={4} /><ellipse cx={0} cy={-4} rx={34} ry={8} fill="#e8b84a" /></g>
       {t < 5.0 && <g transform="translate(610,906) rotate(-80) scale(0.8)"><Note /></g>}
-      {t < 3.4 && <g opacity={1 - ramp(t, 3.1, 3.4)}><Tag x={507} y={238} txt="JULIANA" p={t - 2.3} s={0.36} /><Tag x={545} y={420} txt="LUCAS" p={t - 0.55} s={0.36} up /></g>}
+      {t < 3.4 && <g opacity={1 - ramp(t, 3.1, 3.4)}><Tag x={516} y={196} txt="JULIANA" p={t - 2.3} s={0.34} /><Tag x={570} y={448} txt="LUCAS" p={t - 0.55} s={0.34} up /></g>}
     </g>
   );
 };
-const CAM2 = (t: number): Cam => ({ z: kf(t, [[0, 2.3], [3.0, 2.3], [3.7, 1.0]]), fx: kf(t, [[0, 507], [3.0, 507], [3.7, 470], [5.0, 560]]), fy: kf(t, [[0, 330], [3.0, 330], [3.7, 640]]) });
+const CAM2 = (t: number): Cam => ({ z: kf(t, [[0, 2.2], [3.0, 2.3], [3.7, 1.0]]), fx: kf(t, [[0, 510], [3.0, 510], [3.7, 470], [5.0, 560]]), fy: kf(t, [[0, 322], [3.0, 322], [3.7, 640]]) });
 
 // --- S3 ônibus lotado
 const S3 = (t: number) => {
