@@ -42,7 +42,7 @@ const LINES: LineT[] = [
   ["E tem que dizer não.", 13, 0.4, 1.04],
   ["Depois, vê o olhar da Juliana. Preocupação. Tristeza.", 14, 0.4, 3.39],
   ["É ali que Marcos decide: alguma coisa vai mudar.", 15, 0.4, 2.71],
-  ["O que Marcos irá fazer? Segue pra ver a parte dois.", 16, 0.3, 2.9],
+  ["O que Marcos vai fazer? Segue pra ver a parte dois.", 16, 0.3, 2.6],
 ];
 const KEY = ["passeio", "cem", "roberto", "bronca", "marcos", "lucas", "esse", "atrasado", "dia", "lotado", "chefe", "pagamento", "contas", "cem", "reais", "zerado", "não", "juliana", "mudar", "dois", "remédios"];
 
@@ -1162,7 +1162,7 @@ export const MarcosDia1: React.FC = () => {
       {s < LAST && <Caption t={t} />}
       {s === LAST && (
         <div style={{ position: "absolute", left: 120, right: 120, top: 1270, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, letterSpacing: 2 }}>
-          <div style={{ fontSize: 70, color: WHITE, opacity: endP, transform: `translateY(${(1 - endP) * 16}px)`, WebkitTextStroke: "10px #0a0605", paintOrder: "stroke fill" }}>O QUE MARCOS IRÁ FAZER?</div>
+          <div style={{ fontSize: 70, color: WHITE, opacity: endP, transform: `translateY(${(1 - endP) * 16}px)`, WebkitTextStroke: "10px #0a0605", paintOrder: "stroke fill" }}>O QUE MARCOS VAI FAZER?</div>
           <div style={{ fontSize: 60, color: GOLD, marginTop: 6, opacity: endP2, transform: `translateY(${(1 - endP2) * 16}px)`, WebkitTextStroke: "9px #0a0605", paintOrder: "stroke fill" }}>SEGUE PRA VER A PARTE 2 →</div>
         </div>
       )}
