@@ -108,13 +108,34 @@ const Person: React.FC<{ c: Ch; look: Look; t: number; layer: "body" | "arms" }>
   const S = SH_Y + c.sy;
   const shL: V = [c.cx - 70 + c.lean + tr, S + 12], shR: V = [c.cx + 70 + c.lean + tr, S + 12];
   const elL = ik(shL, c.hands[0], 106, 100, -1), elR = ik(shR, c.hands[1], 106, 100, 1);
-  const arm = (sh: V, el: V, h: V, i: number) => (
-    <g key={i}>
-      <Tube d={limbPath(sh, el, h)} color={SKIN} w={28} />
-      <Tube d={`M${pt(sh)} L${pt(mixV(sh, el, 0.999))} L${pt(mixV(el, h, look.hood ? 0.86 : 0.25))}`} color={look.shirt} w={34} />
-      <circle cx={h[0]} cy={h[1]} r={19} fill={SKIN} stroke={INK} strokeWidth={5} />
-    </g>
-  );
+  // braço = uma curva só (ombro → cotovelo → mão); a manga é a MESMA curva cortada (sem a pele escapar)
+  const arm = (sh: V, el: V, h: V, i: number) => {
+    const q: V = [2 * el[0] - (sh[0] + h[0]) / 2, 2 * el[1] - (sh[1] + h[1]) / 2];
+    const at = (u: number): V => [(1 - u) * (1 - u) * sh[0] + 2 * (1 - u) * u * q[0] + u * u * h[0], (1 - u) * (1 - u) * sh[1] + 2 * (1 - u) * u * q[1] + u * u * h[1]];
+    const sub = (u: number) => { const c1: V = [lerp(sh[0], q[0], u), lerp(sh[1], q[1], u)]; return `M${pt(sh)} Q${pt(c1)} ${pt(at(u))}`; };
+    const full = `M${pt(sh)} Q${pt(q)} ${pt(h)}`;
+    const su = look.hood ? 0.86 : 0.44;
+    const ang = (Math.atan2(h[1] - q[1], h[0] - q[0]) * 180) / Math.PI;
+    const side = i === 0 ? -1 : 1;
+    const cuff = at(su);
+    const cuffAng = (Math.atan2(at(su + 0.02)[1] - at(su - 0.02)[1], at(su + 0.02)[0] - at(su - 0.02)[0]) * 180) / Math.PI;
+    return (
+      <g key={i}>
+        <path d={full} stroke={INK} strokeWidth={37} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={full} stroke={SKIN} strokeWidth={28} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={sub(su)} stroke={INK} strokeWidth={43} fill="none" strokeLinecap="butt" strokeLinejoin="round" />
+        <path d={sub(su)} stroke={look.shirt} strokeWidth={34} fill="none" strokeLinecap="butt" strokeLinejoin="round" />
+        <circle cx={sh[0]} cy={sh[1]} r={17} fill={look.shirt} />
+        {look.hood && <rect x={-6} y={-21} width={12} height={42} rx={5} fill={look.shirt2} stroke={INK} strokeWidth={4} transform={`translate(${cuff[0]},${cuff[1]}) rotate(${cuffAng})`} />}
+        {/* mão em luva com polegar, virada para onde o antebraço aponta */}
+        <g transform={`translate(${h[0]},${h[1]}) rotate(${ang})`}>
+          <ellipse cx={-4 * side * 0} cy={-15 * side} rx={9} ry={7} transform={`rotate(${-30 * side})`} fill={SKIN} stroke={INK} strokeWidth={4} />
+          <ellipse cx={6} cy={0} rx={21} ry={17} fill={SKIN} stroke={INK} strokeWidth={4.5} />
+          <path d={`M14,${-8} q6,8 0,16`} stroke={INK} strokeWidth={2.5} fill="none" opacity={0.5} />
+        </g>
+      </g>
+    );
+  };
   const arms = (
     <g>
       {arm(shL, elL, c.hands[0], 0)}
