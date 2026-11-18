@@ -288,7 +288,7 @@ const ScreenFace: React.FC<{ kind: Screen; pct: number; t: number }> = ({ kind, 
       <g>
         <rect x={0} y={0} width={58} height={44} fill="#2f9a5a" />
         <text x={29} y={20} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={11} fill="#fff">ENVIADO ✓</text>
-        <text x={29} y={34} textAnchor="middle" fontFamily={MONO} fontWeight={800} fontSize={9} fill="#dff5e6">09:12</text>
+        <text x={29} y={34} textAnchor="middle" fontFamily={MONO} fontWeight={800} fontSize={9} fill="#dff5e6">08:12</text>
       </g>
     );
   if (kind === "sending")
@@ -324,7 +324,7 @@ const StatusChip: React.FC<{ cx: number; screen: Screen; pct: number; t: number;
   if (screen === "off" || screen === "doc") return null;
   const pop = backPop(t - at);
   const blink = Math.floor(t * 4) % 2 === 0;
-  const cfg = screen === "done" ? { bg: "#2f9a5a", txt: "✓ PRONTO" } : screen === "sent" ? { bg: "#2f9a5a", txt: "✓ ENVIADO 09:12" } : screen === "sending" ? { bg: "#2a2d3d", txt: "ENVIANDO..." } : { bg: blink ? "#c43d30" : "#7e231d", txt: "ENVIADO 23:59" };
+  const cfg = screen === "done" ? { bg: "#2f9a5a", txt: "✓ PRONTO" } : screen === "sent" ? { bg: "#2f9a5a", txt: "✓ ENVIADO 08:12" } : screen === "sending" ? { bg: "#2a2d3d", txt: "ENVIANDO..." } : { bg: blink ? "#c43d30" : "#7e231d", txt: "ENVIADO 23:59" };
   return (
     <g transform={`translate(${cx},${DESK_TOP - 150}) scale(${pop})`}>
       <rect x={-112} y={-30} width={224} height={60} rx={14} fill={cfg.bg} stroke={INK} strokeWidth={5} />
@@ -501,7 +501,11 @@ const pctAt = (t: number, right: boolean) =>
     : interpolate(t, [0, 12, 16, 16.2, 18, 99], [0, 0, 0.7, 0.7, 1, 1], clamp);
 const minutesAt = (t: number, right: boolean) => {
   const b = blockOf(t);
-  if (right) return b === 4 ? (t < 14.7 ? 1330 : 1350) : [1140, 1140, 1170, 1200, 1330, 480, 540][b];
+  if (right) {
+    if (b === 4) return t < 14.7 ? 1330 : 1350;
+    if (b === 5) return Math.floor(interpolate(t, [16, 17, 19], [482, 492, 496], clamp)); // envia às 08:12
+    return [1140, 1140, 1170, 1200, 1330, 480, 510][b];
+  }
   if (b === 4) return Math.floor(interpolate(t, [12, 16], [1420, 1630], clamp));
   if (b === 5) return Math.floor(interpolate(t, [16, 18], [1390, 1439], clamp));
   return [1140, 1430, 1200, 1260, 1420, 1390, 540][b];
@@ -607,14 +611,15 @@ const rightAt = (t: number, fin: boolean): { c: Ch; lamp: boolean; dark: number;
     note = 0; fly = 0; lid = 0; screen = "off"; dark = 0.42;
     if (t < 14.4) {
       book = 1;
-      c.hands = [[RX - 50, SH_Y + 10], [RX + 50, SH_Y + 10]];
+      c.hands = [[RX - 88, DESK_TOP - 26 + Math.sin(t * 1.3) * 2], [RX + 88, DESK_TOP - 26 + Math.sin(t * 1.3 + 1) * 2]];
       const yawn = er(t, 13.6, 13.8) * (1 - er(t, 14.1, 14.3));
       c.face = baseFace({ ly: 0.6, py: 0.9, curve: 0.4, mo: yawn * 0.9, open: yawn > 0.5 ? 0 : 1 - bl, raise: yawn * 0.5 });
       c.tilt = Math.sin(t * 0.9) * 3 + yawn * 6;
     } else {
       book = 1 - er(t, 14.4, 14.55);
       const reach = er(t, 14.4, 14.65) * (1 - er(t, 14.75, 14.95));
-      c.hands = [[RX - 60, DESK_TOP + 18], mixV([RX + 60, DESK_TOP + 18], [912, DESK_TOP - 140], reach)];
+      const down = er(t, 14.4, 14.55);
+      c.hands = [mixV([RX - 88, DESK_TOP - 26], [RX - 60, DESK_TOP + 18], down), mixV(mixV([RX + 88, DESK_TOP - 26], [RX + 60, DESK_TOP + 18], down), [912, DESK_TOP - 140], reach)];
       lamp = t < 14.7;
       dark = t < 14.7 ? 0.42 : 0.74;
       const up = er(t, 14.95, 15.3);
@@ -793,14 +798,6 @@ const Scene: React.FC = () => {
           <Chair cx={RX} />
           <Person c={Lf.c} look={LOOK_L} t={t} layer="body" />
           <Person c={R.c} look={LOOK_R} t={t} layer="body" />
-          {R.book > 0 && (
-            <g transform={`translate(${RX},${SH_Y + 6}) scale(${R.book})`}>
-              <path d="M-72,-50 Q-36,-62 0,-50 L0,46 Q-36,34 -72,46 Z" fill="#f4ecd8" stroke={INK} strokeWidth={5} strokeLinejoin="round" />
-              <path d="M72,-50 Q36,-62 0,-50 L0,46 Q36,34 72,46 Z" fill="#f4ecd8" stroke={INK} strokeWidth={5} strokeLinejoin="round" />
-              {[-28, -14, 0, 14].map((y) => <g key={y}><line x1={-60} y1={y} x2={-12} y2={y - 4} stroke="#a89a80" strokeWidth={3} /><line x1={12} y1={y - 4} x2={60} y2={y} stroke="#a89a80" strokeWidth={3} /></g>)}
-              <rect x={-80} y={-46} width={10} height={96} rx={3} fill={GOLD} stroke={INK} strokeWidth={3} />
-            </g>
-          )}
           <Desk x0={DESK.L[0]} x1={DESK.L[1]} />
           <Desk x0={DESK.R[0]} x1={DESK.R[1]} />
           {/* mesa da esquerda */}
@@ -817,6 +814,16 @@ const Scene: React.FC = () => {
           {b >= 1 && b !== 6 && <g transform={`translate(${DESK.R[1] - 150},${DESK_TOP + 12})`}><Mug steam={b >= 5 ? 1 : 0} t={t} /></g>}
           {b === 0 && <rect x={RX - 60} y={DESK_TOP + 6} width={96} height={26} fill="#f6f2e8" stroke={INK} strokeWidth={3} transform={`rotate(-4 ${RX} ${DESK_TOP + 18})`} />}
                               {/* braços por cima da mesa */}
+          {/* livro apoiado na mesa, segurado pelas bordas (mãos nas pontas) */}
+          {R.book > 0 && (
+            <g transform={`translate(${RX},${DESK_TOP - 34}) scale(${R.book}) rotate(${Math.sin(t * 0.9) * 1.5})`}>
+              <path d="M-86,-58 Q-43,-72 0,-58 L0,52 Q-43,38 -86,52 Z" fill="#f4ecd8" stroke={INK} strokeWidth={5} strokeLinejoin="round" />
+              <path d="M86,-58 Q43,-72 0,-58 L0,52 Q43,38 86,52 Z" fill="#f4ecd8" stroke={INK} strokeWidth={5} strokeLinejoin="round" />
+              {[-34, -18, -2, 14, 30].map((y) => <g key={y}><line x1={-72} y1={y} x2={-14} y2={y - 5} stroke="#a89a80" strokeWidth={3} /><line x1={14} y1={y - 5} x2={72} y2={y} stroke="#a89a80" strokeWidth={3} /></g>)}
+              <line x1={0} y1={-58} x2={0} y2={52} stroke={INK} strokeWidth={3} />
+              <path d="M-90,54 L90,54 L86,62 L-86,62 Z" fill="#b8862e" stroke={INK} strokeWidth={4} strokeLinejoin="round" />
+            </g>
+          )}
           <Person c={Lf.c} look={LOOK_L} t={t} layer="arms" />
           <Person c={R.c} look={LOOK_R} t={t} layer="arms" />
           <LaptopBack cx={LX} lid={Lf.lid} gold={false} shake={b === 4 || (b === 5 && t < 16.9) ? Math.sin(t * 50) * 1.2 : 0} />
