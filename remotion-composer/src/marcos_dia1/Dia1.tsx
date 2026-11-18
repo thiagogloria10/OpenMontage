@@ -83,8 +83,12 @@ const useFonts = () => {
 // ------------------------------------------------------------------ personagem (corpo inteiro, de frente/3-4)
 type Face = { lx: number; ly: number; open: number; eyeS: number; pupil: number; px: number; py: number; raise: number; worry: number; curve: number; mo: number; wide?: number };
 const F = (o: Partial<Face> = {}): Face => ({ lx: 0, ly: 0, open: 1, eyeS: 1, pupil: 1, px: 0, py: 0, raise: 0, worry: 0, curve: 0.15, mo: 0, wide: 0, ...o });
-type Look = { id: string; shirt: string; shirt2: string; pants: string; shoes: string; hair: string; style: "marcos" | "lucas" | "juliana" | "chefe"; sleeve: number; width: number; tie?: string };
+type Look = { id: string; shirt: string; shirt2: string; pants: string; shoes: string; hair: string; style: "marcos" | "lucas" | "juliana" | "chefe"; sleeve: number; width: number; tie?: string; suit?: boolean; loose?: boolean; pj?: boolean };
 const MARCOS: Look = { id: "m", shirt: "#4c6b92", shirt2: "#3a5576", pants: "#3a3d47", shoes: "#2a1b12", hair: "#3b2a1e", style: "marcos", sleeve: 0.44, width: 0.8 };
+// pijama (acorda), terno (vai trabalhar) e camisa com gravata frouxa (de volta em casa)
+const MARCOS_PJ: Look = { ...MARCOS, shirt: "#8ab0d8", shirt2: "#6f96c0", pants: "#8ab0d8", sleeve: 0.86, pj: true };
+const MARCOS_SUIT: Look = { ...MARCOS, shirt: "#3a4458", shirt2: "#2c3446", pants: "#3a4458", sleeve: 0.86, suit: true, tie: "#2f6aa8" };
+const MARCOS_HOME: Look = { ...MARCOS, shirt: "#ecebe4", shirt2: "#d4d2c8", pants: "#3a4458", sleeve: 0.62, loose: true, tie: "#2f6aa8" };
 const LUCAS: Look = { id: "l", shirt: "#e0a33a", shirt2: "#c4862a", pants: "#3f5a8a", shoes: "#c43d30", hair: "#5a3a22", style: "lucas", sleeve: 0.4, width: 0.76 };
 const JULIANA: Look = { id: "j", shirt: "#a8485e", shirt2: "#8a3a4c", pants: "#2e3040", shoes: "#2a1b12", hair: "#4a2a1a", style: "juliana", sleeve: 0.86, width: 0.72 };
 const CHEFE: Look = { id: "c", shirt: "#e9e6de", shirt2: "#cfcabd", pants: "#2b2d36", shoes: "#151012", hair: "#6a6a6a", style: "chefe", sleeve: 0.86, width: 1.0, tie: "#9a2a2a" };
@@ -231,12 +235,42 @@ const Person: React.FC<{ c: Ch; look: Look; t: number }> = ({ c, look, t }) => {
     <g>
       <path d={`M${shL[0] - 8},${S2 + 8} Q${-78 * W + c.lean * 0.4},${S2 + 120} ${-64 * W},${4} L${64 * W},${4} Q${78 * W + c.lean * 0.4},${S2 + 120} ${shR[0] + 8},${S2 + 8} Q${c.lean},${S2 - 26} ${shL[0] - 8},${S2 + 8} Z`} fill={look.shirt} stroke={INK} strokeWidth={6} strokeLinejoin="round" />
       <path d={`M${shL[0]},${S2 + 16} Q${-66 * W},${S2 + 120} ${-54 * W},${0} L${-30 * W},${0} Q${-40 * W},${S2 + 120} ${shL[0] + 24},${S2 + 18} Z`} fill={look.shirt2} opacity={0.75} />
-      {look.style === "marcos" && <path d={`M${c.lean - 26},${S2 - 6} L${c.lean},${S2 + 26} L${c.lean + 26},${S2 - 6}`} stroke={INK} strokeWidth={5} fill="#e9e6de" strokeLinejoin="round" />}
+      {look.style === "marcos" && !look.suit && !look.loose && !look.pj && <path d={`M${c.lean - 26},${S2 - 6} L${c.lean},${S2 + 26} L${c.lean + 26},${S2 - 6}`} stroke={INK} strokeWidth={5} fill="#e9e6de" strokeLinejoin="round" />}
+      {look.pj && (
+        <g>
+          {[0, 1, 2, 3].map((i) => <path key={i} d={`M${-62 * W},${S2 + 50 + i * 46} L${62 * W},${S2 + 50 + i * 46}`} stroke="#b8d0ec" strokeWidth={9} />)}
+          <path d={`M${c.lean - 30},${S2 - 6} L${c.lean},${S2 + 30} L${c.lean + 30},${S2 - 6}`} stroke={INK} strokeWidth={5} fill="#6f96c0" strokeLinejoin="round" />
+          {[0, 1, 2].map((i) => <circle key={i} cx={c.lean} cy={S2 + 60 + i * 50} r={5} fill="#fff" stroke={INK} strokeWidth={2} />)}
+        </g>
+      )}
+      {look.suit && (
+        <g>
+          {/* camisa branca e gravata aparecendo no V do paletó, lapelas */}
+          <path d={`M${c.lean - 36},${S2 - 6} L${c.lean},${S2 + 120} L${c.lean + 36},${S2 - 6} Z`} fill="#f4f2ec" stroke={INK} strokeWidth={4} strokeLinejoin="round" />
+          <path d={`M${c.lean - 9},${S2 + 8} L${c.lean + 9},${S2 + 8} L${c.lean + 13},${S2 + 104} L${c.lean},${S2 + 118} L${c.lean - 13},${S2 + 104} Z`} fill={look.tie} stroke={INK} strokeWidth={3.5} strokeLinejoin="round" />
+          <path d={`M${c.lean - 9},${S2 + 8} L${c.lean + 9},${S2 + 8} L${c.lean + 6},${S2 - 4} L${c.lean - 6},${S2 - 4} Z`} fill={look.tie} stroke={INK} strokeWidth={3} />
+          <path d={`M${c.lean - 50},${S2 - 2} L${c.lean - 22},${S2 + 70} L${c.lean - 4},${S2 + 128}`} stroke={INK} strokeWidth={4} fill="none" />
+          <path d={`M${c.lean + 50},${S2 - 2} L${c.lean + 22},${S2 + 70} L${c.lean + 4},${S2 + 128}`} stroke={INK} strokeWidth={4} fill="none" />
+          {[0, 1].map((i) => <circle key={i} cx={c.lean + 2} cy={S2 + 150 + i * 36} r={5} fill="#1e2430" stroke={INK} strokeWidth={2} />)}
+          <path d={`M${c.lean + 28},${S2 + 90} l18,-4`} stroke="#f4f2ec" strokeWidth={5} />
+        </g>
+      )}
+      {look.loose && (
+        <g>
+          {/* gola aberta e gravata frouxa, mangas dobradas */}
+          <path d={`M${c.lean - 28},${S2 - 6} L${c.lean - 6},${S2 + 34} M${c.lean + 28},${S2 - 6} L${c.lean + 6},${S2 + 34}`} stroke={INK} strokeWidth={4} />
+          <g transform={`rotate(8 ${c.lean} ${S2 + 30})`}>
+            <path d={`M${c.lean - 8},${S2 + 30} L${c.lean + 8},${S2 + 30} L${c.lean + 12},${S2 + 120} L${c.lean},${S2 + 132} L${c.lean - 12},${S2 + 120} Z`} fill={look.tie} stroke={INK} strokeWidth={3.5} strokeLinejoin="round" />
+            <path d={`M${c.lean - 8},${S2 + 30} L${c.lean + 8},${S2 + 30} L${c.lean + 5},${S2 + 18} L${c.lean - 5},${S2 + 18} Z`} fill={look.tie} stroke={INK} strokeWidth={3} />
+          </g>
+          {[0, 1, 2].map((i) => <circle key={i} cx={c.lean - 2} cy={S2 + 70 + i * 48} r={4} fill="#fff" stroke={INK} strokeWidth={2} />)}
+        </g>
+      )}
       {look.style === "lucas" && [0, 1, 2].map((i) => <path key={i} d={`M${-64 * W},${S2 + 60 + i * 50} L${64 * W},${S2 + 60 + i * 50}`} stroke="#f4d27a" strokeWidth={14} />)}
       {look.style === "juliana" && <path d={`M${c.lean - 38},${S2 - 4} Q${c.lean},${S2 + 46} ${c.lean + 38},${S2 - 4}`} stroke={INK} strokeWidth={5} fill={SKIN} />}
       {look.style === "juliana" && <path d={`M${c.lean - 26},${S2 + 4} Q${c.lean},${S2 + 30} ${c.lean + 26},${S2 + 4}`} stroke={GOLD} strokeWidth={3} fill="none" />}
       {look.style === "juliana" && <circle cx={c.lean} cy={S2 + 22} r={5} fill={GOLD} stroke={INK} strokeWidth={2} />}
-      {look.tie && (
+      {look.tie && look.style === "chefe" && (
         <g>
           <path d={`M${c.lean - 28},${S2 - 6} L${c.lean},${S2 + 22} L${c.lean + 28},${S2 - 6}`} stroke={INK} strokeWidth={5} fill="#fff" strokeLinejoin="round" />
           <path d={`M${c.lean - 10},${S2 + 18} L${c.lean + 10},${S2 + 18} L${c.lean + 16},${S2 + 150} L${c.lean},${S2 + 172} L${c.lean - 16},${S2 + 150} Z`} fill={look.tie} stroke={INK} strokeWidth={4} strokeLinejoin="round" />
@@ -344,6 +378,15 @@ const PhoneS: React.FC<{ glow?: number }> = ({ glow = 1 }) => (
   <g transform="rotate(-8)">
     <rect x={-20} y={-34} width={40} height={66} rx={8} fill="#15161c" stroke={INK} strokeWidth={4} />
     <rect x={-15} y={-28} width={30} height={52} rx={4} fill="#7cc4ff" opacity={0.4 + 0.6 * glow} />
+  </g>
+);
+const Briefcase: React.FC = () => (
+  <g>
+    <path d="M-16,4 Q-16,-12 0,-12 Q16,-12 16,4" stroke={INK} strokeWidth={8} fill="none" />
+    <path d="M-16,4 Q-16,-12 0,-12 Q16,-12 16,4" stroke="#5a3418" strokeWidth={4} fill="none" />
+    <rect x={-52} y={4} width={104} height={74} rx={10} fill="#7a4a24" stroke={INK} strokeWidth={5} />
+    <rect x={-52} y={4} width={104} height={20} rx={8} fill="#8a5a30" stroke={INK} strokeWidth={4} />
+    {[-30, 30].map((x) => <rect key={x} x={x - 6} y={18} width={12} height={12} rx={2} fill={GOLD} stroke={INK} strokeWidth={2.5} />)}
   </g>
 );
 const Note: React.FC = () => (
@@ -538,7 +581,7 @@ const S1 = (t0: number) => {
       <rect x={270} y={824} width={690} height={46} fill="#6b4a36" stroke={INK} strokeWidth={5} />
       <rect x={936} y={700} width={30} height={200} rx={8} fill="#6b4a36" stroke={INK} strokeWidth={5} />
       <ellipse cx={350} cy={738} rx={78} ry={30} fill="#f4f2fa" stroke={INK} strokeWidth={5} />
-      <Person c={m} look={MARCOS} t={t0} />
+      <Person c={m} look={MARCOS_PJ} t={t0} />
       <path d={pathOf(bl)} fill="#5a6aa8" stroke={INK} strokeWidth={5} strokeLinejoin="round" />
       <path d={`M${pt(mixV([520, 760], [640, 790], up))} Q${pt(mixV([600, 770], [700, 784], up))} ${pt(mixV([700, 762], [780, 790], up))}`} stroke="#3e4a80" strokeWidth={4} fill="none" />
       {/* braço de fora por cima do cobertor quando deitado */}
@@ -548,7 +591,7 @@ const S1 = (t0: number) => {
           <path d="M418,716 Q470,684 530,700 Q560,708 584,718" stroke={INK} strokeWidth={37} strokeLinecap="round" strokeLinejoin="round" fill="none" />
           <path d="M418,716 Q470,684 530,700 Q560,708 584,718" stroke={SKIN} strokeWidth={28} strokeLinecap="round" strokeLinejoin="round" fill="none" />
           <path d="M418,716 Q446,698 478,694" stroke={INK} strokeWidth={43} strokeLinecap="butt" fill="none" />
-          <path d="M418,716 Q446,698 478,694" stroke={MARCOS.shirt} strokeWidth={34} strokeLinecap="butt" fill="none" />
+          <path d="M418,716 Q446,698 478,694" stroke={MARCOS_PJ.shirt} strokeWidth={34} strokeLinecap="butt" fill="none" />
           <g transform="translate(590,720) rotate(20)"><ellipse cx={0} cy={-13} rx={9} ry={7} fill={SKIN} stroke={INK} strokeWidth={4} transform="rotate(-30)" /><ellipse cx={6} cy={0} rx={21} ry={16} fill={SKIN} stroke={INK} strokeWidth={4.5} /></g>
         </g>
       )}
@@ -581,7 +624,7 @@ const S2 = (t: number) => {
     return base({
       x: wx, y: 646, k: 1, feet: w.feet, kneeDir: w.kneeDir, sy: w.sy + bend * 64, lean: w.lean + bend * 26,
       hands: v > 0.05 ? w.hands : [HANG[0], hold > 0.5 ? mixV([110, 60], [60, -150], er(x, 5.15, 5.5)) : mixV(HANG[1], [116, 60], bend)],
-      holdR: hold > 0.5 ? <Note /> : undefined,
+      holdR: hold > 0.5 ? <Note /> : undefined, holdL: <Briefcase />,
       face: F({ lx: x < 5.5 ? 0.6 : 0.2, ly: 0.2 + bend * 0.4, py: 0.5 + bend * 0.4, open: 1 - bl, curve: lerp(0.1, -0.35, er(x, 5.6, 6.0)), worry: er(x, 5.6, 6.0) * 0.6 }),
     });
   };
@@ -591,7 +634,7 @@ const S2 = (t: number) => {
       <House t={t} door={0} night={0} />
       <ChairF x={650} seat={780} floor={942} s={0.9} />
       <ChairF x={830} seat={780} floor={942} s={0.9} />
-      <Person c={m} look={MARCOS} t={t} />
+      <Person c={m} look={MARCOS_SUIT} t={t} />
       <Table x={720} y={706} w={420} floor={948} />
       <g transform="translate(830,712)"><ellipse cx={0} cy={0} rx={46} ry={14} fill="#f3efe7" stroke={INK} strokeWidth={4} /><ellipse cx={0} cy={-4} rx={34} ry={8} fill="#e8b84a" /></g>
       {t < 5.0 && <g transform="translate(590,716) rotate(-80) scale(0.8)"><Note /></g>}
@@ -624,7 +667,7 @@ const S3 = (t: number) => {
   const sw = (x: number, o = 0) => Math.sin(x * 3.1 + o);
   const m = follow((x) => base({
     x: 540 + sw(x) * 8, y: 690, k: 1, lean: sw(x) * 10, tilt: sw(x) * 3,
-    hands: [[-86, -14], toLocal(ringPos(STRAPS[1], x, 1), 540 + sw(x) * 8, 690, 1)],
+    hands: [[-86, -14], toLocal(ringPos(STRAPS[1], x, 1), 540 + sw(x) * 8, 690, 1)], holdL: <Briefcase />,
     face: F({ worry: 0.6, curve: -0.45, open: 0.8 - blinkAt(x, 2.4, 0.1) * 0.7, lx: -0.25, ly: 0.1, px: -0.4 }),
   }), t);
   const p3 = follow((x) => base({ x: 280 + sw(x, 0.6) * 8, y: 704, k: 0.94, lean: sw(x, 0.6) * 9, hands: [toLocal(ringPos(STRAPS[0], x, 0), 280 + sw(x, 0.6) * 8, 704, 0.94), [86, -14]], face: F({ lx: 0.4, px: 0.5, curve: -0.1, open: 0.85 - blinkAt(x, 3.1, 1) * 0.7 }) }), t);
@@ -649,7 +692,7 @@ const S3 = (t: number) => {
       {Array.from({ length: 9 }).map((_, i) => <line key={i} x1={-100} y1={1000 + i * 26} x2={1180} y2={1000 + i * 26} stroke="#2a2e32" strokeWidth={4} />)}
       <Person c={p3} look={PAX3} t={t} />
       <Person c={p2} look={PAX2} t={t} />
-      <Person c={m} look={MARCOS} t={t} />
+      <Person c={m} look={MARCOS_SUIT} t={t} />
       {STRAPS.map((x, i) => { const r = ringPos(x, t, i); return <ellipse key={i} cx={r[0]} cy={r[1] - 4} rx={18} ry={8} fill="none" stroke="#e8e4d8" strokeWidth={6} />; })}
       {/* barras amarelas e botão de parada em primeiro plano */}
       {[110, 960].map((x) => <rect key={x} x={x} y={196} width={22} height={900} rx={8} fill="#e8c840" stroke={INK} strokeWidth={5} />)}
@@ -694,7 +737,7 @@ const marcosDesk = (x: number, typing: number, o: Partial<Ch> = {}): Ch => base(
 });
 const S4 = (t: number) => {
   const m = follow((x) => { const c = marcosDesk(x, 0.6); c.sy = Math.sin(x * 2) * 3 + er(x, 2.2, 2.8) * 10; c.face.curve = lerp(-0.35, -0.55, er(x, 2.2, 2.8)); return c; }, t);
-  return (<g><Office t={t} /><Person c={m} look={MARCOS} t={t} /><DeskOffice papers={10} envelope={0} phoneBuzz={-1} t={t} /></g>);
+  return (<g><Office t={t} /><Person c={m} look={MARCOS_SUIT} t={t} /><DeskOffice papers={10} envelope={0} phoneBuzz={-1} t={t} /></g>);
 };
 const CAM4 = (t: number): Cam => ({ z: kf(t, [[0, 1.0], [3.6, 1.12]]), fx: 540, fy: 680 });
 // núcleo da cena do chefe (tempo próprio: entra 0,2–1,0; grita a partir de 1,55)
@@ -726,7 +769,7 @@ const S5 = (t: number) => {
   return (
     <g>
       <Office t={x} />
-      <Person c={m} look={MARCOS} t={x} />
+      <Person c={m} look={MARCOS_SUIT} t={x} />
       <Person c={ch} look={CHEFE} t={x} />
       <DeskOffice papers={papers} envelope={0} phoneBuzz={-1} t={x} />
       {/* cena congelada: tudo escurece e dessatura, só o chefe fica em destaque */}
@@ -755,7 +798,7 @@ const S5b = (t: number) => {
   return (
     <g>
       <Office t={x} />
-      <Person c={m} look={MARCOS} t={x} />
+      <Person c={m} look={MARCOS_SUIT} t={x} />
       <Person c={ch} look={CHEFE} t={x} />
       <DeskOffice papers={papers} envelope={0} phoneBuzz={-1} t={x} />
       {x > 1.65 && [0, 1, 2].map((i) => <path key={i} d={`M${700 - i * 10},${300 + i * 40} l-${40 + i * 10},-${20 - i * 10}`} stroke={RED} strokeWidth={8} strokeLinecap="round" opacity={0.5 + 0.5 * Math.sin(x * 20 + i)} />)}
@@ -786,7 +829,7 @@ const S6 = (t: number) => {
   return (
     <g>
       <Office t={t} />
-      <Person c={m} look={MARCOS} t={t} />
+      <Person c={m} look={MARCOS_SUIT} t={t} />
       {t < 1.3 && <Person c={ch} look={CHEFE} t={t} />}
       <DeskOffice papers={14} envelope={0} phoneBuzz={t < 1.6 ? buzz : -1} t={t} />
       {note > 0 && (
@@ -850,7 +893,7 @@ const S7 = (t: number) => {
     <g>
       <HouseNight t={t} door={0} />
       <NightChair />
-      <Person c={m} look={MARCOS} t={t} />
+      <Person c={m} look={MARCOS_HOME} t={t} />
       <NightTable papers={n} />
       {BILLS.map(([l, v, ic, s0], i) => {
         const pop = backPop(t - (s0 - 0.35));
@@ -892,13 +935,13 @@ const S8 = (t: number) => {
   const door = er(t, 0.05, 0.35);
   const m = follow((x) => marcosLooks(x, er(x, 0.4, 0.8)), t);
   const l = follow((x) => lucasAt(x, "run"), t);
-  return (<g><HouseNight t={t} door={door} /><NightChair /><Person c={m} look={MARCOS} t={t} /><NightTable papers={6} /><Person c={l} look={LUCAS} t={t} />{lightRoom(0.5)}</g>);
+  return (<g><HouseNight t={t} door={door} /><NightChair /><Person c={m} look={MARCOS_HOME} t={t} /><NightTable papers={6} /><Person c={l} look={LUCAS} t={t} />{lightRoom(0.5)}</g>);
 };
 const CAM8 = (t: number): Cam => ({ z: 1.1, fx: kf(t, [[0, 700], [1.8, 680]]), fy: 660 });
 const S9 = (t: number) => {
   const m = follow((x) => { const c = marcosLooks(x, 1); c.face = F({ lx: 0.7, px: 1, curve: lerp(0.3, 0.05, er(x, 2.2, 3.2)), worry: lerp(0.2, 0.55, er(x, 2.2, 3.2)), open: 1 - blinkAt(x, 2.4, 0.9), raise: 0.2 }); return c; }, t);
   const l = follow((x) => lucasAt(x, "ask"), t);
-  return (<g><HouseNight t={t} door={1} /><NightChair /><Person c={m} look={MARCOS} t={t} /><NightTable papers={6} /><Person c={l} look={LUCAS} t={t} />{lightRoom(0.5)}</g>);
+  return (<g><HouseNight t={t} door={1} /><NightChair /><Person c={m} look={MARCOS_HOME} t={t} /><NightTable papers={6} /><Person c={l} look={LUCAS} t={t} />{lightRoom(0.5)}</g>);
 };
 const CAM9 = (t: number): Cam => ({ z: kf(t, [[0, 1.2], [4.6, 1.32]]), fx: 690, fy: kf(t, [[0, 680], [4.6, 660]]) });
 
@@ -949,7 +992,7 @@ const S12 = (t: number) => {
     return c;
   }, t);
   const l = follow((x) => lucasAt(x, "sad"), t);
-  return (<g><HouseNight t={t} door={1} /><NightChair /><Person c={m} look={MARCOS} t={t} /><NightTable papers={6} /><Person c={l} look={LUCAS} t={t} />{lightRoom(0.4)}</g>);
+  return (<g><HouseNight t={t} door={1} /><NightChair /><Person c={m} look={MARCOS_HOME} t={t} /><NightTable papers={6} /><Person c={l} look={LUCAS} t={t} />{lightRoom(0.4)}</g>);
 };
 const CAM12 = (t: number): Cam => ({ z: kf(t, [[0, 1.25], [2.6, 1.36]]), fx: 690, fy: 670 });
 
@@ -961,7 +1004,7 @@ const S13 = (t: number) => {
     return base({ x: 870, y: JUL_Y, k: 0.95, hands: [[-40, -170], [86, -14]], holdL: <rect x={-20} y={-10} width={40} height={90} rx={8} fill="#6a4a3a" stroke={INK} strokeWidth={4} />, face: F({ lx: -0.55, px: -0.9, worry: kf(x, [[0, 0.3], [1.4, 1.0]]), curve: kf(x, [[0, 0.1], [1.4, -0.4]]), open: kf(x, [[0, 1], [2.4, 0.75]]) - bl * 0.6, wide: er(x, 2.2, 3.0) * 0.9, raise: 0.2, eyeS: 1.08 }), tilt: kf(x, [[0, 0], [2.4, 6]]), sy: er(x, 2.4, 3.4) * 6 });
   }, t);
   const m = follow((x) => { const c = marcosLooks(x, 1); c.face = F({ lx: 0.75, px: 1, worry: 0.9, curve: -0.5, open: 0.8 - blinkAt(x, 2.2, 0.5) * 0.7 }); c.sy = 10; return c; }, t);
-  return (<g><HouseNight t={t} door={1} /><NightChair /><Person c={m} look={MARCOS} t={t} /><NightTable papers={6} /><Person c={j} look={JULIANA} t={t} />{lightRoom(0.4)}</g>);
+  return (<g><HouseNight t={t} door={1} /><NightChair /><Person c={m} look={MARCOS_HOME} t={t} /><NightTable papers={6} /><Person c={j} look={JULIANA} t={t} />{lightRoom(0.4)}</g>);
 };
 const CAM13 = (t: number): Cam => ({ z: kf(t, [[0, 1.0], [0.8, 1.0], [2.0, 1.8]]), fx: kf(t, [[0, 640], [0.8, 640], [2.0, 860]]), fy: kf(t, [[0, 620], [2.0, 430]]) });
 
@@ -988,7 +1031,7 @@ const S14 = (t: number, end: boolean) => {
       <defs><radialGradient id="rim" cx={SEAT_X} cy="420" r="520" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#ffcf6a" stopOpacity={0.5} /><stop offset="1" stopColor="#ffcf6a" stopOpacity={0} /></radialGradient></defs>
       <rect x={-400} y={-400} width={1880} height={2400} fill="url(#rim)" opacity={glow} style={{ mixBlendMode: "screen" }} />
       <NightChair />
-      <Person c={m} look={MARCOS} t={t} />
+      <Person c={m} look={MARCOS_HOME} t={t} />
       <NightTable papers={6} />
     </g>
   );
