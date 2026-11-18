@@ -18,14 +18,14 @@ const MONO = "'JetBrains Mono', 'DejaVu Sans Mono', monospace";
 const SKIN = "#f3efe7", SKIN2 = "#d9d2c5";
 
 // ------------------------------------------------------------------ cenas (duração em s) e falas
-const DUR = [2.9, 1.4, 1.3, 3.6, 4.2, 3.4, 3.4, 3.4, 3.0, 3.2, 6.6, 3.0, 2.2, 2.6, 4.4, 4.6, 3.8];
+const DUR = [2.9, 1.4, 1.3, 3.6, 4.2, 3.4, 3.4, 3.4, 3.0, 3.2, 6.6, 3.0, 2.9, 1.4, 2.6, 4.4, 4.6, 3.8];
 const ST: number[] = DUR.reduce<number[]>((a, d, i) => [...a, i === 0 ? 0 : a[i - 1] + DUR[i - 1]], []);
 export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
 // [texto, arquivo, início relativo à cena, duração da fala]
 // uma fala por cena (null = cena sem narração). [texto, arquivo, início na cena, duração]
 type LineT = [string, number, number, number] | null;
 const LINES: LineT[] = [
-  ["Pai, posso ir no passeio? É cem reais.", 1, 0.15, 2.54],
+  ["Pai, posso ir no passeio da escola?", 1, 0.25, 2.04],
   ["Zerado.", 2, 0.2, 0.59],
   null,
   ["Naquela manhã, o Marcos acordou atrasado. De novo.", 3, 0.2, 2.9],
@@ -37,7 +37,8 @@ const LINES: LineT[] = [
   ["Mas hoje é dia de pagamento.", 9, 0.4, 1.63],
   ["Em casa, as contas. Água. Luz. Internet. Aluguel. Mercado. Remédios.", 10, 0.3, 5.19],
   ["Aí o Lucas chega da escola, animado.", 11, 0.3, 2.18],
-  null,
+  ["Pai, posso ir no passeio da escola?", 1, 0.25, 2.04],
+  ["Zerado.", 2, 0.2, 0.59],
   ["E tem que dizer não.", 12, 0.4, 1.04],
   ["Depois, vê o olhar da Juliana. Preocupação. Tristeza.", 13, 0.4, 3.36],
   ["É ali que Marcos decide: alguma coisa vai mudar.", 14, 0.4, 2.66],
@@ -407,14 +408,16 @@ const Bilhete: React.FC = () => (
     <text x={0} y={34} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={26} fill={RED}>R$ 100</text>
   </g>
 );
+// porta em tamanho de gente (250 × 640, vai até o chão)
 const Door: React.FC<{ x: number; y: number; open: number }> = ({ x, y, open }) => (
   <g>
-    <rect x={x} y={y} width={190} height={420} fill="#120a06" stroke={INK} strokeWidth={6} />
+    <rect x={x - 14} y={y - 14} width={278} height={654} fill="#5a3a24" stroke={INK} strokeWidth={6} />
+    <rect x={x} y={y} width={250} height={640} fill="#120a06" stroke={INK} strokeWidth={6} />
     <g transform={`translate(${x},${y}) scale(${1 - open * 0.75},1)`}>
-      <rect x={0} y={0} width={190} height={420} fill="#7a5030" stroke={INK} strokeWidth={6} />
-      <rect x={24} y={30} width={142} height={160} rx={6} fill="#6a4426" stroke={INK} strokeWidth={4} />
-      <rect x={24} y={220} width={142} height={170} rx={6} fill="#6a4426" stroke={INK} strokeWidth={4} />
-      <circle cx={160} cy={220} r={10} fill={GOLD} stroke={INK} strokeWidth={3} />
+      <rect x={0} y={0} width={250} height={640} fill="#7a5030" stroke={INK} strokeWidth={6} />
+      <rect x={32} y={40} width={186} height={250} rx={8} fill="#6a4426" stroke={INK} strokeWidth={4} />
+      <rect x={32} y={330} width={186} height={270} rx={8} fill="#6a4426" stroke={INK} strokeWidth={4} />
+      <circle cx={214} cy={320} r={13} fill={GOLD} stroke={INK} strokeWidth={3} />
     </g>
   </g>
 );
@@ -613,7 +616,7 @@ const House: React.FC<{ t: number; door: number; night: number }> = ({ t, door, 
     <Wall a="#5a3a28" b="#7a5238" floor={930} fa="#5a3a24" fb="#2a1a10" />
     <Window x={night > 0.5 ? 110 : 760} y={250} w={230} h={220} day={night > 0.5 ? 0 : 1} t={t} />
     <Frame x={400} y={232} />
-    <Door x={night > 0.5 ? 830 : 60} y={510} open={door} />
+    <Door x={night > 0.5 ? 790 : 40} y={290} open={door} />
   </g>
 );
 
@@ -1099,14 +1102,14 @@ const SCENES: [(t: number) => React.ReactNode, (t: number) => Cam][] = [
   [COLD, CAMC], [(t) => S10(t + 0.2, true), CAM11], [Rewind, CAMR],
   [(t) => { T1v = -0.05; return S1(t); }, (t) => { T1v = -0.05; return CAM1(t); }],
   [FAM, CAMF], [S3, CAM3], [S4, CAM4], [S5, CAM5], [S5b, CAM5b], [S6, CAM6], [S7, CAM7], [S8, CAM8],
-  [ASKS, CAMA], [S12, CAM12], [S13, CAM13], [(t) => S14(t, false), CAM14], [(t) => S14(t, true), CAM15],
+  [COLD, CAMC], [(t) => S10(t + 0.2, true), CAM11], [S12, CAM12], [S13, CAM13], [(t) => S14(t, false), CAM14], [(t) => S14(t, true), CAM15],
 ];
 
 // ------------------------------------------------------------------ legenda palavra por palavra
 const Caption: React.FC<{ t: number }> = ({ t }) => {
   const s = sceneOf(t);
   const ln = LINES[s];
-  if (!ln || s === 1) return null; // no ZERADO da abertura a tela já diz tudo
+  if (!ln || s === 1 || s === 13) return null; // no ZERADO da abertura a tela já diz tudo
   const [txt, , st, dur] = ln;
   const t0 = ST[s] + st;
   const words = txt.split(" ");
@@ -1156,7 +1159,7 @@ export const MarcosDia1: React.FC = () => {
   return (
     <AbsoluteFill style={{ background: "#0a0605" }}>
       {LINES.map((ln, i) => ln && (
-        <Sequence key={ln[1]} from={Math.round((ST[i] + ln[2]) * fps)}><Audio src={staticFile(`marcos_dia1/fala10/n${ln[1]}.wav`)} /></Sequence>
+        <Sequence key={i} from={Math.round((ST[i] + ln[2]) * fps)}><Audio src={staticFile(`marcos_dia1/fala10/n${ln[1]}.wav`)} /></Sequence>
       ))}
       <Audio src={staticFile("marcos_dia1/sfx.wav")} volume={0.45} />
       <div style={{ position: "absolute", left: 0, top: SCENE_Y, width: 1080, height: SCENE_H, overflow: "hidden" }}>
