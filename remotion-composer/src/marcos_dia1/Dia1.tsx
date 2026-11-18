@@ -38,7 +38,7 @@ const LINES: [string, number, number, number][] = [
   ["E tem que dizer não.", 13, 0.4, 1.04],
   ["Depois, vê o olhar da Juliana. Preocupação. Tristeza.", 14, 0.4, 3.39],
   ["É ali que Marcos decide: alguma coisa vai mudar.", 15, 0.4, 2.71],
-  ["Fim do primeiro episódio. Segue pra ver a parte dois.", 16, 0.3, 2.79],
+  ["O que Marcos irá fazer? Segue pra ver a parte dois.", 16, 0.3, 2.9],
 ];
 const KEY = ["roberto", "bronca", "marcos", "lucas", "esse", "atrasado", "dia", "lotado", "chefe", "pagamento", "contas", "cem", "reais", "zerado", "não", "juliana", "mudar", "dois", "remédios"];
 
@@ -808,8 +808,8 @@ const BILLS: [string, string, string, number][] = [["ÁGUA", "R$ 120", "💧", 1
 const BILL_POS: V[] = [[250, 300], [540, 225], [830, 300], [250, 520], [830, 520], [830, 740]];
 const FLOOR_N = 1012, SEAT_X = 545, SEAT_Y = 852;
 const marcosChair = (x: number, o: Partial<Ch> = {}): Ch => base({
-  x: SEAT_X, y: SEAT_Y - 12, k: 1, sit: 1, lean: -10,
-  hands: [[-128, -40], [36, -170]], holdR: <PhoneS />,
+  x: SEAT_X, y: SEAT_Y - 12, k: 1, sit: 1, lean: 0,
+  hands: [[-70, -26], [36, -170]], holdR: <PhoneS />,
   face: F({ ly: 0.45, py: 0.9, worry: 0.5, curve: -0.3, open: 1 - blinkAt(x, 2.7, 0.4) }), ...o,
 });
 const HouseNight: React.FC<{ t: number; door: number }> = ({ t, door }) => (
@@ -828,15 +828,19 @@ const HouseNight: React.FC<{ t: number; door: number }> = ({ t, door }) => (
 const NightChair: React.FC = () => <ChairF x={SEAT_X} seat={SEAT_Y} floor={FLOOR_N} />;
 const NightTable: React.FC<{ papers?: number }> = ({ papers = 0 }) => (
   <g>
-    <Table x={260} y={800} w={330} floor={FLOOR_N} />
-    {Array.from({ length: papers }).map((_, i) => <rect key={i} x={150 + ((i * 41) % 180)} y={792 + (i % 3) * 5} width={60} height={12} fill="#fdfbf4" stroke={INK} strokeWidth={2.5} transform={`rotate(${((i * 23) % 30) - 15} ${180 + ((i * 41) % 180)} 798)`} />)}
+    <Table x={SEAT_X} y={812} w={440} floor={FLOOR_N} />
+    {/* toalha de mesa caindo na frente (esconde as pernas dele, que está sentado atrás) */}
+    <path d={`M${SEAT_X - 232},${852} L${SEAT_X + 232},${852} L${SEAT_X + 240},${972} Q${SEAT_X + 200},${990} ${SEAT_X + 160},${972} Q${SEAT_X + 120},${990} ${SEAT_X + 80},${972} Q${SEAT_X + 40},${990} ${SEAT_X},${972} Q${SEAT_X - 40},${990} ${SEAT_X - 80},${972} Q${SEAT_X - 120},${990} ${SEAT_X - 160},${972} Q${SEAT_X - 200},${990} ${SEAT_X - 240},${972} Z`} fill="#e8dcc4" stroke={INK} strokeWidth={5} strokeLinejoin="round" />
+    {[-160, -80, 0, 80, 160].map((dx) => <line key={dx} x1={SEAT_X + dx} y1={856} x2={SEAT_X + dx} y2={970} stroke="#c8b898" strokeWidth={4} />)}
+    <rect x={SEAT_X - 232} y={872} width={464} height={12} fill="#b8483c" opacity={0.8} />
+    {Array.from({ length: papers }).map((_, i) => <rect key={i} x={SEAT_X - 190 + ((i * 53) % 120)} y={816 + (i % 3) * 6} width={60} height={12} fill="#fdfbf4" stroke={INK} strokeWidth={2.5} transform={`rotate(${((i * 23) % 30) - 15} ${SEAT_X - 160 + ((i * 53) % 120)} 822)`} />)}
   </g>
 );
 const S7 = (t: number) => {
   const m = follow((x) => {
     const c = marcosChair(x);
     const tap = BILLS.some(([, , , s0]) => x > s0 - 0.15 && x < s0 + 0.05);
-    c.hands = [[-128, -40], [36, tap ? -190 : -170]];
+    c.hands = [[-70, -26], [36, tap ? -190 : -170]];
     const n = BILLS.filter(([, , , s0]) => x > s0).length;
     c.face.worry = 0.4 + n * 0.08; c.face.curve = -0.2 - n * 0.07; c.sy = n * 3;
     return c;
@@ -857,10 +861,10 @@ const S7 = (t: number) => {
     </g>
   );
 };
-const CAM7 = (t: number): Cam => ({ z: kf(t, [[0, 1.12], [6.6, 1.05]]), fx: 470, fy: 640 });
+const CAM7 = (t: number): Cam => ({ z: kf(t, [[0, 1.1], [6.6, 1.04]]), fx: 545, fy: 620 });
 
 // Lucas entra pela porta da direita e fica ao lado do pai
-const LUCAS_X = 760, LUCAS_Y = FLOOR_N - 296 * 0.68;
+const LUCAS_X = 830, LUCAS_Y = FLOOR_N - 296 * 0.68;
 const lucasAt = (x: number, mode: "run" | "ask" | "sad"): Ch => {
   const bl = blinkAt(x, 2.3, 0.6);
   if (mode === "run") {
@@ -881,7 +885,7 @@ const marcosLooks = (x: number, look: number): Ch => {
   const c = marcosChair(x);
   c.face.lx = look * 0.7; c.face.px = look; c.face.ly = lerp(0.45, 0, look); c.face.py = lerp(0.9, 0, look);
   c.face.curve = lerp(-0.3, 0.25, look); c.face.worry = lerp(0.6, 0.2, look);
-  c.hands = [[-128, -40], mixV([36, -170], [60, 4], look)]; c.holdR = look > 0.5 ? undefined : <PhoneS />;
+  c.hands = [[-70, -26], mixV([36, -170], [70, -26], look)]; c.holdR = look > 0.5 ? undefined : <PhoneS />;
   return c;
 };
 const S8 = (t: number) => {
@@ -890,13 +894,13 @@ const S8 = (t: number) => {
   const l = follow((x) => lucasAt(x, "run"), t);
   return (<g><HouseNight t={t} door={door} /><NightChair /><Person c={m} look={MARCOS} t={t} /><NightTable papers={6} /><Person c={l} look={LUCAS} t={t} />{lightRoom(0.5)}</g>);
 };
-const CAM8 = (t: number): Cam => ({ z: 1.12, fx: kf(t, [[0, 680], [1.8, 640]]), fy: 660 });
+const CAM8 = (t: number): Cam => ({ z: 1.1, fx: kf(t, [[0, 700], [1.8, 680]]), fy: 660 });
 const S9 = (t: number) => {
   const m = follow((x) => { const c = marcosLooks(x, 1); c.face = F({ lx: 0.7, px: 1, curve: lerp(0.3, 0.05, er(x, 2.2, 3.2)), worry: lerp(0.2, 0.55, er(x, 2.2, 3.2)), open: 1 - blinkAt(x, 2.4, 0.9), raise: 0.2 }); return c; }, t);
   const l = follow((x) => lucasAt(x, "ask"), t);
   return (<g><HouseNight t={t} door={1} /><NightChair /><Person c={m} look={MARCOS} t={t} /><NightTable papers={6} /><Person c={l} look={LUCAS} t={t} />{lightRoom(0.5)}</g>);
 };
-const CAM9 = (t: number): Cam => ({ z: kf(t, [[0, 1.25], [4.6, 1.4]]), fx: 655, fy: kf(t, [[0, 680], [4.6, 660]]) });
+const CAM9 = (t: number): Cam => ({ z: kf(t, [[0, 1.2], [4.6, 1.32]]), fx: 690, fy: kf(t, [[0, 680], [4.6, 660]]) });
 
 // --- S10/S11: o extrato no celular
 const S10 = (t: number, zerado: boolean) => {
@@ -947,7 +951,7 @@ const S12 = (t: number) => {
   const l = follow((x) => lucasAt(x, "sad"), t);
   return (<g><HouseNight t={t} door={1} /><NightChair /><Person c={m} look={MARCOS} t={t} /><NightTable papers={6} /><Person c={l} look={LUCAS} t={t} />{lightRoom(0.4)}</g>);
 };
-const CAM12 = (t: number): Cam => ({ z: kf(t, [[0, 1.3], [2.6, 1.42]]), fx: 655, fy: 670 });
+const CAM12 = (t: number): Cam => ({ z: kf(t, [[0, 1.25], [2.6, 1.36]]), fx: 690, fy: 670 });
 
 // --- S13 o olhar da Juliana (na porta da direita, chegando do trabalho)
 const JUL_Y = FLOOR_N - 296 * 0.95;
@@ -969,8 +973,8 @@ const S14 = (t: number, end: boolean) => {
     const c = marcosChair(x); c.holdR = undefined;
     c.sit = 1 - st;
     c.y = lerp(SEAT_Y - 12, FLOOR_N - 296, st);
-    c.lean = lerp(-10, 0, st);
-    c.hands = st < 0.05 ? [[-128, -40], [60, 4]] : [mixV([-128, -40], [-92, -20], st), mixV([60, 4], [92, -20], st)];
+    c.lean = 0;
+    c.hands = st < 0.05 ? [[-70, -26], [70, -26]] : [mixV([-70, -26], [-92, -20], st), mixV([70, -26], [92, -20], st)];
     const firm = end ? 1 : er(x, 3.1, 3.6);
     c.tremble = firm > 0.5 && firm < 0.98 ? 0.15 : 0;
     c.face = F({ lx: lerp(0.1, 0, d), ly: lerp(0.35, -0.08, d), py: lerp(0.6, -0.1, d), worry: lerp(0.9, -0.55, d), curve: lerp(-0.5, -0.05, d), open: lerp(0.75, 0.84, d) - blinkAt(x + (end ? 9 : 0), 3.2, 0.7) * 0.7, raise: lerp(0, -0.25, d) });
@@ -1072,7 +1076,7 @@ export const MarcosDia1: React.FC = () => {
       {s < 15 && <Caption t={t} />}
       {s === 15 && (
         <div style={{ position: "absolute", left: 120, right: 120, top: 1270, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, letterSpacing: 2 }}>
-          <div style={{ fontSize: 76, color: WHITE, opacity: endP, transform: `translateY(${(1 - endP) * 16}px)`, WebkitTextStroke: "10px #0a0605", paintOrder: "stroke fill" }}>FIM DO EPISÓDIO 1</div>
+          <div style={{ fontSize: 70, color: WHITE, opacity: endP, transform: `translateY(${(1 - endP) * 16}px)`, WebkitTextStroke: "10px #0a0605", paintOrder: "stroke fill" }}>O QUE MARCOS IRÁ FAZER?</div>
           <div style={{ fontSize: 60, color: GOLD, marginTop: 6, opacity: endP2, transform: `translateY(${(1 - endP2) * 16}px)`, WebkitTextStroke: "9px #0a0605", paintOrder: "stroke fill" }}>SEGUE PRA VER A PARTE 2 →</div>
         </div>
       )}
