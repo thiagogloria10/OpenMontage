@@ -9,8 +9,8 @@ import { AbsoluteFill, Audio, continueRender, delayRender, interpolate, spring, 
 // ==================================================================
 const TXT = {
   hook: ["MESMO TRABALHO.", "30 DIAS PRA ENTREGAR."],
-  titleR: "COM DISCIPLINA",
-  titleL: "SEM DISCIPLINA",
+  titleR: ["FAZ ANTES"],
+  titleL: ["DEIXA PRA", "ÚLTIMA HORA"],
   final: ["O PRAZO ERA O MESMO.", "O PREÇO NÃO."],
 };
 const AUDIO = "prazo_marcos/audio_final.wav";
@@ -472,7 +472,7 @@ const Plant: React.FC<{ t: number }> = ({ t }) => (
 );
 
 // ------------------------------------------------------------------ textos
-const R_LABELS = ["MARCOU DIA E HORA", "1 HORA POR DIA", "UM POUCO TODO DIA", "TERMINOU ANTES", "NOITE TRANQUILA", "ENTREGOU NA HORA", "E DESCANSADO"];
+const R_LABELS = ["MARCOU DIA E HORA", "1 HORA POR DIA", "UM POUCO TODO DIA", "TERMINOU CEDO", "NOITE TRANQUILA", "ENTREGOU NA HORA", "E DESCANSADO"];
 const L_LABELS = ["TEM TEMPO", "SÓ MAIS UM", "COMEÇO AMANHÃ", "AINDA DÁ TEMPO?", "VIROU A NOITE", "NO ÚLTIMO MINUTO", "E ESGOTADO"];
 const DAYS = [30, 24, 15, 7, 1, 0, 0];
 const pctAt = (t: number, right: boolean) =>
@@ -491,15 +491,17 @@ const fmt = (m: number) => {
   return `${String(Math.floor(mm / 60)).padStart(2, "0")}:${String(mm % 60).padStart(2, "0")}`;
 };
 
-const SideLabel: React.FC<{ cx: number; title: string; sub: string; subAt: number; right: boolean; hide: number }> = ({ cx, title, sub, subAt, right, hide }) => {
+const SideLabel: React.FC<{ cx: number; title: string[]; sub: string; subAt: number; right: boolean; hide: number }> = ({ cx, title, sub, subAt, right, hide }) => {
   const { t, fps } = useT();
   const p = spring({ frame: Math.round((t - subAt) * fps), fps, config: { damping: 14, stiffness: 200 } });
   const pct = pctAt(t, right);
   const b = blockOf(t);
   const barCol = pct >= 1 ? GREEN : right ? GOLD : b >= 4 ? RED : "#9a8f8a";
   return (
-    <div style={{ position: "absolute", left: cx - 210, width: 420, top: 372, textAlign: "center", opacity: 1 - hide }}>
-      <div style={{ fontFamily: BARLOW, fontWeight: 700, fontSize: 54, color: right ? WHITE : "#e2d8cf", letterSpacing: 3, lineHeight: 1, textShadow: "0 3px 0 rgba(0,0,0,.6), 0 4px 12px rgba(0,0,0,.8)" }}>{title}</div>
+    <div style={{ position: "absolute", left: cx - 210, width: 420, top: 362, textAlign: "center", opacity: 1 - hide }}>
+      <div style={{ height: 100, display: "flex", flexDirection: "column", justifyContent: "center", fontFamily: BARLOW, fontWeight: 700, fontSize: title.length > 1 ? 50 : 58, color: right ? WHITE : "#e2d8cf", letterSpacing: 3, lineHeight: 1, textShadow: "0 3px 0 rgba(0,0,0,.6), 0 4px 12px rgba(0,0,0,.8)" }}>
+        {title.map((l) => <div key={l}>{l}</div>)}
+      </div>
       <div style={{ fontFamily: BARLOW, fontWeight: 600, fontSize: 42, color: right ? GOLD : "#f0a89c", letterSpacing: 2, marginTop: 4, height: 46, opacity: Math.min(1, p * 1.5), transform: `translateY(${(1 - p) * 10}px)`, textShadow: "0 2px 0 rgba(0,0,0,.6), 0 2px 10px rgba(0,0,0,.9)" }}>{sub}</div>
       <div style={{ margin: "8px auto 0", width: 290, padding: "5px 10px 8px", background: "rgba(14,9,6,.82)", borderRadius: 10, border: "3px solid #1b100a" }}>
         <div style={{ display: "flex", justifyContent: "space-between", fontFamily: BARLOW, fontWeight: 700, fontSize: 26, color: WHITE, letterSpacing: 1 }}>
