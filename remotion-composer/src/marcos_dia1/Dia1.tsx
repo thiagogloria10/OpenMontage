@@ -18,12 +18,11 @@ const MONO = "'JetBrains Mono', 'DejaVu Sans Mono', monospace";
 const SKIN = "#f3efe7", SKIN2 = "#d9d2c5";
 
 // ------------------------------------------------------------------ cenas (duração em s) e falas
-const DUR = [2.9, 4.4, 6.4, 3.4, 3.4, 3.4, 3.0, 3.2, 6.6, 3.0, 4.6, 1.9, 1.8, 2.6, 4.4, 4.6, 3.8];
+const DUR = [4.4, 6.4, 3.4, 3.4, 3.4, 3.0, 3.2, 6.6, 3.0, 4.6, 1.9, 1.8, 2.6, 4.4, 4.6, 3.8];
 const ST: number[] = DUR.reduce<number[]>((a, d, i) => [...a, i === 0 ? 0 : a[i - 1] + DUR[i - 1]], []);
 export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
 // [texto, arquivo, início relativo à cena, duração da fala]
 const LINES: [string, number, number, number][] = [
-  ["Pai, posso ir no passeio da escola?", 0, 0.25, 2.04],
   ["Esse é o Marcos. Ele sempre acorda atrasado.", 1, 0.3, 2.53],
   ["O Lucas, o filho, já foi pra escola. A Juliana, a esposa, pro trabalho.", 2, 0.4, 4.31],
   ["Ônibus lotado. Como todo dia.", 3, 0.4, 1.9],
@@ -41,7 +40,7 @@ const LINES: [string, number, number, number][] = [
   ["É ali que Marcos decide: alguma coisa vai mudar.", 15, 0.4, 2.71],
   ["O que Marcos irá fazer? Segue pra ver a parte dois.", 16, 0.3, 2.9],
 ];
-const KEY = ["passeio", "roberto", "bronca", "marcos", "lucas", "esse", "atrasado", "dia", "lotado", "chefe", "pagamento", "contas", "cem", "reais", "zerado", "não", "juliana", "mudar", "dois", "remédios"];
+const KEY = ["roberto", "bronca", "marcos", "lucas", "esse", "atrasado", "dia", "lotado", "chefe", "pagamento", "contas", "cem", "reais", "zerado", "não", "juliana", "mudar", "dois", "remédios"];
 
 // ------------------------------------------------------------------ utilidades
 type V = [number, number];
@@ -1040,16 +1039,7 @@ const S14 = (t: number, end: boolean) => {
 const CAM14 = (t: number): Cam => ({ z: kf(t, [[0, 1.25], [2.2, 1.35], [3.3, 1.6], [4.6, 1.8]]), fx: SEAT_X, fy: kf(t, [[0, 600], [2.2, 590], [3.3, 470], [4.6, 450]]) });
 const CAM15 = (t: number): Cam => ({ z: 1.8 + t * 0.02, fx: SEAT_X, fy: 450 });
 
-// abertura (v12): o Lucas pedindo, já em ação, antes da história do dia (tudo o resto igual à v9)
-const COLD = (t: number) => {
-  const m = follow((x) => { const c = marcosLooks(x + 2, 1); c.face = F({ lx: 0.7, px: 1, curve: lerp(0.15, -0.1, er(x, 1.6, 2.6)), worry: lerp(0.3, 0.7, er(x, 1.6, 2.6)), open: 1 - blinkAt(x, 2.4, 0.9), raise: 0.2 }); return c; }, t);
-  const l = follow((x) => lucasAt(x + 2.0, "ask"), t);
-  return (<g><HouseNight t={t} door={1} /><NightChair /><Person c={m} look={MARCOS_HOME} t={t} /><NightTable papers={6} /><Person c={l} look={LUCAS} t={t} />{lightRoom(0.5)}</g>);
-};
-const CAMC = (t: number): Cam => ({ z: kf(t, [[0, 1.3], [2.9, 1.42]]), fx: 690, fy: 660 });
-
 const SCENES: [(t: number) => React.ReactNode, (t: number) => Cam][] = [
-  [COLD, CAMC],
   [S1, CAM1], [S2, CAM2], [S3, CAM3], [S4, CAM4], [S5, CAM5], [S5b, CAM5b], [S6, CAM6], [S7, CAM7], [S8, CAM8],
   [S9, CAM9], [(t) => S10(t, false), CAM10], [(t) => S10(t, true), CAM11], [S12, CAM12], [S13, CAM13], [(t) => S14(t, false), CAM14], [(t) => S14(t, true), CAM15],
 ];
@@ -1099,8 +1089,8 @@ export const MarcosDia1: React.FC = () => {
   const [draw, cam] = SCENES[s];
   const c = cam(lt);
   const flash = s > 0 ? Math.max(0, 1 - lt / 0.14) * 0.18 : 0;
-  const endP = s === 16 ? er(lt, 0.3, 0.8) : 0;
-  const endP2 = s === 16 ? er(lt, 1.4, 1.9) : 0;
+  const endP = s === 15 ? er(lt, 0.3, 0.8) : 0;
+  const endP2 = s === 15 ? er(lt, 1.4, 1.9) : 0;
   return (
     <AbsoluteFill style={{ background: "#0a0605" }}>
       {LINES.map(([, n, st], i) => (
@@ -1126,8 +1116,8 @@ export const MarcosDia1: React.FC = () => {
         <div style={{ color: WHITE }}>{HOOK[0]}</div>
         <div style={{ color: GOLD }}>{HOOK[1]}</div>
       </div>
-      {s < 16 && <Caption t={t} />}
-      {s === 16 && (
+      {s < 15 && <Caption t={t} />}
+      {s === 15 && (
         <div style={{ position: "absolute", left: 120, right: 120, top: 1270, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, letterSpacing: 2 }}>
           <div style={{ fontSize: 70, color: WHITE, opacity: endP, transform: `translateY(${(1 - endP) * 16}px)`, WebkitTextStroke: "10px #0a0605", paintOrder: "stroke fill" }}>O QUE MARCOS IRÁ FAZER?</div>
           <div style={{ fontSize: 60, color: GOLD, marginTop: 6, opacity: endP2, transform: `translateY(${(1 - endP2) * 16}px)`, WebkitTextStroke: "9px #0a0605", paintOrder: "stroke fill" }}>SEGUE PRA VER A PARTE 2 →</div>
