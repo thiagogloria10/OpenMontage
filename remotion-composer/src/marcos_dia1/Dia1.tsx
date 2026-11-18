@@ -25,7 +25,7 @@ export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
 type LineT = [string, number, number, number] | null;
 const LINES: LineT[] = [
   ["Pai, posso ir no passeio? É cem reais.", 90, 0.15, 2.41],
-  ["Zerado.", 91, 0.15, 0.59],
+  null, // ZERADO da abertura: só a imagem, sem fala
   null,
   ["Esse é o Marcos. Ele sempre acorda atrasado.", 1, 0.3, 2.53],
   ["O Lucas, o filho, já foi pra escola. A Juliana, a esposa, pro trabalho.", 2, 0.4, 4.31],
