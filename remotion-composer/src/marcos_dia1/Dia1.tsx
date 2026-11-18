@@ -18,29 +18,32 @@ const MONO = "'JetBrains Mono', 'DejaVu Sans Mono', monospace";
 const SKIN = "#f3efe7", SKIN2 = "#d9d2c5";
 
 // ------------------------------------------------------------------ cenas (duração em s) e falas
-const DUR = [4.4, 6.4, 3.4, 3.4, 3.4, 3.0, 3.2, 6.6, 3.0, 4.6, 1.9, 1.8, 2.6, 4.4, 4.6, 3.8];
+const DUR = [2.9, 1.4, 1.3, 3.6, 4.2, 3.4, 3.4, 3.4, 3.0, 3.2, 6.6, 3.0, 2.2, 2.6, 4.4, 4.6, 3.8];
 const ST: number[] = DUR.reduce<number[]>((a, d, i) => [...a, i === 0 ? 0 : a[i - 1] + DUR[i - 1]], []);
 export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
 // [texto, arquivo, início relativo à cena, duração da fala]
-const LINES: [string, number, number, number][] = [
-  ["Esse é o Marcos. Ele sempre acorda atrasado.", 1, 0.3, 2.53],
-  ["O Lucas, o filho, já foi pra escola. A Juliana, a esposa, pro trabalho.", 2, 0.4, 4.31],
-  ["Ônibus lotado. Como todo dia.", 3, 0.4, 1.9],
-  ["No escritório, o emprego que ele não aguenta mais.", 4, 0.3, 2.72],
-  ["E esse... é o seu Roberto. O chefe dele.", 5, 0.5, 2.14],
-  ["E o Marcos leva mais uma bronca.", 6, 0.3, 1.59],
-  ["Mas hoje é dia de pagamento.", 7, 0.4, 1.56],
-  ["Em casa, as contas. Água. Luz. Internet. Aluguel. Mercado. Remédios.", 8, 0.3, 5.24],
-  ["Aí o Lucas chega da escola, animado:", 9, 0.3, 2.33],
-  ["Pai, a escola vai fazer um passeio! Custa cem reais. Posso ir?", 10, 0.25, 3.69],
-  ["Marcos olha o extrato...", 11, 0.3, 1.17],
-  ["Zerado.", 12, 0.25, 0.57],
-  ["E tem que dizer não.", 13, 0.4, 1.04],
-  ["Depois, vê o olhar da Juliana. Preocupação. Tristeza.", 14, 0.4, 3.39],
-  ["É ali que Marcos decide: alguma coisa vai mudar.", 15, 0.4, 2.71],
-  ["O que Marcos irá fazer? Segue pra ver a parte dois.", 16, 0.3, 2.9],
+// uma fala por cena (null = cena sem narração). [texto, arquivo, início na cena, duração]
+type LineT = [string, number, number, number] | null;
+const LINES: LineT[] = [
+  ["Pai, posso ir no passeio? É cem reais.", 1, 0.15, 2.54],
+  ["Zerado.", 2, 0.2, 0.59],
+  null,
+  ["Naquela manhã, o Marcos acordou atrasado. De novo.", 3, 0.2, 2.9],
+  ["O Lucas já tinha ido pra escola, e a Juliana, pro trabalho.", 4, 0.25, 3.27],
+  ["Ônibus lotado. Como todo dia.", 5, 0.4, 1.95],
+  ["No escritório, o emprego que ele não aguenta mais.", 6, 0.3, 2.62],
+  ["E esse... é o seu Roberto. O chefe dele.", 7, 0.5, 2.07],
+  ["E o Marcos leva mais uma bronca.", 8, 0.3, 1.68],
+  ["Mas hoje é dia de pagamento.", 9, 0.4, 1.63],
+  ["Em casa, as contas. Água. Luz. Internet. Aluguel. Mercado. Remédios.", 10, 0.3, 5.19],
+  ["Aí o Lucas chega da escola, animado.", 11, 0.3, 2.18],
+  null,
+  ["E tem que dizer não.", 12, 0.4, 1.04],
+  ["Depois, vê o olhar da Juliana. Preocupação. Tristeza.", 13, 0.4, 3.36],
+  ["É ali que Marcos decide: alguma coisa vai mudar.", 14, 0.4, 2.66],
+  ["O que Marcos vai fazer? Segue pra ver a parte dois.", 15, 0.3, 2.59],
 ];
-const KEY = ["roberto", "bronca", "marcos", "lucas", "esse", "atrasado", "dia", "lotado", "chefe", "pagamento", "contas", "cem", "reais", "zerado", "não", "juliana", "mudar", "dois", "remédios"];
+const KEY = ["passeio", "manhã", "roberto", "bronca", "marcos", "lucas", "esse", "atrasado", "dia", "lotado", "chefe", "pagamento", "contas", "cem", "reais", "zerado", "não", "juliana", "mudar", "dois", "remédios"];
 
 // ------------------------------------------------------------------ utilidades
 type V = [number, number];
@@ -544,6 +547,7 @@ const base = (o: Partial<Ch>): Ch => ({ x: 540, y: 700, k: 1, lean: 0, sy: 0, hx
 
 // --- S1 quarto: acorda atrasado (cabeça no travesseiro, corpo e pernas debaixo do cobertor)
 const T1 = 1.6;
+let T1v = T1; // v10: acorda logo no começo (T1v pequeno)
 type Pts = V[];
 const mixPts = (a: Pts, b: Pts, k: number): Pts => a.map((p, i) => mixV(p, b[i], k));
 const pathOf = (p: Pts) => `M${pt(p[0])} Q${pt(p[1])} ${pt(p[2])} Q${pt(p[3])} ${pt(p[4])} Q${pt(p[5])} ${pt(p[6])} Q${pt(p[7])} ${pt(p[8])} L${pt(p[9])} L${pt(p[10])} Z`;
@@ -551,6 +555,7 @@ const pathOf = (p: Pts) => `M${pt(p[0])} Q${pt(p[1])} ${pt(p[2])} Q${pt(p[3])} $
 const BL_LIE: Pts = [[412, 712], [470, 684], [560, 690], [650, 684], [730, 700], [820, 712], [880, 704], [930, 668], [952, 740], [952, 828], [412, 828]];
 const BL_SIT: Pts = [[560, 772], [610, 744], [680, 736], [740, 726], [790, 742], [850, 748], [890, 736], [930, 700], [952, 760], [952, 828], [560, 828]];
 const S1 = (t0: number) => {
+  const T1 = T1v;
   const t = t0 - T1;
   const up = er(t, 0.55, 1.05);
   const mk = (x0: number): Ch => {
@@ -595,12 +600,12 @@ const S1 = (t0: number) => {
           <g transform="translate(590,720) rotate(20)"><ellipse cx={0} cy={-13} rx={9} ry={7} fill={SKIN} stroke={INK} strokeWidth={4} transform="rotate(-30)" /><ellipse cx={6} cy={0} rx={21} ry={16} fill={SKIN} stroke={INK} strokeWidth={4.5} /></g>
         </g>
       )}
-      {t0 < 2.1 && <g opacity={1 - ramp(t0, 1.8, 2.1)}><Tag x={340} y={570} txt="MARCOS" p={t0 - 0.35} /></g>}
+      {T1 > 1 ? (t0 < 2.1 && <g opacity={1 - ramp(t0, 1.8, 2.1)}><Tag x={340} y={570} txt="MARCOS" p={t0 - 0.35} /></g>) : (t0 > 1.9 && <g opacity={1 - ramp(t0, 3.3, 3.6)}><Tag x={720} y={300} txt="MARCOS" p={t0 - 1.95} /></g>)}
       {t > 1.25 && t < 2.6 && <text x={520} y={360} fontFamily={BARLOW} fontWeight={700} fontSize={130} fill={RED} stroke={INK} strokeWidth={5} opacity={1 - ramp(t, 2.3, 2.6)}>!</text>}
     </g>
   );
 };
-const CAM1 = (t0: number): Cam => { const t = t0 - T1; return { z: kf(t, [[-T1, 1.25], [1.0, 1.2], [1.5, 1.08]]), fx: kf(t, [[-T1, 480], [1.0, 480], [1.5, 590]]), fy: kf(t, [[-T1, 690], [1.5, 620]]) }; };
+const CAM1 = (t0: number): Cam => { const T1 = T1v; const t = t0 - T1; return { z: kf(t, [[-T1, 1.25], [1.0, 1.2], [1.5, 1.08]]), fx: kf(t, [[-T1, 480], [1.0, 480], [1.5, 590]]), fy: kf(t, [[-T1, 690], [1.5, 620]]) }; };
 
 // --- casa (fundo comum). night: porta à direita, janela à esquerda
 const House: React.FC<{ t: number; door: number; night: number }> = ({ t, door, night }) => (
@@ -1039,15 +1044,70 @@ const S14 = (t: number, end: boolean) => {
 const CAM14 = (t: number): Cam => ({ z: kf(t, [[0, 1.25], [2.2, 1.35], [3.3, 1.6], [4.6, 1.8]]), fx: SEAT_X, fy: kf(t, [[0, 600], [2.2, 590], [3.3, 470], [4.6, 450]]) });
 const CAM15 = (t: number): Cam => ({ z: 1.8 + t * 0.02, fx: SEAT_X, fy: 450 });
 
+// abertura: o pedido do Lucas já em ação (bilhete na mão), Marcos olhando
+const COLD = (t: number) => {
+  const m = follow((x) => { const c = marcosLooks(x + 2, 1); c.face = F({ lx: 0.7, px: 1, curve: lerp(0.15, -0.1, er(x, 1.6, 2.6)), worry: lerp(0.3, 0.7, er(x, 1.6, 2.6)), open: 1 - blinkAt(x, 2.4, 0.9), raise: 0.2 }); return c; }, t);
+  const l = follow((x) => lucasAt(x + 2.0, "ask"), t);
+  return (<g><HouseNight t={t} door={1} /><NightChair /><Person c={m} look={MARCOS_HOME} t={t} /><NightTable papers={6} /><Person c={l} look={LUCAS} t={t} />{lightRoom(0.5)}</g>);
+};
+const CAMC = (t: number): Cam => ({ z: kf(t, [[0, 1.3], [2.9, 1.42]]), fx: 690, fy: 660 });
+// rebobinar: a história passa de trás para frente rápido, com cara de fita VHS
+const REW: [number, number][] = [[11, 2.5], [10, 5.0], [9, 2.0], [8, 1.5], [7, 2.2], [5, 2.0], [4, 2.8]];
+const Rewind = (t: number) => {
+  const k = Math.min(REW.length - 1, Math.floor((t / 1.3) * REW.length));
+  const [si, lt] = REW[k];
+  const [draw, cam] = SCENES[si];
+  const c = cam(lt - (t * 3) % 0.5);
+  const jit = Math.sin(t * 90) * 8;
+  return (
+    <g>
+      <rect x={-400} y={-400} width={1880} height={2400} fill="#000" />
+      <g transform={`translate(${jit},0) translate(540,630) scale(${c.z}) translate(${-c.fx},${-c.fy})`} opacity={0.92}>{draw(lt - (t * 3) % 0.5)}</g>
+      <rect x={-400} y={-400} width={1880} height={2400} fill="#5a78a8" opacity={0.18} style={{ mixBlendMode: "screen" }} />
+      {Array.from({ length: 70 }).map((_, i) => <rect key={i} x={0} y={i * 18} width={1080} height={4} fill="#000" opacity={0.28} />)}
+      {[0, 1, 2].map((i) => { const y = ((t * 1400 + i * 420) % 1300) - 40; return <rect key={i} x={0} y={y} width={1080} height={26} fill="#fff" opacity={0.14} />; })}
+      <g transform="translate(150,190)">
+        <path d="M60,0 L0,34 L60,68 Z M130,0 L70,34 L130,68 Z" fill="#fff" stroke={INK} strokeWidth={4} />
+      </g>
+    </g>
+  );
+};
+const CAMR = (_t: number): Cam => ({ z: 1, fx: 540, fy: 630 });
+// família rápida: foto com LUCAS/JULIANA e corte seco para ele pegando o bilhete
+const FAM = (t: number) => (t < 2.1 ? S2(t * (2.9 / 2.1)) : S2(t + 2.55));
+const CAMF = (t: number): Cam => (t < 2.1 ? CAM2(t * (2.9 / 2.1)) : CAM2(t + 2.55));
+// pedido curto (o público já viu na abertura): Lucas com o bilhete, Marcos olha o celular e o R$ 0,00
+const ASKS = (t: number) => {
+  const m = follow((x) => { const c = marcosChair(x); c.face = F({ lx: lerp(0.7, 0.1, er(x, 0.5, 0.8)), px: lerp(1, 0.2, er(x, 0.5, 0.8)), ly: er(x, 0.5, 0.8) * 0.45, py: er(x, 0.5, 0.8) * 0.9, worry: er(x, 0.9, 1.4) * 0.9, curve: lerp(0.1, -0.5, er(x, 0.9, 1.4)), open: 1 - blinkAt(x, 2.4, 0.3), eyeS: lerp(1, 1.2, er(x, 0.9, 1.1)) }); return c; }, t);
+  const l = follow((x) => lucasAt(x + 1.8, "ask"), t);
+  const pop = backPop(t - 0.85);
+  return (
+    <g>
+      <HouseNight t={t} door={1} /><NightChair /><Person c={m} look={MARCOS_HOME} t={t} /><NightTable papers={6} /><Person c={l} look={LUCAS} t={t} />{lightRoom(0.5)}
+      {pop > 0 && (
+        <g transform={`translate(${SEAT_X - 10},${430}) scale(${pop})`}>
+          <rect x={-120} y={-44} width={240} height={88} rx={16} fill="#fdfbf4" stroke={INK} strokeWidth={5} />
+          <text x={0} y={18} textAnchor="middle" fontFamily={MONO} fontWeight={800} fontSize={50} fill={RED}>R$ 0,00</text>
+        </g>
+      )}
+    </g>
+  );
+};
+const CAMA = (t: number): Cam => ({ z: kf(t, [[0, 1.2], [2.2, 1.3]]), fx: 660, fy: 660 });
+
 const SCENES: [(t: number) => React.ReactNode, (t: number) => Cam][] = [
-  [S1, CAM1], [S2, CAM2], [S3, CAM3], [S4, CAM4], [S5, CAM5], [S5b, CAM5b], [S6, CAM6], [S7, CAM7], [S8, CAM8],
-  [S9, CAM9], [(t) => S10(t, false), CAM10], [(t) => S10(t, true), CAM11], [S12, CAM12], [S13, CAM13], [(t) => S14(t, false), CAM14], [(t) => S14(t, true), CAM15],
+  [COLD, CAMC], [(t) => S10(t + 0.2, true), CAM11], [Rewind, CAMR],
+  [(t) => { T1v = -0.05; return S1(t); }, (t) => { T1v = -0.05; return CAM1(t); }],
+  [FAM, CAMF], [S3, CAM3], [S4, CAM4], [S5, CAM5], [S5b, CAM5b], [S6, CAM6], [S7, CAM7], [S8, CAM8],
+  [ASKS, CAMA], [S12, CAM12], [S13, CAM13], [(t) => S14(t, false), CAM14], [(t) => S14(t, true), CAM15],
 ];
 
 // ------------------------------------------------------------------ legenda palavra por palavra
 const Caption: React.FC<{ t: number }> = ({ t }) => {
   const s = sceneOf(t);
-  const [txt, , st, dur] = LINES[s];
+  const ln = LINES[s];
+  if (!ln || s === 1) return null; // no ZERADO da abertura a tela já diz tudo
+  const [txt, , st, dur] = ln;
   const t0 = ST[s] + st;
   const words = txt.split(" ");
   const total = txt.replace(/ /g, "").length;
@@ -1089,12 +1149,14 @@ export const MarcosDia1: React.FC = () => {
   const [draw, cam] = SCENES[s];
   const c = cam(lt);
   const flash = s > 0 ? Math.max(0, 1 - lt / 0.14) * 0.18 : 0;
-  const endP = s === 15 ? er(lt, 0.3, 0.8) : 0;
-  const endP2 = s === 15 ? er(lt, 1.4, 1.9) : 0;
+  const LAST = SCENES.length - 1;
+  const endP = s === LAST ? er(lt, 0.3, 0.8) : 0;
+  const endP2 = s === LAST ? er(lt, 1.4, 1.9) : 0;
+  const morning = s === 3 ? er(lt, 0.05, 0.3) * (1 - er(lt, 1.7, 2.0)) : 0;
   return (
     <AbsoluteFill style={{ background: "#0a0605" }}>
-      {LINES.map(([, n, st], i) => (
-        <Sequence key={n} from={Math.round((ST[i] + st) * fps)}><Audio src={staticFile(`marcos_dia1/fala/n${n}.wav`)} /></Sequence>
+      {LINES.map((ln, i) => ln && (
+        <Sequence key={ln[1]} from={Math.round((ST[i] + ln[2]) * fps)}><Audio src={staticFile(`marcos_dia1/fala10/n${ln[1]}.wav`)} /></Sequence>
       ))}
       <Audio src={staticFile("marcos_dia1/sfx.wav")} volume={0.45} />
       <div style={{ position: "absolute", left: 0, top: SCENE_Y, width: 1080, height: SCENE_H, overflow: "hidden" }}>
@@ -1116,10 +1178,16 @@ export const MarcosDia1: React.FC = () => {
         <div style={{ color: WHITE }}>{HOOK[0]}</div>
         <div style={{ color: GOLD }}>{HOOK[1]}</div>
       </div>
-      {s < 15 && <Caption t={t} />}
-      {s === 15 && (
+      {morning > 0 && (
+        <div style={{ position: "absolute", left: 120, right: 120, top: 470, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, letterSpacing: 2, opacity: morning, transform: `translateY(${(1 - morning) * 12}px)` }}>
+          <div style={{ fontSize: 84, color: GOLD, WebkitTextStroke: "10px #0a0605", paintOrder: "stroke fill" }}>07:48.</div>
+          <div style={{ fontSize: 70, color: WHITE, WebkitTextStroke: "10px #0a0605", paintOrder: "stroke fill" }}>NAQUELA MANHÃ…</div>
+        </div>
+      )}
+      {s < LAST && <Caption t={t} />}
+      {s === LAST && (
         <div style={{ position: "absolute", left: 120, right: 120, top: 1270, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, letterSpacing: 2 }}>
-          <div style={{ fontSize: 70, color: WHITE, opacity: endP, transform: `translateY(${(1 - endP) * 16}px)`, WebkitTextStroke: "10px #0a0605", paintOrder: "stroke fill" }}>O QUE MARCOS IRÁ FAZER?</div>
+          <div style={{ fontSize: 70, color: WHITE, opacity: endP, transform: `translateY(${(1 - endP) * 16}px)`, WebkitTextStroke: "10px #0a0605", paintOrder: "stroke fill" }}>O QUE MARCOS VAI FAZER?</div>
           <div style={{ fontSize: 60, color: GOLD, marginTop: 6, opacity: endP2, transform: `translateY(${(1 - endP2) * 16}px)`, WebkitTextStroke: "9px #0a0605", paintOrder: "stroke fill" }}>SEGUE PRA VER A PARTE 2 →</div>
         </div>
       )}
