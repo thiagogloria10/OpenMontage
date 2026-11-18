@@ -583,7 +583,8 @@ const rightAt = (t: number, fin: boolean): { c: Ch; lamp: boolean; dark: number;
     const w = t < 1.0;
     // escreve o plano no papel; depois olha o calendário e sorri
     const wr = 1 - er(t, 1.5, 1.9);
-    c.hands = [[RX - 40, DESK_TOP + 20], mixV([RX + 50, DESK_TOP + 16], [RX + 6 + Math.sin(t * 9) * 16, DESK_TOP + 10 + Math.sin(t * 18) * 4], wr)];
+    const lineK = (t * 1.6) % 1, row = Math.min(2, Math.floor(t / 0.55));
+    c.hands = [[RX - 46, DESK_TOP + 18], mixV([RX + 60, DESK_TOP + 18], [RX + 22 + lineK * 46 + Math.sin(t * 30) * 3, DESK_TOP - 4 + row * 9], wr)];
     c.holdR = wr > 0.3 ? <rect x={-3} y={-30} width={7} height={32} rx={2} fill="#e04a3c" stroke={INK} strokeWidth={2.5} transform="rotate(25)" /> : undefined;
     c.face = baseFace({ lx: kf(t, [[0, 0.1], [1.1, 0.1], [1.5, -0.85]]), ly: kf(t, [[0, 0.55], [1.0, 0.55], [1.4, -0.1]]), py: kf(t, [[0, 0.8], [1.0, 0.8], [1.4, -0.4]]), px: kf(t, [[1.0, 0], [1.4, -0.9]]), curve: kf(t, [[1.4, 0.3], [1.9, 0.75]]), open: 1 - bl });
     c.tilt = kf(t, [[1.0, 0], [1.5, -6]]);
@@ -812,7 +813,19 @@ const Scene: React.FC = () => {
                               {/* mesa da direita */}
           <DeskLamp x={DESK.R[1] - 50} dir={-1} on={R.lamp} />
           {b >= 1 && b !== 6 && <g transform={`translate(${DESK.R[1] - 150},${DESK_TOP + 12})`}><Mug steam={b >= 5 ? 1 : 0} t={t} /></g>}
-          {b === 0 && <rect x={RX - 60} y={DESK_TOP + 6} width={96} height={26} fill="#f6f2e8" stroke={INK} strokeWidth={3} transform={`rotate(-4 ${RX} ${DESK_TOP + 18})`} />}
+          {/* começo: planeja num caderno aberto (o notebook ainda não está na mesa) */}
+          {b === 0 && (
+            <g transform={`translate(${RX + 6},${DESK_TOP + 14})`}>
+              <path d="M-96,10 L-84,-26 L0,-30 L0,12 Z" fill="#f6f2e8" stroke={INK} strokeWidth={4} strokeLinejoin="round" />
+              <path d="M96,10 L84,-26 L0,-30 L0,12 Z" fill="#f6f2e8" stroke={INK} strokeWidth={4} strokeLinejoin="round" />
+              {[-20, -12, -4, 4].map((y, i) => <g key={y}><line x1={-80 + i * 2} y1={y} x2={-10} y2={y - 1} stroke="#b9c4d8" strokeWidth={2} /><line x1={10} y1={y - 1} x2={80 - i * 2} y2={y} stroke="#b9c4d8" strokeWidth={2} /></g>)}
+              {/* o que ele vai escrevendo (aparece aos poucos) */}
+              <path d={`M12,-20 l${Math.min(1, t / 1.4) * 56},0`} stroke="#3a4a86" strokeWidth={3} strokeLinecap="round" />
+              <path d={`M12,-11 l${Math.max(0, Math.min(1, (t - 0.5) / 0.9)) * 48},0`} stroke="#3a4a86" strokeWidth={3} strokeLinecap="round" />
+              <path d={`M12,-2 l${Math.max(0, Math.min(1, (t - 1.0) / 0.6)) * 30},0`} stroke="#3a4a86" strokeWidth={3} strokeLinecap="round" />
+              <path d="M-98,12 L98,12 L94,18 L-94,18 Z" fill="#2f4f80" stroke={INK} strokeWidth={3} strokeLinejoin="round" />
+            </g>
+          )}
                               {/* braços por cima da mesa */}
           {/* livro apoiado na mesa, segurado pelas bordas (mãos nas pontas) */}
           {R.book > 0 && (
@@ -827,7 +840,7 @@ const Scene: React.FC = () => {
           <Person c={Lf.c} look={LOOK_L} t={t} layer="arms" />
           <Person c={R.c} look={LOOK_R} t={t} layer="arms" />
           <LaptopBack cx={LX} lid={Lf.lid} gold={false} shake={b === 4 || (b === 5 && t < 16.9) ? Math.sin(t * 50) * 1.2 : 0} />
-          <LaptopBack cx={RX} lid={R.lid} gold shake={0} />
+          {b !== 0 && <LaptopBack cx={RX} lid={R.lid} gold shake={0} />}
           {/* luz de cada lado */}
           <rect x={0} y={WALL_Y} width={600} height={1320} fill="url(#shadeL)" opacity={Lf.dark} />
           <rect x={480} y={WALL_Y} width={600} height={1320} fill="url(#shadeR)" opacity={R.dark} />
