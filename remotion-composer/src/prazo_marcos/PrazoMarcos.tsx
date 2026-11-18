@@ -10,7 +10,7 @@ import { AbsoluteFill, Audio, continueRender, delayRender, interpolate, spring, 
 const TXT = {
   hook: ["MESMO TRABALHO.", "30 DIAS PRA ENTREGAR."],
   titleR: ["FAZ ANTES"],
-  titleL: ["DEIXA PRA", "ÚLTIMA HORA"],
+  titleL: ["DEIXA PRA DEPOIS"],
   final: ["O PRAZO ERA O MESMO.", "O PREÇO NÃO."],
 };
 const AUDIO = "prazo_marcos/audio_final.wav";
@@ -498,8 +498,8 @@ const SideLabel: React.FC<{ cx: number; title: string[]; sub: string; subAt: num
   const b = blockOf(t);
   const barCol = pct >= 1 ? GREEN : right ? GOLD : b >= 4 ? RED : "#9a8f8a";
   return (
-    <div style={{ position: "absolute", left: cx - 210, width: 420, top: 362, textAlign: "center", opacity: 1 - hide }}>
-      <div style={{ height: 100, display: "flex", flexDirection: "column", justifyContent: "center", fontFamily: BARLOW, fontWeight: 700, fontSize: title.length > 1 ? 50 : 58, color: right ? WHITE : "#e2d8cf", letterSpacing: 3, lineHeight: 1, textShadow: "0 3px 0 rgba(0,0,0,.6), 0 4px 12px rgba(0,0,0,.8)" }}>
+    <div style={{ position: "absolute", left: cx - 210, width: 420, top: 372, textAlign: "center", opacity: 1 - hide }}>
+      <div style={{ height: 62, display: "flex", flexDirection: "column", justifyContent: "center", fontFamily: BARLOW, fontWeight: 700, fontSize: 51, whiteSpace: "nowrap", color: right ? WHITE : "#e2d8cf", letterSpacing: 1.5, lineHeight: 1, textShadow: "0 3px 0 rgba(0,0,0,.6), 0 4px 12px rgba(0,0,0,.8)" }}>
         {title.map((l) => <div key={l}>{l}</div>)}
       </div>
       <div style={{ fontFamily: BARLOW, fontWeight: 600, fontSize: 42, color: right ? GOLD : "#f0a89c", letterSpacing: 2, marginTop: 4, height: 46, opacity: Math.min(1, p * 1.5), transform: `translateY(${(1 - p) * 10}px)`, textShadow: "0 2px 0 rgba(0,0,0,.6), 0 2px 10px rgba(0,0,0,.9)" }}>{sub}</div>
