@@ -311,12 +311,13 @@ const ScreenFace: React.FC<{ kind: Screen; pct: number; t: number }> = ({ kind, 
 };
 // notebook de frente para a pessoa: vemos a tampa por trás; as mãos ficam no teclado atrás dela
 const LaptopBack: React.FC<{ cx: number; lid: number; gold: boolean; shake: number }> = ({ cx, lid, gold, shake }) => (
-  <g transform={`translate(${cx},${DESK_TOP + 16 + shake})`}>
-    <rect x={-108} y={-6} width={216} height={14} rx={5} fill="#4a4d5c" stroke={INK} strokeWidth={4} />
+  <g transform={`translate(${cx},${DESK_TOP + 32 + shake})`}>
+    <ellipse cx={0} cy={9} rx={122} ry={9} fill="#000" opacity={0.35} />
+    <rect x={-110} y={-8} width={220} height={16} rx={5} fill="#4a4d5c" stroke={INK} strokeWidth={4} />
     <g transform={`scale(1,${Math.max(0.06, lid)})`}>
-      <rect x={-98} y={-124} width={196} height={122} rx={12} fill="#3d404e" stroke={INK} strokeWidth={5} />
-      <rect x={-86} y={-112} width={172} height={98} rx={8} fill="#454959" />
-      <circle cx={0} cy={-63} r={13} fill={gold ? GOLD : "#6b6e7c"} stroke={INK} strokeWidth={3} />
+      <rect x={-98} y={-128} width={196} height={124} rx={12} fill="#3d404e" stroke={INK} strokeWidth={5} />
+      <rect x={-86} y={-116} width={172} height={98} rx={8} fill="#454959" />
+      <circle cx={0} cy={-67} r={13} fill={gold ? GOLD : "#6b6e7c"} stroke={INK} strokeWidth={3} />
     </g>
   </g>
 );
@@ -566,8 +567,8 @@ const blinkAt = (t: number, period: number, off: number) => {
 };
 // mãos no teclado do notebook (kx = centro do notebook)
 const typing = (kx: number, t: number, amp: number, sp: number): [V, V] => [
-  [kx - 36 + Math.sin(t * sp * 0.37) * 8 * amp, DESK_TOP + 8 - (0.5 - 0.5 * Math.cos(t * sp)) * 12 * amp],
-  [kx + 36 + Math.sin(t * sp * 0.31 + 2) * 8 * amp, DESK_TOP + 8 - (0.5 - 0.5 * Math.cos(t * sp + 2.4)) * 12 * amp],
+  [kx - 36 + Math.sin(t * sp * 0.37) * 8 * amp, DESK_TOP + 2 - (0.5 - 0.5 * Math.cos(t * sp)) * 12 * amp],
+  [kx + 36 + Math.sin(t * sp * 0.31 + 2) * 8 * amp, DESK_TOP + 2 - (0.5 - 0.5 * Math.cos(t * sp + 2.4)) * 12 * amp],
 ];
 const restHands = (cx: number): [V, V] => [[cx - 60, DESK_TOP + 18], [cx + 60, DESK_TOP + 18]];
 
