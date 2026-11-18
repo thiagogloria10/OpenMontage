@@ -18,28 +18,28 @@ const MONO = "'JetBrains Mono', 'DejaVu Sans Mono', monospace";
 const SKIN = "#f3efe7", SKIN2 = "#d9d2c5";
 
 // ------------------------------------------------------------------ cenas (duração em s) e falas
-const DUR = [3.6, 4.4, 2.8, 3.6, 3.2, 3.4, 6.4, 2.8, 4.6, 2.0, 1.8, 2.8, 4.6, 4.0, 3.8];
+const DUR = [4.4, 6.4, 3.0, 3.4, 3.6, 3.2, 6.4, 2.9, 4.6, 1.9, 1.8, 2.6, 4.4, 4.0, 3.8];
 const ST: number[] = DUR.reduce<number[]>((a, d, i) => [...a, i === 0 ? 0 : a[i - 1] + DUR[i - 1]], []);
 export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
 // [texto, arquivo, início relativo à cena, duração da fala]
 const LINES: [string, number, number, number][] = [
-  ["Marcos acordou atrasado.", 1, 0.45, 1.38],
-  ["O filho já tinha ido pra escola. A esposa, pro trabalho.", 2, 0.5, 3.04],
-  ["Ônibus lotado.", 3, 0.4, 0.96],
-  ["Escritório. O emprego que ele não aguentava mais.", 4, 0.3, 2.77],
-  ["E a bronca do chefe... de novo.", 5, 0.5, 1.38],
-  ["Pelo menos, hoje era dia de pagamento.", 6, 0.4, 2.11],
-  ["Em casa, as contas. Água. Luz. Internet. Aluguel. Mercado. Remédios.", 7, 0.3, 5.22],
-  ["Aí o Lucas chegou da escola, animado:", 8, 0.3, 2.28],
-  ["Pai, a escola vai fazer um passeio! Custa cem reais. Posso ir?", 9, 0.25, 3.77],
-  ["Marcos olhou o extrato...", 10, 0.3, 1.18],
-  ["Zerado.", 11, 0.25, 0.53],
-  ["E teve que dizer não.", 12, 0.4, 1.11],
-  ["Depois, viu o olhar da Juliana. Preocupação. Tristeza.", 13, 0.4, 3.53],
-  ["Foi ali que Marcos decidiu: alguma coisa ia mudar.", 14, 0.4, 2.79],
+  ["Esse é o Marcos. Ele sempre acorda atrasado.", 1, 0.3, 2.5],
+  ["O Lucas, o filho, já foi pra escola. A Juliana, a esposa, pro trabalho.", 2, 0.4, 4.37],
+  ["Ônibus lotado. Como todo dia.", 3, 0.4, 1.93],
+  ["No escritório, o emprego que ele não aguenta mais.", 4, 0.3, 2.68],
+  ["E esse... é o chefe dele.", 5, 0.4, 1.21],
+  ["Mas hoje é dia de pagamento.", 6, 0.4, 1.64],
+  ["Em casa, as contas. Água. Luz. Internet. Aluguel. Mercado. Remédios.", 7, 0.3, 5.13],
+  ["Aí o Lucas chega da escola, animado:", 8, 0.3, 2.4],
+  ["Pai, a escola vai fazer um passeio! Custa cem reais. Posso ir?", 9, 0.25, 3.83],
+  ["Marcos olha o extrato...", 10, 0.3, 1.09],
+  ["Zerado.", 11, 0.25, 0.55],
+  ["E tem que dizer não.", 12, 0.4, 1.03],
+  ["Depois, vê o olhar da Juliana. Preocupação. Tristeza.", 13, 0.4, 3.41],
+  ["É ali que Marcos decide: alguma coisa vai mudar.", 14, 0.4, 2.69],
   ["Fim do primeiro episódio. Segue pra ver a parte dois.", 15, 0.3, 2.8],
 ];
-const KEY = ["atrasado", "lotado", "chefe", "pagamento", "contas", "cem", "reais", "zerado", "não", "juliana", "mudar", "dois", "remédios"];
+const KEY = ["marcos", "lucas", "esse", "atrasado", "dia", "lotado", "chefe", "pagamento", "contas", "cem", "reais", "zerado", "não", "juliana", "mudar", "dois", "remédios"];
 
 // ------------------------------------------------------------------ utilidades
 type V = [number, number];
@@ -359,6 +359,20 @@ const Bill: React.FC<{ label: string; val: string; icon: string; paid: number; p
   </g>
 );
 
+// plaquinha de nome ("ESSE É...")
+const Tag: React.FC<{ x: number; y: number; txt: string; p: number; s?: number; up?: boolean; side?: boolean }> = ({ x, y, txt, p, s = 1, up, side }) => {
+  const k = backPop(p);
+  if (k <= 0) return null;
+  const w = txt.length * 27 + 44;
+  return (
+    <g transform={`translate(${x},${y}) scale(${s * k})`}>
+      <path d={side ? `M${w / 2 - 4},-16 L${w / 2 + 22},0 L${w / 2 - 4},16 Z` : up ? "M-16,-40 L0,-62 L16,-40 Z" : "M-16,30 L0,54 L16,30 Z"} fill={GOLD} stroke={INK} strokeWidth={4} strokeLinejoin="round" />
+      <rect x={-w / 2} y={-36} width={w} height={70} rx={14} fill="#14100c" stroke={GOLD} strokeWidth={5} />
+      <text x={0} y={17} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={50} fill={WHITE} letterSpacing={2}>{txt}</text>
+    </g>
+  );
+};
+
 // ------------------------------------------------------------------ cenas
 type Cam = { z: number; fx: number; fy: number };
 const lightRoom = (warm: number) => (
@@ -373,12 +387,11 @@ const lightRoom = (warm: number) => (
 // mãos seguem o alvo com atraso (somente dentro da mesma cena)
 const follow = (fn: (x: number) => Ch, t: number): Ch => {
   const c = fn(t);
-  const s = sceneOf(t);
   const Wt = [0.32, 0.26, 0.2, 0.13, 0.09];
   let a: number[] = [0, 0, 0, 0], sw = 0;
   Wt.forEach((w, i) => {
     const x = t - i * 0.035;
-    if (sceneOf(x) !== s || x < 0) return;
+    if (x < 0) return;
     const h = fn(x).hands;
     a = [a[0] + h[0][0] * w, a[1] + h[0][1] * w, a[2] + h[1][0] * w, a[3] + h[1][1] * w];
     sw += w;
@@ -411,9 +424,12 @@ const walkHands = (ph: number, amp: number): [V, V] => [[-86 - Math.sin(ph) * 24
 const base = (o: Partial<Ch>): Ch => ({ x: 540, y: 700, k: 1, lean: 0, sy: 0, hx: 0, hy: 0, tilt: 0, face: F(), hands: HANG, feet: STAND_FEET, ...o });
 
 // --- S1 quarto: acorda atrasado
-const S1 = (t: number) => {
+const T1 = 1.6;
+const S1 = (t0: number) => {
+  const t = t0 - T1;
   const up = er(t, 0.55, 1.05);
-  const mk = (x: number): Ch => {
+  const mk = (x0: number): Ch => {
+    const x = x0 - T1;
     const u = er(x, 0.55, 1.05);
     const bl = blinkAt(x, 2.6, 0.5);
     return base({
@@ -424,7 +440,7 @@ const S1 = (t: number) => {
       sweat: ramp(x, 1.3, 3.0), tremble: u > 0.9 && x < 1.5 ? 1 : 0, sy: u * -6,
     });
   };
-  const m = follow(mk, t);
+  const m = follow(mk, t0);
   return (
     <g>
       <Wall a="#2e4058" b="#4a5a70" floor={900} fa="#5a3a24" fb="#2a1a10" />
@@ -433,7 +449,7 @@ const S1 = (t: number) => {
       {/* criado-mudo + despertador */}
       <rect x={110} y={690} width={130} height={210} fill="#7a5236" stroke={INK} strokeWidth={5} />
       <rect x={122} y={720} width={106} height={70} rx={6} fill="#8a6449" stroke={INK} strokeWidth={4} />
-      <AlarmClock x={200} y={650} ring={t < 1.6 ? 1 : 0} t={t} txt="07:48" />
+      <AlarmClock x={200} y={650} ring={t > -0.5 && t < 1.6 ? 1 : 0} t={t0} txt="07:48" />
       {/* cama */}
       <rect x={240} y={520} width={34} height={380} rx={8} fill="#6b4a36" stroke={INK} strokeWidth={5} />
       <rect x={260} y={760} width={680} height={60} fill="#cfcde3" stroke={INK} strokeWidth={5} />
@@ -442,11 +458,12 @@ const S1 = (t: number) => {
       <Person c={m} look={MARCOS} t={t} />
       {/* cobertor */}
       <path d={`M${lerp(380, 430, up)},${lerp(700, 772, up)} Q${600},${lerp(668, 742, up)} 790,${lerp(712, 748, up)} Q812,790 790,830 L${lerp(380, 430, up)},830 Z`} fill="#5a6aa8" stroke={INK} strokeWidth={5} strokeLinejoin="round" />
+      {t0 < 2.1 && <g opacity={1 - ramp(t0, 1.8, 2.1)}><Tag x={330} y={560} txt="MARCOS" p={t0 - 0.35} /></g>}
       {t > 1.25 && t < 2.6 && <text x={470} y={360} fontFamily={BARLOW} fontWeight={700} fontSize={130} fill={RED} stroke={INK} strokeWidth={5} opacity={1 - ramp(t, 2.3, 2.6)}>!</text>}
     </g>
   );
 };
-const CAM1 = (t: number): Cam => ({ z: kf(t, [[0, 1.25], [1.0, 1.25], [1.5, 1.1]]), fx: kf(t, [[0, 440], [1.0, 440], [1.5, 560]]), fy: kf(t, [[0, 700], [1.5, 620]]) });
+const CAM1 = (t0: number): Cam => { const t = t0 - T1; return { z: kf(t, [[-T1, 1.32], [1.0, 1.25], [1.5, 1.1]]), fx: kf(t, [[-T1, 440], [1.0, 440], [1.5, 560]]), fy: kf(t, [[-T1, 690], [1.5, 620]]) }; };
 
 // --- casa (fundo comum)
 const House: React.FC<{ t: number; door: number; night: number }> = ({ t, door, night }) => (
@@ -465,32 +482,34 @@ const House: React.FC<{ t: number; door: number; night: number }> = ({ t, door, 
 // --- S2 casa vazia: anda até a mesa e lê o bilhete
 const S2 = (t: number) => {
   const mk = (x: number): Ch => {
-    const wx = kf(x, [[0, 200], [1.9, 560]]);
-    const v = x < 1.9 ? 1 - er(x, 1.5, 1.9) : 0;
+    const wx = kf(x, [[3.0, -120], [4.7, 560]]);
+    const v = x < 3.0 ? 0 : x < 4.7 ? 1 - er(x, 4.35, 4.7) : 0;
     const ph = (wx - 200) / 34;
-    const grab = er(x, 2.0, 2.4);
+    const grab = er(x, 4.8, 5.15);
     const bl = blinkAt(x, 2.8, 0.2);
     return base({
-      x: wx, y: 630, k: 1, ...(() => { const w = walkPose(wx - 200, v, 1); return { feet: w.feet, sy: w.sy, lean: w.lean, kneeDir: w.kneeDir }; })(),
-      hands: v > 0.05 ? walkPose(wx - 200, v, 1).hands : [HANG[0], mixV(HANG[1], [60, -150], grab)],
+      x: wx, y: 646, k: 1, ...(() => { const w = walkPose(wx + 120, v, 1); return { feet: w.feet, sy: w.sy, lean: w.lean, kneeDir: w.kneeDir }; })(),
+      hands: v > 0.05 ? walkPose(wx + 120, v, 1).hands : [HANG[0], mixV(HANG[1], [60, -150], grab)],
       holdR: grab > 0.5 ? <Note /> : undefined,
-      face: F({ lx: x < 2.0 ? kf(x, [[0, 0.65], [0.9, 0.65], [1.3, -0.4], [1.7, 0.5]]) : 0.2, ly: grab * 0.5, py: grab * 0.9, open: 1 - bl, curve: lerp(0.1, -0.35, er(x, 2.8, 3.4)), worry: er(x, 2.8, 3.4) * 0.6 }),
+      face: F({ lx: x < 4.8 ? 0.6 : 0.2, ly: grab * 0.5, py: grab * 0.9, open: 1 - bl, curve: lerp(0.1, -0.35, er(x, 5.3, 5.8)), worry: er(x, 5.3, 5.8) * 0.6 }),
     });
   };
   const m = follow(mk, t);
-  const sigh = er(t, 3.2, 3.6) * (1 - er(t, 3.9, 4.3));
+  const sigh = er(t, 5.6, 5.95) * (1 - er(t, 6.05, 6.4));
   m.sy += sigh * 10;
   return (
     <g>
       <House t={t} door={0} night={0} />
-      <Table x={620} y={820} w={420} />
-      <g transform="translate(700,826)"><ellipse cx={0} cy={0} rx={46} ry={14} fill="#f3efe7" stroke={INK} strokeWidth={4} /><ellipse cx={0} cy={-4} rx={34} ry={8} fill="#e8b84a" /></g>
-      {t < 2.2 && <g transform="translate(560,830) rotate(-80) scale(0.8)"><Note /></g>}
       <Person c={m} look={MARCOS} t={t} />
+      {/* ele fica atrás da mesa (a mesa cobre as pernas) */}
+      <Table x={620} y={892} w={460} />
+      <g transform="translate(730,898)"><ellipse cx={0} cy={0} rx={46} ry={14} fill="#f3efe7" stroke={INK} strokeWidth={4} /><ellipse cx={0} cy={-4} rx={34} ry={8} fill="#e8b84a" /></g>
+      {t < 5.0 && <g transform="translate(610,906) rotate(-80) scale(0.8)"><Note /></g>}
+      {t < 3.4 && <g opacity={1 - ramp(t, 3.1, 3.4)}><Tag x={507} y={238} txt="JULIANA" p={t - 2.3} s={0.36} /><Tag x={545} y={420} txt="LUCAS" p={t - 0.55} s={0.36} up /></g>}
     </g>
   );
 };
-const CAM2 = (t: number): Cam => ({ z: 1.0, fx: kf(t, [[0, 420], [2.0, 560]]), fy: 640 });
+const CAM2 = (t: number): Cam => ({ z: kf(t, [[0, 2.3], [3.0, 2.3], [3.7, 1.0]]), fx: kf(t, [[0, 507], [3.0, 507], [3.7, 470], [5.0, 560]]), fy: kf(t, [[0, 330], [3.0, 330], [3.7, 640]]) });
 
 // --- S3 ônibus lotado
 const S3 = (t: number) => {
@@ -559,32 +578,33 @@ const S4 = (t: number) => {
 const CAM4 = (t: number): Cam => ({ z: kf(t, [[0, 1.0], [3.6, 1.12]]), fx: 540, fy: 680 });
 const S5 = (t: number) => {
   const shrink = er(t, 0.6, 0.9);
-  const m = follow((x) => { const s = er(x, 0.6, 0.9); const c = marcosDesk(x, 0, { sy: s * 26, hy: s * 10, tilt: s * -6 }); c.hands = [[-90, -120], [90, -120]]; c.face = F({ lx: 0.6, px: 1, open: s > 0.5 ? 0.25 : 0.8, worry: 0.9, curve: -0.6, raise: 0.2 }); c.tremble = s > 0.5 ? 0.4 : 0; return c; }, t);
+  const m = follow((x) => { const s = er(x, 1.5, 1.8); const c = marcosDesk(x, 0, { sy: s * 26, hy: s * 10, tilt: s * -6 }); c.hands = [[-90, -120], [90, -120]]; c.face = F({ lx: er(x, 0.4, 0.8) * 0.6, px: er(x, 0.4, 0.8), open: s > 0.5 ? 0.25 : 0.8, worry: lerp(0.45, 0.9, er(x, 0.6, 1.0)), curve: -0.6, raise: 0.2 }); c.tremble = s > 0.5 ? 0.4 : 0; return c; }, t);
   const ch = follow((x) => {
-    const wx = kf(x, [[0, 1220], [0.6, 860]]);
-    const v = x < 0.6 ? 1 : 0;
+    const wx = kf(x, [[0.2, 1220], [1.0, 860]]);
+    const v = x < 1.0 ? 1 - er(x, 0.85, 1.0) : 0;
     const yell = 0.6 + 0.4 * Math.sin(x * 18);
-    const slam = er(x, 0.75, 0.9) * (1 - er(x, 1.1, 1.4));
+    const slam = er(x, 1.6, 1.75) * (1 - er(x, 1.95, 2.25));
     return base({
       x: wx, y: 620, k: 1.04, feet: walkPose((1220 - wx) / 1.04, v, -1).feet, kneeDir: -1, lean: -12, sy: walkPose((1220 - wx) / 1.04, v, -1).sy,
-      hands: [mixV([-86, -14], [-150, -170 + slam * 120], er(x, 0.6, 0.8)), [92 + Math.sin(x * 9) * 10, -200 + Math.sin(x * 9) * 20]],
-      face: F({ lx: -0.7, px: -1, worry: -0.9, raise: -0.2, mo: x > 0.7 ? yell : 0.2, curve: -0.4, eyeS: 1.1 }),
-      red: er(x, 0.6, 1.0), tremble: x > 0.8 ? 0.6 : 0,
+      hands: x < 1.0 ? walkPose((1220 - wx) / 1.04, v, -1).hands : [mixV([-86, -14], [-150, -170 + slam * 120], er(x, 1.4, 1.6)), mixV([86, -14], [92 + Math.sin(x * 9) * 10, -200 + Math.sin(x * 9) * 20], er(x, 1.3, 1.6))],
+      face: F({ lx: -0.7, px: -1, worry: -0.9, raise: -0.2, mo: x > 1.55 ? yell : 0, curve: -0.4, eyeS: 1.1 }),
+      red: er(x, 1.5, 1.9), tremble: x > 1.7 ? 0.6 : 0,
     });
   }, t);
   return (
     <g>
       <Office t={t} />
       <Person c={m} look={MARCOS} t={t} />
-      <DeskOffice papers={10 + (t > 0.9 ? 6 : 0)} envelope={0} phoneBuzz={-1} t={t} />
+      <DeskOffice papers={10 + (t > 1.75 ? 6 : 0)} envelope={0} phoneBuzz={-1} t={t} />
       <Person c={ch} look={CHEFE} t={t} />
-      {t > 0.75 && [0, 1, 2].map((i) => <path key={i} d={`M${700 - i * 10},${300 + i * 40} l-${40 + i * 10},-${20 - i * 10}`} stroke={RED} strokeWidth={8} strokeLinecap="round" opacity={0.5 + 0.5 * Math.sin(t * 20 + i)} />)}
-      {t > 0.8 && <text x={300} y={290} fontFamily={BARLOW} fontWeight={700} fontSize={90} fill={RED} stroke={INK} strokeWidth={4} transform={`rotate(-8 300 290) scale(${1 + Math.sin(t * 18) * 0.03})`}>!!!</text>}
+      {t < 1.9 && <g opacity={1 - ramp(t, 1.6, 1.9)}><Tag x={ch.x - 230} y={250} txt="O CHEFE" p={t - 0.85} side /></g>}
+      {t > 1.65 && [0, 1, 2].map((i) => <path key={i} d={`M${700 - i * 10},${300 + i * 40} l-${40 + i * 10},-${20 - i * 10}`} stroke={RED} strokeWidth={8} strokeLinecap="round" opacity={0.5 + 0.5 * Math.sin(t * 20 + i)} />)}
+      {t > 1.7 && <text x={300} y={290} fontFamily={BARLOW} fontWeight={700} fontSize={90} fill={RED} stroke={INK} strokeWidth={4} transform={`rotate(-8 300 290) scale(${1 + Math.sin(t * 18) * 0.03})`}>!!!</text>}
       {void shrink}
     </g>
   );
 };
-const CAM5 = (t: number): Cam => ({ z: 1.0 + Math.sin(t * 40) * 0.004 * (t > 0.8 ? 1 : 0), fx: 600, fy: 640 });
+const CAM5 = (t: number): Cam => ({ z: 1.0 + Math.sin(t * 40) * 0.004 * (t > 1.7 ? 1 : 0), fx: 600, fy: 640 });
 const S6 = (t: number) => {
   const buzz = t > 1.1 && t < 1.8 ? 1 : 0;
   const m = follow((x) => {
