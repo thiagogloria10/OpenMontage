@@ -84,6 +84,7 @@ const Tube: React.FC<{ d: string; color: string; w: number }> = ({ d, color, w }
 
 // ------------------------------------------------------------------ cena: medidas
 const LX = 300, RX = 780;
+const KL = LX, KR = RX; // notebook bem na frente de cada um, virado para ele
 const DESK_TOP = 1108, DESK_EDGE = 1152, FLOOR_Y = 1470, WALL_Y = 360;
 const SH_Y = 992; // altura dos ombros sentado
 const DESK = { L: [110, 500] as V, R: [580, 970] as V };
@@ -288,9 +289,35 @@ const ScreenFace: React.FC<{ kind: Screen; pct: number; t: number }> = ({ kind, 
     </g>
   );
 };
+// notebook de frente para a pessoa: vemos a tampa por trás; as mãos ficam no teclado atrás dela
+const LaptopBack: React.FC<{ cx: number; lid: number; gold: boolean; shake: number }> = ({ cx, lid, gold, shake }) => (
+  <g transform={`translate(${cx},${DESK_TOP + 16 + shake})`}>
+    <rect x={-108} y={-6} width={216} height={14} rx={5} fill="#4a4d5c" stroke={INK} strokeWidth={4} />
+    <g transform={`scale(1,${Math.max(0.06, lid)})`}>
+      <rect x={-98} y={-124} width={196} height={122} rx={12} fill="#3d404e" stroke={INK} strokeWidth={5} />
+      <rect x={-86} y={-112} width={172} height={98} rx={8} fill="#454959" />
+      <circle cx={0} cy={-63} r={13} fill={gold ? GOLD : "#6b6e7c"} stroke={INK} strokeWidth={3} />
+    </g>
+  </g>
+);
+const StatusChip: React.FC<{ cx: number; screen: Screen; pct: number; t: number; at: number }> = ({ cx, screen, pct, t, at }) => {
+  if (screen === "off" || screen === "doc") return null;
+  const pop = backPop(t - at);
+  const blink = Math.floor(t * 4) % 2 === 0;
+  const cfg = screen === "done" ? { bg: "#2f9a5a", txt: "✓ PRONTO" } : screen === "sent" ? { bg: "#2f9a5a", txt: "✓ ENVIADO 09:12" } : screen === "sending" ? { bg: "#2a2d3d", txt: "ENVIANDO..." } : { bg: blink ? "#c43d30" : "#7e231d", txt: "ENVIADO 23:59" };
+  return (
+    <g transform={`translate(${cx},${DESK_TOP - 150}) scale(${pop})`}>
+      <rect x={-112} y={-30} width={224} height={60} rx={14} fill={cfg.bg} stroke={INK} strokeWidth={5} />
+      <text x={0} y={screen === "sending" ? 0 : 11} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={screen === "sending" ? 26 : 34} fill="#fff">{cfg.txt}</text>
+      {screen === "sending" && <><rect x={-90} y={8} width={180} height={12} rx={6} fill="#454a63" /><rect x={-90} y={8} width={180 * pct} height={12} rx={6} fill={RED} /></>}
+    </g>
+  );
+};
+const backPop = (x: number) => { if (x <= 0) return 0; if (x >= 0.3) return 1; const k = x / 0.3; return 1 + 2.2 * Math.pow(k - 1, 3) + 1.2 * Math.pow(k - 1, 2); };
 const Laptop: React.FC<{ cx: number; lid: number; screen: Screen; pct: number; t: number }> = ({ cx, lid, screen, pct, t }) => (
   <g transform={`translate(${cx},${DESK_TOP + 18})`}>
-    <path d="M-66,0 L66,0 L56,-14 L-56,-14 Z" fill="#4a4d5c" stroke={INK} strokeWidth={4} strokeLinejoin="round" />
+    <path d="M-70,2 L70,2 L58,-20 L-58,-20 Z" fill="#4a4d5c" stroke={INK} strokeWidth={4} strokeLinejoin="round" />
+    {[-14, -8, -2].map((y, i) => <line key={i} x1={-50 - i * 3} y1={y} x2={50 + i * 3} y2={y} stroke="#2e3038" strokeWidth={2.5} strokeDasharray="7 3" />)}
     <g transform={`scale(1,${Math.max(0.05, lid)})`}>
       <rect x={-58} y={-104} width={116} height={92} rx={7} fill="#2a2a33" stroke={INK} strokeWidth={5} />
       <g transform="translate(-50,-97) scale(1.72,1.75)"><ScreenFace kind={screen} pct={pct} t={t} /></g>
@@ -505,16 +532,17 @@ const blinkAt = (t: number, period: number, off: number) => {
   const q = ((t + off) % period + period) % period;
   return q < 0.14 ? 1 - Math.abs(q - 0.07) / 0.07 : 0;
 };
-const typing = (cx: number, t: number, amp: number, sp: number): [V, V] => [
-  [cx - 52 + Math.sin(t * sp * 0.5) * 6 * amp, DESK_TOP + 14 - Math.abs(Math.sin(t * sp)) * 16 * amp],
-  [cx + 52 + Math.cos(t * sp * 0.45) * 6 * amp, DESK_TOP + 14 - Math.abs(Math.sin(t * sp + 1.3)) * 16 * amp],
+// mãos no teclado do notebook (kx = centro do notebook)
+const typing = (kx: number, t: number, amp: number, sp: number): [V, V] => [
+  [kx - 34 + Math.sin(t * sp * 0.5) * 7 * amp, DESK_TOP + 8 - Math.abs(Math.sin(t * sp)) * 14 * amp],
+  [kx + 34 + Math.cos(t * sp * 0.45) * 7 * amp, DESK_TOP + 8 - Math.abs(Math.sin(t * sp + 1.3)) * 14 * amp],
 ];
 const restHands = (cx: number): [V, V] => [[cx - 60, DESK_TOP + 18], [cx + 60, DESK_TOP + 18]];
 
 const rightAt = (t: number, fin: boolean): { c: Ch; lamp: boolean; dark: number; dawn: number; lid: number; screen: Screen; note: number; fly: number; book: number } => {
   const b = fin ? 6 : blockOf(t);
   const breath = Math.sin(t * 2.1) * 3;
-  const c: Ch = { cx: RX, sy: breath, lean: 0, hx: 0, hy: 0, tilt: 0, face: baseFace({ lx: -0.15, curve: 0.45 }), hands: typing(RX, t, 1, 13), back: false, messy: 0, tired: 0, sweat: 0, tremble: 0, stand: 0, walk: 0 };
+  const c: Ch = { cx: RX, sy: breath, lean: 0, hx: 0, hy: 0, tilt: 0, face: baseFace({ lx: -0.15, curve: 0.45 }), hands: typing(KR, t, 1, 13), back: false, messy: 0, tired: 0, sweat: 0, tremble: 0, stand: 0, walk: 0 };
   let lamp = true, dark = 0.18, dawn = 0, lid = 1, screen: Screen = "doc", note = 0, fly = 0, book = 0;
   const bl = blinkAt(t, 3.1, 0.4);
   c.face.open = 1 - bl;
@@ -530,8 +558,8 @@ const rightAt = (t: number, fin: boolean): { c: Ch; lamp: boolean; dark: number;
     c.hx = kf(t, [[1.0, 0], [1.5, -10]]);
     note = er(t, 1.15, 1.3); fly = er(t, 1.2, 1.75);
   } else if (b === 1 || b === 2) {
-    c.hands = typing(RX, t, 1, 13);
-    c.face = baseFace({ lx: -0.5, ly: 0.35, px: -0.6, py: 0.6, curve: 0.45, open: 1 - bl });
+    c.hands = typing(KR, t, 1, 13);
+    c.face = baseFace({ lx: 0, ly: 0.35, px: 0, py: 0.7, curve: 0.45, open: 1 - bl });
     c.hy = Math.sin(t * 3.3) * 3; c.tilt = -3 + Math.sin(t * 1.4) * 2;
     note = 1; fly = 1;
   } else if (b === 3) {
@@ -540,12 +568,12 @@ const rightAt = (t: number, fin: boolean): { c: Ch; lamp: boolean; dark: number;
     screen = t < 10 ? "doc" : "done";
     lid = 1 - er(t, 11.45, 11.85);
     const up: [V, V] = [[RX - 110, SH_Y - 260], [RX + 110, SH_Y - 260]];
-    const close: [V, V] = [[RX - 60, DESK_TOP + 18], [RX - 170, DESK_TOP - 70 + er(t, 11.45, 11.85) * 70]];
-    const typ = typing(RX, t, t < 10 ? 1 : 0.2, 13);
+    const close: [V, V] = [[RX - 60, DESK_TOP + 18], [KR, DESK_TOP - 92 + er(t, 11.45, 11.85) * 92]];
+    const typ = typing(KR, t, t < 10 ? 1 : 0.2, 13);
     c.hands = t < 10.2 ? typ : t < 11.3 ? [mixV(typ[0], up[0], st), mixV(typ[1], up[1], st)] : close;
     c.back = st > 0.4;
     c.sy = breath - st * 14; c.lean = 0;
-    c.face = baseFace({ lx: lerp(-0.5, 0, st), ly: lerp(0.35, -0.3, st), px: -0.6, py: 0.6, open: st > 0.5 ? 0 : 1 - bl, curve: lerp(0.5, 0.2, st), mo: st > 0.5 ? 0.45 : 0, raise: t > 10 && t < 10.3 ? 0.6 : 0 });
+    c.face = baseFace({ lx: 0, ly: lerp(0.35, -0.3, st), px: 0, py: 0.7, open: st > 0.5 ? 0 : 1 - bl, curve: lerp(0.5, 0.2, st), mo: st > 0.5 ? 0.45 : 0, raise: t > 10 && t < 10.3 ? 0.6 : 0 });
     c.tilt = st * 4;
   } else if (b === 4) {
     note = 1; fly = 1; lid = 0; screen = "off"; dark = 0.42;
@@ -573,18 +601,19 @@ const rightAt = (t: number, fin: boolean): { c: Ch; lamp: boolean; dark: number;
     note = 1; fly = 1; lamp = false; dark = 0.04; dawn = 1;
     screen = t < 17.0 ? "doc" : "sent";
     const click = er(t, 16.7, 16.85) * (1 - er(t, 16.9, 17.1));
-    const typ = typing(RX, t, 0.4, 8);
-    c.hands = [typ[0], mixV(typ[1], [RX - 120, DESK_TOP + 6], click)];
+    const typ = typing(KR, t, 0.4, 8);
+    c.hands = [mixV(typ[0], [KR + 10, DESK_TOP - 2], click), typ[1]];
     const happy = er(t, 17.05, 17.4);
-    c.face = baseFace({ lx: -0.5, ly: lerp(0.35, 0, happy), px: -0.6, py: lerp(0.6, 0, happy), curve: lerp(0.4, 0.85, happy), raise: happy * 0.3, open: 1 - bl });
+    c.face = baseFace({ lx: 0, ly: lerp(0.35, 0, happy), px: 0, py: lerp(0.7, 0, happy), curve: lerp(0.4, 0.85, happy), raise: happy * 0.3, open: 1 - bl });
     c.sy = breath - happy * 8; c.tilt = happy * -4;
   } else {
-    note = 1; fly = 1; lamp = false; dark = 0.04; dawn = 1; screen = "sent";
-    const k = fin ? 1 : er(t, 19.0, 19.45);
+    note = 1; fly = 1; lamp = false; dark = 0.04; dawn = 1;
+    lid = fin ? 0 : 1 - er(t, 19.0, 19.35); screen = lid > 0.5 ? "sent" : "off";
+    const k = fin ? 1 : er(t, 19.2, 19.6);
     const sipT = fin ? t - FINAL : t - 19;
     const sip = fin ? er(sipT, 1.5, 1.8) * (1 - er(sipT, 2.3, 2.6)) : 0;
     const mugHand: V = mixV([RX + 70, SH_Y + 60], [RX + 30, SH_Y - 100], sip);
-    c.hands = [mixV([RX - 60, DESK_TOP + 18], [RX - 70, SH_Y + 70], k), mixV([RX + 60, DESK_TOP + 18], mugHand, k)];
+    c.hands = [[RX - 62, DESK_TOP + 16], mixV([RX + 60, DESK_TOP + 18], mugHand, k)];
     c.holdR = k > 0.3 ? <Mug steam={1} t={t} /> : undefined;
     c.face = baseFace({ lx: 0, curve: 0.85, open: sip > 0.5 ? 0 : 1 - bl, raise: 0.2 });
     c.sy = breath - 6; c.tilt = Math.sin(t * 1.2) * 2;
@@ -617,14 +646,14 @@ const leftAt = (t: number, fin: boolean): { c: Ch; lamp: boolean; dark: number; 
     lid = er(t, 6.15, 6.5) * (1 - er(t, 7.55, 7.9)); screen = "doc";
     const back = er(t, 7.95, 8.4);
     const hd = headOf(c);
-    const typ: [V, V] = [[LX - 58, DESK_TOP + 18], kv(t, [[6.0, [LX + 58, DESK_TOP + 18]], [6.2, [LX + 150, DESK_TOP - 60]], [6.5, [LX + 58, DESK_TOP + 18]], [7.5, [LX + 58, DESK_TOP + 18]], [7.7, [LX + 150, DESK_TOP - 60]], [7.9, [LX + 58, DESK_TOP + 18]]])];
+    const typ: [V, V] = [[LX - 58, DESK_TOP + 18], kv(t, [[6.0, [LX + 58, DESK_TOP + 18]], [6.15, [KL, DESK_TOP - 10]], [6.5, [KL, DESK_TOP - 92]], [6.7, [KL + 30, DESK_TOP + 8]], [7.45, [KL + 30, DESK_TOP + 8]], [7.55, [KL, DESK_TOP - 92]], [7.9, [KL, DESK_TOP - 8]], [8.0, [LX + 58, DESK_TOP + 18]]])];
     const bh: [V, V] = [[hd[0] - 66, hd[1] + 6], [hd[0] + 66, hd[1] + 6]];
     c.hands = back > 0.01 ? [mixV(typ[0], bh[0], back), mixV(typ[1], bh[1], back)] : typ;
     c.back = back > 0.5;
     c.sy = breath + back * 10; c.tilt = back * -6;
     c.face = baseFace({
-      lx: kf(t, [[6.3, 0], [6.6, 0.55], [7.6, 0.55], [8.0, 0]]), ly: kf(t, [[6.3, 0], [6.6, 0.3], [7.8, 0.3], [8.2, -0.2]]),
-      px: kf(t, [[6.3, 0], [6.6, 0.9]]), py: kf(t, [[6.3, 0], [6.6, 0.5], [7.8, 0.5], [8.2, -0.6]]),
+      lx: 0, ly: kf(t, [[6.3, 0], [6.6, 0.3], [7.8, 0.3], [8.2, -0.2]]),
+      px: 0, py: kf(t, [[6.3, 0], [6.6, 0.5], [7.8, 0.5], [8.2, -0.6]]),
       eyeS: kf(t, [[6.4, 1], [6.7, 1.22], [7.2, 1.22], [7.5, 1]]), worry: kf(t, [[6.5, 0], [6.9, 0.9], [7.6, 0.9], [8.0, 0]]),
       curve: kf(t, [[6.5, 0.2], [6.9, -0.5], [7.6, -0.5], [8.1, 0.55]]), open: back > 0.6 ? 0.08 : 1 - bl, raise: kf(t, [[6.4, 0], [6.7, 0.7], [7.3, 0]]),
     });
@@ -645,31 +674,31 @@ const leftAt = (t: number, fin: boolean): { c: Ch; lamp: boolean; dark: number; 
     dark = 0.7; lid = 1; screen = "doc";
     const sips = [13.15, 14.35];
     const sip = Math.max(...sips.map((s) => er(t, s - 0.2, s) * (1 - er(t, s + 0.25, s + 0.45))));
-    const typ = typing(LX, t, 1.8, 24);
+    const typ = typing(KL, t, 1.8, 24);
     const hd = headOf(c);
     c.hands = [typ[0], mixV(typ[1], [hd[0] + 40, hd[1] + 40], sip)];
     c.holdR = sip > 0.3 ? <Mug t={t} /> : undefined;
     c.messy = kf(t, [[12, 0.6], [16, 1]]); c.tired = kf(t, [[12, 0.5], [16, 1]]);
     c.lean = Math.sin(t * 24) * 2; c.sy = breath + 8;
-    c.face = baseFace({ lx: 0.45, ly: 0.35, px: 0.8, py: 0.5, open: 0.55 - bl * 0.5, worry: 0.8, curve: -0.6, mo: sip * 0.3 });
+    c.face = baseFace({ lx: 0.05, ly: 0.35, px: 0.1, py: 0.7, open: 0.55 - bl * 0.5, worry: 0.8, curve: -0.6, mo: sip * 0.3 });
     mugs = t < 13.2 ? 1 : t < 14.4 ? 2 : 3; papers = Math.floor(interpolate(t, [12, 16], [2, 9], clamp)); stack = interpolate(t, [12, 16], [0.2, 0.75], clamp);
     cloud = 1.35; rain = 1; flash = [13.0, 15.1].some((s0) => t > s0 && t < s0 + 0.12);
   } else if (b === 5) {
     dark = 0.6; lid = 1; mugs = 3; papers = 9; stack = 0.85;
     screen = t < 16.9 ? "doc" : t < 18.0 ? "sending" : "late";
-    const typ = typing(LX, t, 1.9, 26);
+    const typ = typing(KL, t, 1.9, 26);
     const stop = er(t, 16.85, 17.1);
     c.hands = [mixV(typ[0], [LX - 60, DESK_TOP + 18], stop), mixV(typ[1], [LX + 60, DESK_TOP + 18], stop)];
     const relief = er(t, 18.0, 18.4);
     c.messy = 1; c.tired = 1; c.sweat = ramp(t, 16.9, 18.2);
     c.sy = breath + 8 + relief * 18; c.tilt = relief * 8;
-    c.face = baseFace({ lx: 0.45, ly: lerp(0.3, 0.5, relief), px: 0.8, py: 0.4, eyeS: lerp(1.2, 0.95, relief), open: lerp(1, 0.4, relief), worry: lerp(0.9, 1, relief), raise: lerp(0.8, 0, relief), curve: -0.6, mo: lerp(0.4, 0.55, relief) });
+    c.face = baseFace({ lx: 0.05, ly: lerp(0.3, 0.5, relief), px: 0.1, py: 0.6, eyeS: lerp(1.2, 0.95, relief), open: lerp(1, 0.4, relief), worry: lerp(0.9, 1, relief), raise: lerp(0.8, 0, relief), curve: -0.6, mo: lerp(0.4, 0.55, relief) });
     cloud = 1.45; rain = 1;
   } else {
     lamp = false; dark = 0.1; mugs = 3; papers = 9; stack = 1; lid = 0;
     const k = fin ? 1 : er(t, 19.0, 19.5);
-    c.hands = [mixV([LX - 60, DESK_TOP + 18], [LX + 40, DESK_TOP + 4], k), mixV([LX + 60, DESK_TOP + 18], [LX - 40, DESK_TOP + 4], k)];
-    c.sy = breath * 1.4 + k * 95; c.hy = k * 10; c.tilt = k * 12;
+    c.hands = [mixV([LX - 60, DESK_TOP + 18], [LX - 96, DESK_TOP + 6], k), mixV([LX + 60, DESK_TOP + 18], [LX + 96, DESK_TOP + 6], k)];
+    c.sy = breath * 1.4 + k * 78; c.hy = k * 10; c.tilt = k * 12;
     c.messy = 1; c.tired = 1;
     c.face = baseFace({ ly: 0.6, open: k > 0.5 ? 0 : 0.4, worry: 0.6, curve: -0.3, mo: k * (0.3 + 0.08 * Math.sin(t * 2.2)) });
     cloud = 1.5; rain = 1;
@@ -701,7 +730,7 @@ const Scene: React.FC = () => {
             <radialGradient id="lampL" cx={DESK.L[0] + 120} cy={DESK_TOP - 120} r="520" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#ffbf6b" stopOpacity={0.5} /><stop offset="0.4" stopColor="#e88a3c" stopOpacity={0.2} /><stop offset="1" stopColor="#e88a3c" stopOpacity={0} /></radialGradient>
             <radialGradient id="lampR" cx={DESK.R[1] - 120} cy={DESK_TOP - 120} r="520" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#ffbf6b" stopOpacity={0.5} /><stop offset="0.4" stopColor="#e88a3c" stopOpacity={0.2} /><stop offset="1" stopColor="#e88a3c" stopOpacity={0} /></radialGradient>
             <radialGradient id="phoneL" cx={LX + 20} cy={SH_Y - 40} r="300" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#7fb2ff" stopOpacity={0.42} /><stop offset="1" stopColor="#7fb2ff" stopOpacity={0} /></radialGradient>
-            <radialGradient id="screenL" cx={DESK.L[1] - 70} cy={DESK_TOP - 50} r="300" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#bcd6ff" stopOpacity={0.28} /><stop offset="1" stopColor="#bcd6ff" stopOpacity={0} /></radialGradient>
+            <radialGradient id="screenL" cx={LX} cy={SH_Y - 110} r="300" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#bcd6ff" stopOpacity={0.28} /><stop offset="1" stopColor="#bcd6ff" stopOpacity={0} /></radialGradient>
             <radialGradient id="sunR" cx="836" cy="680" r="640" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#ffd28a" stopOpacity={0.5} /><stop offset="1" stopColor="#ffd28a" stopOpacity={0} /></radialGradient>
             <linearGradient id="shadeL" x1="0" x2="1"><stop offset="0.82" stopColor="#0c0604" /><stop offset="1" stopColor="#0c0604" stopOpacity={0} /></linearGradient>
             <linearGradient id="shadeR" x1="0" x2="1"><stop offset="0" stopColor="#0c0604" stopOpacity={0} /><stop offset="0.18" stopColor="#0c0604" /></linearGradient>
@@ -736,18 +765,16 @@ const Scene: React.FC = () => {
           {Array.from({ length: Lf.papers }).map((_, i) => (
             <rect key={i} x={150 + ((i * 41) % 260)} y={DESK_TOP + 14 + (i % 3) * 8} width={56} height={14} fill="#f1ede2" stroke={INK} strokeWidth={2.5} transform={`rotate(${((i * 23) % 30) - 15} ${178 + ((i * 41) % 260)} ${DESK_TOP + 20})`} />
           ))}
-          {Array.from({ length: Lf.mugs }).map((_, i) => <g key={i} transform={`translate(${246 + i * 40},${DESK_TOP + 12})`}><Mug steam={i === Lf.mugs - 1 && b >= 4 ? 1 : 0} t={t} /></g>)}
-          <Laptop cx={DESK.L[1] - 72} lid={Lf.lid} screen={Lf.screen} pct={Lf.screen === "sending" ? ramp(t, 16.9, 18) : pctAt(t, false)} t={t} />
-          <rect x={LX - 74} y={DESK_TOP + 14} width={148} height={18} rx={4} fill="#2e2a2a" stroke={INK} strokeWidth={4} />
-          {/* mesa da direita */}
+          {Array.from({ length: Lf.mugs }).map((_, i) => <g key={i} transform={`translate(${230 + i * 34},${DESK_TOP + 12})`}><Mug steam={i === Lf.mugs - 1 && b >= 4 ? 1 : 0} t={t} /></g>)}
+                              {/* mesa da direita */}
           <DeskLamp x={DESK.R[1] - 50} dir={-1} on={R.lamp} />
           {b >= 1 && b !== 6 && <g transform={`translate(${DESK.R[1] - 150},${DESK_TOP + 12})`}><Mug steam={b >= 5 ? 1 : 0} t={t} /></g>}
           {b === 0 && <rect x={RX - 60} y={DESK_TOP + 6} width={96} height={26} fill="#f6f2e8" stroke={INK} strokeWidth={3} transform={`rotate(-4 ${RX} ${DESK_TOP + 18})`} />}
-          <Laptop cx={DESK.R[0] + 72} lid={R.lid} screen={R.screen} pct={pctAt(t, true)} t={t} />
-          {b !== 0 && <rect x={RX - 74} y={DESK_TOP + 14} width={148} height={18} rx={4} fill="#2e2a2a" stroke={INK} strokeWidth={4} />}
-          {/* braços por cima da mesa */}
+                              {/* braços por cima da mesa */}
           <Person c={Lf.c} look={LOOK_L} t={t} layer="arms" />
           <Person c={R.c} look={LOOK_R} t={t} layer="arms" />
+          <LaptopBack cx={LX} lid={Lf.lid} gold={false} shake={b === 4 || (b === 5 && t < 16.9) ? Math.sin(t * 50) * 1.2 : 0} />
+          <LaptopBack cx={RX} lid={R.lid} gold shake={0} />
           {/* luz de cada lado */}
           <rect x={0} y={WALL_Y} width={600} height={1320} fill="url(#shadeL)" opacity={Lf.dark} />
           <rect x={480} y={WALL_Y} width={600} height={1320} fill="url(#shadeR)" opacity={R.dark} />
@@ -756,6 +783,8 @@ const Scene: React.FC = () => {
           {Lf.phone > 0 && <rect x={0} y={WALL_Y} width={600} height={1320} fill="url(#phoneL)" opacity={0.85 + 0.15 * Math.sin(frame / 3)} style={{ mixBlendMode: "screen" }} />}
           {Lf.lid > 0.5 && Lf.screen !== "off" && <rect x={0} y={WALL_Y} width={600} height={1320} fill="url(#screenL)" style={{ mixBlendMode: "screen" }} />}
           {R.dawn > 0 && <rect x={480} y={WALL_Y} width={600} height={1320} fill="url(#sunR)" style={{ mixBlendMode: "screen" }} />}
+          <StatusChip cx={LX} screen={Lf.screen} pct={ramp(t, 16.9, 18)} t={t} at={Lf.screen === "late" ? 18.0 : 16.9} />
+          <StatusChip cx={RX} screen={R.screen} pct={1} t={t} at={R.screen === "done" ? 10.0 : b === 5 ? 17.0 : -9} />
           {/* efeitos */}
           {Lf.cloud > 0.01 && <Cloud x={lh[0] + 6} y={lh[1] - 150 - Lf.cloud * 20} s={Lf.cloud} rain={Lf.rain} t={t} flash={Lf.flash} />}
           {b === 4 && !fin && <FlyPaper t={t} n={5} cx={LX} cy={DESK_TOP - 100} />}
@@ -767,7 +796,7 @@ const Scene: React.FC = () => {
           ) : null)}
           {b === 1 && Math.sin(((t - 3) / 3) * Math.PI * 3) > 0 && <text x={LX - 190} y={SH_Y - 190} fontFamily={BARLOW} fontWeight={700} fontSize={50} fill="#f4ede0" stroke={INK} strokeWidth={2} transform={`rotate(-8 ${LX - 150} ${SH_Y - 200})`}>KKK</text>}
           {b === 3 && t > 9.45 && <text x={lh[0] + 92} y={lh[1] - 50} fontFamily={BARLOW} fontWeight={700} fontSize={110} fill={RED} stroke={INK} strokeWidth={4} transform={`scale(1)`}>!</text>}
-          {b === 2 && [6.8, 7.7, 8.5].map((s, i) => t > s ? <text key={i} x={DESK.R[0] + 72} y={DESK_TOP - 120 - (t - s) * 90} fontFamily={BARLOW} fontWeight={700} fontSize={56} fill={GREEN} stroke={INK} strokeWidth={2.5} textAnchor="middle" opacity={1 - ramp(t, s + 0.5, s + 0.9)}>✓</text> : null)}
+          {b === 2 && [6.8, 7.7, 8.5].map((s, i) => t > s ? <text key={i} x={RX + 130} y={DESK_TOP - 150 - (t - s) * 90} fontFamily={BARLOW} fontWeight={700} fontSize={56} fill={GREEN} stroke={INK} strokeWidth={2.5} textAnchor="middle" opacity={1 - ramp(t, s + 0.5, s + 0.9)}>✓</text> : null)}
           {b === 4 && t > 14.8 && [0, 1, 2].map((i) => {
             const q = (((t - 14.8 + i * 0.45) % 1.35) + 1.35) % 1.35 / 1.35;
             return <text key={i} x={RX + 60 + q * 70 + i * 12} y={SH_Y - 260 - q * 150} fontFamily={BARLOW} fontWeight={700} fontSize={50 + i * 12} fill={GOLD} stroke={INK} strokeWidth={2} opacity={interpolate(q, [0, 0.2, 0.8, 1], [0, 1, 1, 0])}>z</text>;
