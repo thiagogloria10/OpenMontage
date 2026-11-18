@@ -517,18 +517,24 @@ const SideLabel: React.FC<{ cx: number; title: string[]; sub: string; subAt: num
   const pct = pctAt(t, right);
   const b = blockOf(t);
   const barCol = pct >= 1 ? GREEN : right ? GOLD : b >= 4 ? RED : "#9a8f8a";
+  const mins = minutesAt(t, right);
+  const clockCol = !right && ((mins >= 1440 && mins < 1800) || (b === 5 && mins >= 1430)) ? RED : "#ffb84a";
   return (
     <div style={{ position: "absolute", left: cx - 210, width: 420, top: 372, textAlign: "center", opacity: 1 - hide }}>
       <div style={{ height: 62, display: "flex", flexDirection: "column", justifyContent: "center", fontFamily: BARLOW, fontWeight: 700, fontSize: 51, whiteSpace: "nowrap", color: right ? WHITE : "#e2d8cf", letterSpacing: 1.5, lineHeight: 1, textShadow: "0 3px 0 rgba(0,0,0,.6), 0 4px 12px rgba(0,0,0,.8)" }}>
         {title.map((l) => <div key={l}>{l}</div>)}
       </div>
       <div style={{ fontFamily: BARLOW, fontWeight: 600, fontSize: 42, color: right ? GOLD : "#f0a89c", letterSpacing: 2, marginTop: 4, height: 46, opacity: Math.min(1, p * 1.5), transform: `translateY(${(1 - p) * 10}px)`, textShadow: "0 2px 0 rgba(0,0,0,.6), 0 2px 10px rgba(0,0,0,.9)" }}>{sub}</div>
-      <div style={{ margin: "8px auto 0", width: 290, padding: "5px 10px 8px", background: "rgba(14,9,6,.82)", borderRadius: 10, border: "3px solid #1b100a" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", fontFamily: BARLOW, fontWeight: 700, fontSize: 26, color: WHITE, letterSpacing: 1 }}>
-          <span>TRABALHO</span><span style={{ color: barCol }}>{Math.round(pct * 100)}%</span>
-        </div>
-        <div style={{ height: 12, marginTop: 4, borderRadius: 6, background: "#33261d", overflow: "hidden" }}>
-          <div style={{ width: `${pct * 100}%`, height: "100%", background: barCol }} />
+      <div style={{ margin: "8px auto 0", width: 360, display: "flex", gap: 8 }}>
+        {/* relógio de cada um, junto do seu progresso */}
+        <div style={{ width: 104, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(14,9,6,.82)", borderRadius: 10, border: "3px solid #1b100a", fontFamily: MONO, fontWeight: 800, fontSize: 30, color: clockCol, textShadow: `0 0 8px ${clockCol}` }}>{fmt(mins)}</div>
+        <div style={{ flex: 1, padding: "5px 10px 8px", background: "rgba(14,9,6,.82)", borderRadius: 10, border: "3px solid #1b100a" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontFamily: BARLOW, fontWeight: 700, fontSize: 26, color: WHITE, letterSpacing: 1 }}>
+            <span>TRABALHO</span><span style={{ color: barCol }}>{Math.round(pct * 100)}%</span>
+          </div>
+          <div style={{ height: 12, marginTop: 4, borderRadius: 6, background: "#33261d", overflow: "hidden" }}>
+            <div style={{ width: `${pct * 100}%`, height: "100%", background: barCol }} />
+          </div>
         </div>
       </div>
     </div>
@@ -763,8 +769,6 @@ const Scene: React.FC = () => {
     c.sy += (Math.min(c.hands[0][1], c.hands[1][1]) < SH_Y ? -6 : 0) * 0.5;
   }
   const lh = headOf(Lf.c);
-  const lClock = minutesAt(t, false);
-  const lClockCol = (lClock >= 1440 && lClock < 1800) || (b === 5 && lClock >= 1430) ? RED : "#ffb84a";
   return (
     <AbsoluteFill>
       <div style={{ position: "absolute", inset: 0, transform: `scale(${pulse})`, transformOrigin: "540px 1000px" }}>
@@ -784,8 +788,6 @@ const Scene: React.FC = () => {
           <rect width={1080} height={1920} fill="#0a0605" />
           <Room t={t} dawn={R.dawn} />
           <Calendar n={DAYS[b]} prev={DAYS[Math.max(0, b - 1)]} tear={tear} note={R.note} fly={R.fly} />
-          <WallClock x={350} y={640} txt={fmt(lClock)} col={lClockCol} />
-          <WallClock x={626} y={640} txt={fmt(minutesAt(t, true))} col="#ffb84a" />
           {/* nuvem atrás da cabeça? não: fica por cima no fim */}
           <Chair cx={LX} />
           <Chair cx={RX} />
