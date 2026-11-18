@@ -61,15 +61,14 @@ const useFonts = () => {
   }, [h]);
 };
 // IK de 2 ossos: escolhe o cotovelo mais afastado do centro do corpo
-const ik = (a: V, c: V, l1: number, l2: number, cx: number): V => {
+const ik = (a: V, c: V, l1: number, l2: number, side: number): V => {
   const dx = c[0] - a[0], dy = c[1] - a[1];
   const d = Math.max(1, Math.min(Math.hypot(dx, dy), l1 + l2 - 0.5));
   const th = Math.atan2(dy, dx);
   const al = Math.acos(Math.max(-1, Math.min(1, (l1 * l1 + d * d - l2 * l2) / (2 * l1 * d))));
   const p1: V = [a[0] + l1 * Math.cos(th + al), a[1] + l1 * Math.sin(th + al)];
   const p2: V = [a[0] + l1 * Math.cos(th - al), a[1] + l1 * Math.sin(th - al)];
-  const s1 = Math.abs(p1[0] - cx) + p1[1] * 0.25, s2 = Math.abs(p2[0] - cx) + p2[1] * 0.25;
-  return s1 > s2 ? p1 : p2;
+  return (p1[0] - p2[0]) * side > 0 ? p1 : p2;
 };
 const limbPath = (a: V, b: V, c: V) => {
   const q: V = [2 * b[0] - (a[0] + c[0]) / 2, 2 * b[1] - (a[1] + c[1]) / 2];
@@ -108,7 +107,7 @@ const Person: React.FC<{ c: Ch; look: Look; t: number; layer: "body" | "arms" }>
   const tr = c.tremble * Math.sin(t * 90) * 3;
   const S = SH_Y + c.sy;
   const shL: V = [c.cx - 70 + c.lean + tr, S + 12], shR: V = [c.cx + 70 + c.lean + tr, S + 12];
-  const elL = ik(shL, c.hands[0], 106, 100, c.cx), elR = ik(shR, c.hands[1], 106, 100, c.cx);
+  const elL = ik(shL, c.hands[0], 106, 100, -1), elR = ik(shR, c.hands[1], 106, 100, 1);
   const arm = (sh: V, el: V, h: V, i: number) => (
     <g key={i}>
       <Tube d={limbPath(sh, el, h)} color={SKIN} w={28} />
@@ -536,8 +535,8 @@ const blinkAt = (t: number, period: number, off: number) => {
 };
 // mãos no teclado do notebook (kx = centro do notebook)
 const typing = (kx: number, t: number, amp: number, sp: number): [V, V] => [
-  [kx - 34 + Math.sin(t * sp * 0.5) * 7 * amp, DESK_TOP + 8 - Math.abs(Math.sin(t * sp)) * 14 * amp],
-  [kx + 34 + Math.cos(t * sp * 0.45) * 7 * amp, DESK_TOP + 8 - Math.abs(Math.sin(t * sp + 1.3)) * 14 * amp],
+  [kx - 36 + Math.sin(t * sp * 0.37) * 8 * amp, DESK_TOP + 8 - (0.5 - 0.5 * Math.cos(t * sp)) * 12 * amp],
+  [kx + 36 + Math.sin(t * sp * 0.31 + 2) * 8 * amp, DESK_TOP + 8 - (0.5 - 0.5 * Math.cos(t * sp + 2.4)) * 12 * amp],
 ];
 const restHands = (cx: number): [V, V] => [[cx - 60, DESK_TOP + 18], [cx + 60, DESK_TOP + 18]];
 
@@ -551,21 +550,21 @@ const rightAt = (t: number, fin: boolean): { c: Ch; lamp: boolean; dark: number;
   if (b === 0) {
     lid = 0; screen = "off";
     const w = t < 1.0;
-    c.hands = w
-      ? [[RX - 40, DESK_TOP + 20], [RX + 10 + Math.sin(t * 22) * 10, DESK_TOP + 10 + Math.cos(t * 22) * 5]]
-      : [[RX - 40, DESK_TOP + 20], kv(t, [[1.0, [RX + 10, DESK_TOP + 10]], [1.25, [RX - 60, DESK_TOP - 150]], [1.7, [RX + 40, DESK_TOP + 14]]])];
-    c.holdR = t < 1.0 ? <rect x={-3} y={-30} width={7} height={32} rx={2} fill="#e04a3c" stroke={INK} strokeWidth={2.5} transform="rotate(25)" /> : undefined;
+    // escreve o plano no papel; depois olha o calendário e sorri
+    const wr = 1 - er(t, 1.5, 1.9);
+    c.hands = [[RX - 40, DESK_TOP + 20], mixV([RX + 50, DESK_TOP + 16], [RX + 6 + Math.sin(t * 9) * 16, DESK_TOP + 10 + Math.sin(t * 18) * 4], wr)];
+    c.holdR = wr > 0.3 ? <rect x={-3} y={-30} width={7} height={32} rx={2} fill="#e04a3c" stroke={INK} strokeWidth={2.5} transform="rotate(25)" /> : undefined;
     c.face = baseFace({ lx: kf(t, [[0, 0.1], [1.1, 0.1], [1.5, -0.85]]), ly: kf(t, [[0, 0.55], [1.0, 0.55], [1.4, -0.1]]), py: kf(t, [[0, 0.8], [1.0, 0.8], [1.4, -0.4]]), px: kf(t, [[1.0, 0], [1.4, -0.9]]), curve: kf(t, [[1.4, 0.3], [1.9, 0.75]]), open: 1 - bl });
     c.tilt = kf(t, [[1.0, 0], [1.5, -6]]);
     c.hx = kf(t, [[1.0, 0], [1.5, -10]]);
-    note = er(t, 1.15, 1.3); fly = er(t, 1.2, 1.75);
+    note = 0; fly = 0;
   } else if (b === 1 || b === 2) {
     c.hands = typing(KR, t, 1, 13);
     c.face = baseFace({ lx: 0, ly: 0.35, px: 0, py: 0.7, curve: 0.45, open: 1 - bl });
     c.hy = Math.sin(t * 3.3) * 3; c.tilt = -3 + Math.sin(t * 1.4) * 2;
-    note = 1; fly = 1;
+    note = 0; fly = 0;
   } else if (b === 3) {
-    note = 1; fly = 1;
+    note = 0; fly = 0;
     const st = er(t, 10.2, 10.55) * (1 - er(t, 11.1, 11.4));
     screen = t < 10 ? "doc" : "done";
     lid = 1 - er(t, 11.45, 11.85);
@@ -578,7 +577,7 @@ const rightAt = (t: number, fin: boolean): { c: Ch; lamp: boolean; dark: number;
     c.face = baseFace({ lx: 0, ly: lerp(0.35, -0.3, st), px: 0, py: 0.7, open: st > 0.5 ? 0 : 1 - bl, curve: lerp(0.5, 0.2, st), mo: st > 0.5 ? 0.45 : 0, raise: t > 10 && t < 10.3 ? 0.6 : 0 });
     c.tilt = st * 4;
   } else if (b === 4) {
-    note = 1; fly = 1; lid = 0; screen = "off"; dark = 0.42;
+    note = 0; fly = 0; lid = 0; screen = "off"; dark = 0.42;
     if (t < 14.4) {
       book = 1;
       c.hands = [[RX - 50, SH_Y + 10], [RX + 50, SH_Y + 10]];
@@ -600,7 +599,7 @@ const rightAt = (t: number, fin: boolean): { c: Ch; lamp: boolean; dark: number;
       c.face = baseFace({ lx: t > 15.2 ? 0.7 : 0.2, curve: 0.6, open: t > 14.75 ? 0 : 1 - bl });
     }
   } else if (b === 5) {
-    note = 1; fly = 1; lamp = false; dark = 0.04; dawn = 1;
+    note = 0; fly = 0; lamp = false; dark = 0.04; dawn = 1;
     screen = t < 17.0 ? "doc" : "sent";
     const click = er(t, 16.7, 16.85) * (1 - er(t, 16.9, 17.1));
     const typ = typing(KR, t, 0.4, 8);
@@ -609,7 +608,7 @@ const rightAt = (t: number, fin: boolean): { c: Ch; lamp: boolean; dark: number;
     c.face = baseFace({ lx: 0, ly: lerp(0.35, 0, happy), px: 0, py: lerp(0.7, 0, happy), curve: lerp(0.4, 0.85, happy), raise: happy * 0.3, open: 1 - bl });
     c.sy = breath - happy * 8; c.tilt = happy * -4;
   } else {
-    note = 1; fly = 1; lamp = false; dark = 0.04; dawn = 1;
+    note = 0; fly = 0; lamp = false; dark = 0.04; dawn = 1;
     lid = fin ? 0 : 1 - er(t, 19.0, 19.35); screen = lid > 0.5 ? "sent" : "off";
     const k = fin ? 1 : er(t, 19.2, 19.6);
     const sipT = fin ? t - FINAL : t - 19;
@@ -720,6 +719,28 @@ const Scene: React.FC = () => {
   const flash = cut ? interpolate(since, [0, 0.16], [0.22, 0], clamp) : 0;
   const R = rightAt(t, fin);
   const Lf = leftAt(t, fin);
+  // mãos seguem o alvo com um leve atraso (média de amostras anteriores do mesmo bloco) → braços soltos
+  const key = (x: number) => (x >= FINAL ? 99 : blockOf(x));
+  const follow = (fn: (x: number) => Ch): [V, V] => {
+    const W = [0.32, 0.26, 0.2, 0.13, 0.09];
+    let sx: [number, number, number, number] = [0, 0, 0, 0], sw = 0;
+    W.forEach((w, i) => {
+      const x = t - i * 0.035;
+      if (key(x) !== key(t)) return;
+      const h = fn(x).hands;
+      sx = [sx[0] + h[0][0] * w, sx[1] + h[0][1] * w, sx[2] + h[1][0] * w, sx[3] + h[1][1] * w];
+      sw += w;
+    });
+    return [[sx[0] / sw, sx[1] / sw], [sx[2] / sw, sx[3] / sw]];
+  };
+  R.c.hands = follow((x) => rightAt(x, x >= FINAL).c);
+  Lf.c.hands = follow((x) => leftAt(x, x >= FINAL).c);
+  // ombros acompanham as mãos (movimento secundário)
+  for (const c of [R.c, Lf.c]) {
+    if (c.stand > 0.01) continue;
+    c.lean += ((c.hands[0][0] + c.hands[1][0]) / 2 - c.cx) * 0.07;
+    c.sy += (Math.min(c.hands[0][1], c.hands[1][1]) < SH_Y ? -6 : 0) * 0.5;
+  }
   const lh = headOf(Lf.c);
   const lClock = minutesAt(t, false);
   const lClockCol = (lClock >= 1440 && lClock < 1800) || (b === 5 && lClock >= 1430) ? RED : "#ffb84a";
