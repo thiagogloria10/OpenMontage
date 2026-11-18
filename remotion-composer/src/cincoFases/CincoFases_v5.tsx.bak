@@ -1,0 +1,754 @@
+import React from "react";
+import {
+  AbsoluteFill,
+  Audio,
+  interpolate,
+  spring,
+  staticFile,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
+import { loadSpaceGrotesk } from "../lib/localFonts";
+import captionsData from "./captions.json";
+import { CHAR_ARMS_UP, CHAR_IDLE, CHAR_PAL, CHAR_SIT, ICONS, ICON_PAL, PixelArt } from "./Pixel";
+
+const { fontFamily: HEAD } = loadSpaceGrotesk(["500", "700"]);
+const MONO = "'JetBrains Mono', 'DejaVu Sans Mono', monospace";
+
+const GOLD = "#E8B84A";
+const RED = "#e0554a";
+const BLUE = "#7aa7e0";
+const BG = "#121212";
+const DIM = "#5a5a5a";
+const WHITE = "#f2f2f2";
+
+type Cap = { w: string; s: number; e: number; line: number };
+const CAPS = captionsData as Cap[];
+const TOTAL = 36.0;
+
+const lineStart = (line: number) => CAPS.find((c) => c.line === line)!.s;
+const capTime = (w: string, line: number) => {
+  const c = CAPS.find((x) => x.line === line && x.w.toLowerCase().startsWith(w.toLowerCase()));
+  return c ? c.s : lineStart(line);
+};
+
+// Cenas
+const T = {
+  f1: lineStart(2),
+  f2: lineStart(4),
+  f3: lineStart(6),
+  stop: lineStart(9),
+  f4: capTime("Fase", 10),
+  f5: lineStart(11),
+  end: lineStart(13),
+};
+const HOOK_NEVER = 9999;
+const HOOK_3 = capTime("terceira", 1);
+const PHASE_AT = [T.f1, T.f2, T.f3, T.f4, T.f5];
+const phaseOf = (t: number) => PHASE_AT.filter((x) => t >= x).length; // 0..5
+const SCENES = [0, T.f1, T.f2, T.f3, T.f4, T.f5, T.end];
+
+const useT = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  return { t: frame / fps, frame, fps };
+};
+const clamp = { extrapolateLeft: "clamp" as const, extrapolateRight: "clamp" as const };
+
+// ---------- helpers ----------
+const Pop: React.FC<{ at: number; children: React.ReactNode; style?: React.CSSProperties; from?: number }> = ({
+  at,
+  children,
+  style,
+  from = 0.4,
+}) => {
+  const { frame, fps } = useT();
+  const sp = spring({ frame: frame - at * fps, fps, config: { damping: 11, stiffness: 200 } });
+  const op = interpolate(frame - at * fps, [0, 3], [0, 1], clamp);
+  return <div style={{ transform: `scale(${from + (1 - from) * sp})`, opacity: op, ...style }}>{children}</div>;
+};
+
+const sceneOpacity = (t: number, a: number, b: number) =>
+  interpolate(t, [a, a + 0.15, b - 0.12, b], [0, 1, 1, 0], clamp);
+
+// zoom de entrada de cada cena + tremida na fase 3
+const useCamera = () => {
+  const { t, frame, fps } = useT();
+  const last = SCENES.filter((s) => s <= t).pop() ?? 0;
+  const sp = spring({ frame: frame - last * fps, fps, config: { damping: 14, stiffness: 120 } });
+  const zoom = 1.08 - 0.08 * sp;
+  const shakeAmt = interpolate(t, [T.stop, T.stop + 0.05, T.stop + 0.7], [0, 1, 0], clamp);
+  const sx = Math.sin(frame * 2.3) * 16 * shakeAmt;
+  const sy = Math.cos(frame * 3.1) * 12 * shakeAmt;
+  return { zoom, sx, sy };
+};
+
+// ---------- HUD ----------
+const HudBox: React.FC<{ label: string; value: string; active?: boolean; danger?: boolean; bumpAt?: number }> = ({
+  label,
+  value,
+  active,
+  danger,
+  bumpAt,
+}) => {
+  const { t } = useT();
+  const since = bumpAt === undefined || t < bumpAt ? 99 : t - bumpAt;
+  const scale = 1 + interpolate(since, [0, 0.08, 0.35], [0, 0.16, 0], { extrapolateRight: "clamp" });
+  const c = danger ? RED : active ? GOLD : "#3a3a3a";
+  return (
+    <div
+      style={{
+        width: 420,
+        height: 128,
+        border: `4px solid ${c}`,
+        background: danger ? "rgba(224,85,74,0.10)" : active ? "rgba(232,184,74,0.08)" : "#181818",
+        borderRadius: 6,
+        padding: "14px 22px",
+        boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+      }}
+    >
+      <div style={{ fontFamily: MONO, fontSize: 24, letterSpacing: 4, color: danger ? RED : active ? GOLD : "#8a8a8a", fontWeight: 700 }}>
+        {label}
+      </div>
+      <div
+        style={{
+          fontFamily: MONO,
+          fontSize: 56,
+          fontWeight: 800,
+          color: danger ? RED : WHITE,
+          textAlign: "right",
+          lineHeight: 1,
+          transform: `scale(${scale})`,
+          transformOrigin: "right center",
+        }}
+      >
+        {value}
+      </div>
+    </div>
+  );
+};
+
+const peopleLeft = (t: number) => {
+  if (t < T.stop + 0.15) return 10;
+  return Math.max(2, 10 - Math.floor((t - T.stop - 0.15) / 0.07));
+};
+
+const Hud: React.FC = () => {
+  const { t } = useT();
+  const ph = phaseOf(t);
+  const p = peopleLeft(t);
+  return (
+    <div style={{ position: "absolute", top: 120, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 40 }}>
+      <HudBox label="FASE" value={`${ph}/5`} active={ph > 0} danger={ph === 3} bumpAt={PHASE_AT[ph - 1]} />
+      <HudBox label="AINDA TENTANDO" value={`${p}/10`} active={t >= T.stop + 1.2} danger={t >= T.stop && t < T.f4} bumpAt={t >= T.stop ? T.stop : undefined} />
+    </div>
+  );
+};
+
+// ---------- Headline ----------
+type HL = { text: string; color?: string; big?: boolean; at: number };
+const Headline: React.FC = () => {
+  const { t } = useT();
+  const H = (lines: HL[]) => (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+      {lines.map((l, i) =>
+        t >= l.at ? (
+          <Pop key={i} at={l.at}>
+            <div
+              style={{
+                fontFamily: HEAD,
+                fontWeight: 700,
+                fontSize: l.big ? 112 : 80,
+                lineHeight: 1.02,
+                color: l.color ?? WHITE,
+                letterSpacing: -1,
+                textAlign: "center",
+                textShadow: "0 6px 0 rgba(0,0,0,0.5)",
+              }}
+            >
+              {l.text}
+            </div>
+          </Pop>
+        ) : (
+          <div key={i} style={{ height: l.big ? 114 : 82 }} />
+        )
+      )}
+    </div>
+  );
+  let c: React.ReactNode;
+  if (t < T.f1)
+    c =
+      t < lineStart(1)
+        ? H([
+            { text: "AS 5 FASES DE", at: 0.05 },
+            { text: "QUEM MUDA DE VIDA.", color: GOLD, at: capTime("quem", 0) },
+          ])
+        : H([
+            { text: "QUASE TODO MUNDO", at: lineStart(1) },
+            { text: "PARA NA 3ª.", color: RED, big: true, at: capTime("para", 1) },
+          ]);
+  else if (t < T.f2) c = H([{ text: "FASE 1", color: GOLD, big: true, at: T.f1 }, { text: "RECLAMAR", at: capTime("reclama", 2) }]);
+  else if (t < T.f3)
+    c = H([{ text: "FASE 2", color: GOLD, big: true, at: T.f2 }, { text: "PLANEJAR SEM FAZER", at: capTime("assiste", 4) }]);
+  else if (t < T.stop)
+    c = H([{ text: "FASE 3", color: RED, big: true, at: T.f3 }, { text: "FAZER E NÃO VER NADA", at: capTime("finalmente", 6) }]);
+  else if (t < T.f4)
+    c = H([{ text: "AQUI A MAIORIA", at: T.stop }, { text: "PARA", color: RED, big: true, at: capTime("para", 9) }]);
+  else if (t < T.f5)
+    c = H([{ text: "FASE 4", color: GOLD, big: true, at: T.f4 }, { text: "CONTINUAR MESMO ASSIM", at: capTime("continua", 10) }]);
+  else if (t < T.end)
+    c = H([{ text: "FASE 5", color: GOLD, big: true, at: T.f5 }, { text: "O RESULTADO APARECE", at: capTime("resultado", 11) }]);
+  else
+    c = H([
+      { text: "EM QUAL FASE", at: T.end },
+      { text: "VOCÊ ESTÁ?", color: GOLD, big: true, at: T.end + 0.3 },
+    ]);
+  return <div style={{ position: "absolute", top: 300, left: 40, right: 40 }}>{c}</div>;
+};
+
+// ---------- Trilha das 5 fases ----------
+const Track: React.FC<{ y: number }> = ({ y }) => {
+  const { t, frame } = useT();
+  const ph = phaseOf(t);
+  const blink = Math.floor(frame / 6) % 2 === 0;
+  const W = 150;
+  const G = 18;
+  const x0 = 540 - (5 * W + 4 * G) / 2;
+  // marcador anda até a fase atual
+  const target = ph === 0 ? -0.6 : ph - 1;
+  const prevAt = ph === 0 ? 0 : PHASE_AT[ph - 1];
+  const prevTarget = ph <= 1 ? -0.6 : ph - 2;
+  const k = interpolate(t, [prevAt, prevAt + 0.5], [0, 1], clamp);
+  const pos = prevTarget + (target - prevTarget) * k;
+  const mx = x0 + pos * (W + G) + W / 2 - 39;
+  const hop = k < 1 ? Math.abs(Math.sin(k * Math.PI * 2)) * 24 : 0;
+  const stuck = t >= T.stop && t < T.f4;
+  return (
+    <div style={{ position: "absolute", top: y, left: 0, right: 0, height: 240 }}>
+      <div style={{ position: "absolute", left: mx, top: 0 - hop, filter: stuck ? "grayscale(0.4)" : undefined }}>
+        <PixelArt grid={CHAR_IDLE} palette={CHAR_PAL} size={6} />
+      </div>
+      {t >= HOOK_NEVER && t < T.f1 && (
+        <div style={{ position: "absolute", left: x0 + 2 * (W + G) + W / 2 - 200, width: 400, top: 6 + Math.abs(Math.sin(frame / 5)) * 10, textAlign: "center" }}>
+          <Pop at={HOOK_NEVER}>
+            <div style={{ fontFamily: MONO, fontWeight: 800, fontSize: 34, color: RED, letterSpacing: 2 }}>VOCÊ ESTÁ AQUI</div>
+            <div style={{ width: 0, height: 0, margin: "6px auto 0", borderLeft: "22px solid transparent", borderRight: "22px solid transparent", borderTop: `30px solid ${RED}` }} />
+          </Pop>
+        </div>
+      )}
+      {[0, 1, 2, 3, 4].map((i) => {
+        const done = ph > i;
+        const isThree = i === 2;
+        const warn = isThree && (t < T.f1 ? t >= HOOK_3 : ph === 3) && blink;
+        const col = isThree && (ph === 3 || (t < T.f1 && t >= HOOK_3)) ? RED : done ? GOLD : "#3a3a3a";
+        return (
+          <div key={i}>
+            <div
+              style={{
+                position: "absolute",
+                left: x0 + i * (W + G),
+                top: 120,
+                width: W,
+                height: 46,
+                boxSizing: "border-box",
+                border: `4px solid ${warn ? WHITE : col}`,
+                background: done ? (isThree && ph === 3 ? RED : GOLD) : "#1e1e1e",
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                left: x0 + i * (W + G),
+                width: W,
+                top: 178,
+                textAlign: "center",
+                fontFamily: MONO,
+                fontWeight: 800,
+                fontSize: 30,
+                color: col === "#3a3a3a" ? DIM : col,
+              }}
+            >
+              {isThree && ((t >= HOOK_3 && t < T.f1) || ph === 3) ? "3 !" : i + 1}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// ---------- peças de cena ----------
+const Floor: React.FC<{ y: number; moving?: boolean }> = ({ y, moving }) => {
+  const { frame } = useT();
+  return (
+    <div style={{ position: "absolute", top: y, left: 120, right: 120, height: 6, background: "#2c2c2c", overflow: "hidden" }}>
+      {moving &&
+        Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} style={{ position: "absolute", top: 0, height: 6, width: 40, background: "#555", left: ((i * 90 - frame * 9) % 1080 + 1080) % 1080 - 60 }} />
+        ))}
+    </div>
+  );
+};
+
+const Chip: React.FC<{ at: number; text: string; color?: string; x: number; y: number; cross?: boolean; crossAt?: number }> = ({
+  at,
+  text,
+  color = WHITE,
+  x,
+  y,
+  cross,
+  crossAt,
+}) => {
+  const { t } = useT();
+  if (t < at) return null;
+  const cw = crossAt !== undefined ? interpolate(t, [crossAt, crossAt + 0.2], [0, 100], clamp) : cross ? 100 : 0;
+  return (
+    <div style={{ position: "absolute", left: x, top: y }}>
+      <Pop at={at}>
+        <div
+          style={{
+            position: "relative",
+            padding: "12px 24px",
+            border: `4px solid ${color}`,
+            background: "#1a1a1a",
+            borderRadius: 10,
+            fontFamily: HEAD,
+            fontWeight: 700,
+            fontSize: 44,
+            color,
+            whiteSpace: "nowrap",
+          }}
+        >
+          {text}
+          <div style={{ position: "absolute", left: 10, top: "50%", height: 6, width: `calc(${cw}% - 20px)`, background: RED }} />
+        </div>
+      </Pop>
+    </div>
+  );
+};
+
+const LoopArrow: React.FC<{ at: number }> = ({ at }) => {
+  const { t } = useT();
+  if (t < at) return null;
+  const rot = (t - at) * 360;
+  return (
+    <div style={{ position: "absolute", left: 540 - 170, top: 640 }}>
+      <Pop at={at}>
+        <svg width={340} height={340} viewBox="0 0 100 100" style={{ transform: `rotate(${rot}deg)` }}>
+          <path d="M50 12 A38 38 0 1 1 18 30" fill="none" stroke={GOLD} strokeWidth={6} />
+          <polygon points="8,24 26,20 20,38" fill={GOLD} />
+        </svg>
+      </Pop>
+    </div>
+  );
+};
+
+// ---------- cenas ----------
+const SceneHook: React.FC = () => {
+  const { t, frame } = useT();
+  const tStart = capTime("terceira", 1);
+  return (
+    <AbsoluteFill style={{ opacity: sceneOpacity(t, 0, T.f1) }}>
+      {Array.from({ length: 10 }).map((_, i) => {
+        const row = Math.floor(i / 5);
+        const col = i % 5;
+        const bob = Math.abs(Math.sin(frame / 5 + i)) * 10;
+        const fallen = t >= tStart && i >= 2 && t > tStart + 0.1 + (i - 2) * 0.08;
+        const op = fallen ? 0.18 : 1;
+        return (
+          <div key={i} style={{ position: "absolute", left: 165 + col * 150, top: 660 + row * 190 - (fallen ? 0 : bob), opacity: op, transition: "none" }}>
+            <PixelArt grid={CHAR_IDLE} palette={CHAR_PAL} size={8} />
+          </div>
+        );
+      })}
+    </AbsoluteFill>
+  );
+};
+
+const SceneF1: React.FC = () => {
+  const { t, frame } = useT();
+  const bob = Math.sin(frame / 8) * 4;
+  const loop = lineStart(3);
+  return (
+    <AbsoluteFill style={{ opacity: sceneOpacity(t, T.f1, T.f2) }}>
+      {t < loop ? (
+        <div style={{ position: "absolute", left: 540 - 91, top: 760 + bob }}>
+          <PixelArt grid={CHAR_IDLE} palette={CHAR_PAL} size={14} />
+        </div>
+      ) : null}
+      {t < loop && (
+        <>
+          <Chip at={capTime("salário", 2)} text="SALÁRIO" color={RED} x={130} y={640} />
+          <Chip at={capTime("chefe", 2)} text="CHEFE" color={RED} x={690} y={700} />
+          <Chip at={capTime("rotina", 2)} text="ROTINA" color={RED} x={150} y={900} />
+        </>
+      )}
+      {t >= loop && (
+        <>
+          <LoopArrow at={loop} />
+          <div style={{ position: "absolute", left: 540 - 91 * 0.7, top: 740 + bob }}>
+            <PixelArt grid={CHAR_IDLE} palette={CHAR_PAL} size={10} />
+          </div>
+          <Pop at={capTime("igual", 3)} style={{ position: "absolute", left: 0, right: 0, top: 1000, textAlign: "center" }}>
+            <div style={{ fontFamily: MONO, fontWeight: 800, fontSize: 46, color: GOLD, letterSpacing: 3 }}>DIA 1 = DIA 365</div>
+          </Pop>
+        </>
+      )}
+      <Floor y={1046} />
+    </AbsoluteFill>
+  );
+};
+
+const SceneF2: React.FC = () => {
+  const { t, frame } = useT();
+  const type = Math.floor(frame / 4) % 2;
+  const bar = lineStart(5);
+  const fake = interpolate(t, [bar, bar + 0.8], [0, 1], clamp);
+  return (
+    <AbsoluteFill style={{ opacity: sceneOpacity(t, T.f2, T.f3) }}>
+      <div style={{ position: "absolute", left: 540 - 91, top: 800 + (type ? 2 : 0) }}>
+        <PixelArt grid={CHAR_SIT} palette={CHAR_PAL} size={14} />
+      </div>
+      <div style={{ position: "absolute", left: 540 - 128, top: 920 }}>
+        <div style={{ width: 256, height: 120, background: "#2b2b2b", border: "8px solid #3d3d3d", boxSizing: "border-box" }} />
+      </div>
+      <div style={{ position: "absolute", left: 220, right: 220, top: 1040, height: 22, background: "#6b4a32" }} />
+      <Chip at={capTime("vídeo", 4)} text="▶ VÍDEO" color={BLUE} x={120} y={600} />
+      <Chip at={capTime("salva", 4)} text="POST SALVO" color={BLUE} x={580} y={640} />
+      <Chip at={capTime("planilha", 4)} text="PLANILHA" color={BLUE} x={330} y={740} />
+      {t >= bar && (
+        <div style={{ position: "absolute", left: 160, right: 160, top: 1080 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontFamily: MONO, fontWeight: 800, fontSize: 30 }}>
+            <span style={{ color: BLUE }}>PRODUTIVO</span>
+            <span style={{ color: BLUE }}>{Math.round(fake * 100)}%</span>
+          </div>
+          <div style={{ height: 22, border: `3px solid ${BLUE}`, marginTop: 6 }}>
+            <div style={{ height: "100%", width: `${fake * 100}%`, background: BLUE }} />
+          </div>
+          {t >= capTime("começou", 5) && (
+            <>
+              <div style={{ display: "flex", justifyContent: "space-between", fontFamily: MONO, fontWeight: 800, fontSize: 30, marginTop: 16 }}>
+                <span style={{ color: RED }}>FEITO</span>
+                <span style={{ color: RED }}>0%</span>
+              </div>
+              <div style={{ height: 22, border: `3px solid ${RED}`, marginTop: 6 }} />
+            </>
+          )}
+        </div>
+      )}
+    </AbsoluteFill>
+  );
+};
+
+const CheckRow: React.FC<{ at: number; label: string; icon?: string; appear: number }> = ({ at, label, icon, appear }) => {
+  const { t, frame, fps } = useT();
+  const done = t >= at;
+  const sp = spring({ frame: frame - appear * fps, fps, config: { damping: 14, stiffness: 170 } });
+  const ck = spring({ frame: frame - at * fps, fps, config: { damping: 9, stiffness: 220 } });
+  return (
+    <div
+      style={{
+        width: 820,
+        height: 128,
+        display: "flex",
+        alignItems: "center",
+        gap: 28,
+        padding: "0 30px",
+        boxSizing: "border-box",
+        background: done ? "rgba(232,184,74,0.10)" : "#1a1a1a",
+        border: `4px solid ${done ? GOLD : "#333"}`,
+        borderRadius: 8,
+        transform: `translateX(${(1 - sp) * 160}px)`,
+        opacity: Math.min(1, sp * 1.4),
+      }}
+    >
+      <div style={{ width: 100, display: "flex", justifyContent: "center" }}>
+        {icon ? <PixelArt grid={ICONS[icon]} palette={ICON_PAL} size={7} /> : <div style={{ fontFamily: MONO, fontSize: 56, color: GOLD, fontWeight: 800 }}>5h</div>}
+      </div>
+      <div style={{ flex: 1, fontFamily: HEAD, fontWeight: 700, fontSize: 48, color: done ? WHITE : "#9a9a9a" }}>{label}</div>
+      <div
+        style={{
+          width: 66,
+          height: 66,
+          border: `5px solid ${done ? GOLD : "#4a4a4a"}`,
+          boxSizing: "border-box",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: MONO,
+          fontSize: 48,
+          fontWeight: 800,
+          color: BG,
+          background: done ? GOLD : "transparent",
+        }}
+      >
+        {done ? <span style={{ transform: `scale(${ck})` }}>✓</span> : null}
+      </div>
+    </div>
+  );
+};
+
+const SceneF3: React.FC = () => {
+  const { t } = useT();
+  const months = lineStart(8);
+  const m = t < capTime("dois", 8) ? 1 : 2;
+  return (
+    <AbsoluteFill style={{ opacity: sceneOpacity(t, T.f3, T.stop) }}>
+      {t < months ? (
+        <div style={{ position: "absolute", top: 600, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 22 }}>
+          <CheckRow at={capTime("Acorda", 7)} label="ACORDAR CEDO" appear={T.f3 + 0.3} />
+          <CheckRow at={capTime("estuda", 7)} label="ESTUDAR" icon="aprendizado" appear={T.f3 + 0.45} />
+          <CheckRow at={capTime("treina", 7)} label="TREINAR" icon="atividade" appear={T.f3 + 0.6} />
+        </div>
+      ) : (
+        <>
+          <Pop at={months} style={{ position: "absolute", left: 540 - 170, top: 590 }}>
+            <div style={{ width: 340, border: `5px solid ${WHITE}`, borderRadius: 10, overflow: "hidden", background: "#1a1a1a" }}>
+              <div style={{ background: RED, height: 54, fontFamily: MONO, fontWeight: 800, fontSize: 32, color: WHITE, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                CALENDÁRIO
+              </div>
+              <div key={m} style={{ fontFamily: HEAD, fontWeight: 700, fontSize: 110, color: WHITE, textAlign: "center", padding: "10px 0 20px" }}>
+                MÊS {m}
+              </div>
+            </div>
+          </Pop>
+          <div style={{ position: "absolute", top: 900, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 30 }}>
+            {[
+              ["0", "CURTIDAS"],
+              ["0", "COMENTÁRIOS"],
+              ["0", "R$"],
+            ].map(([n, l], i) => (
+              <Pop key={l} at={capTime("nada", 8) + i * 0.12}>
+                <div style={{ width: 230, padding: "14px 0", border: `4px solid #444`, background: "#1a1a1a", textAlign: "center" }}>
+                  <div style={{ fontFamily: MONO, fontWeight: 800, fontSize: 60, color: RED, lineHeight: 1 }}>{n}</div>
+                  <div style={{ fontFamily: MONO, fontWeight: 700, fontSize: 22, color: "#8a8a8a", marginTop: 6 }}>{l}</div>
+                </div>
+              </Pop>
+            ))}
+          </div>
+        </>
+      )}
+    </AbsoluteFill>
+  );
+};
+
+const SceneStop: React.FC = () => {
+  const { t, frame } = useT();
+  const flash = interpolate(t, [T.stop, T.stop + 0.05, T.stop + 0.45], [0, 0.35, 0], clamp);
+  return (
+    <AbsoluteFill style={{ opacity: sceneOpacity(t, T.stop, T.f4) }}>
+      {Array.from({ length: 10 }).map((_, i) => {
+        const row = Math.floor(i / 5);
+        const col = i % 5;
+        const quitAt = T.stop + 0.15 + (i < 8 ? i * 0.07 : 99);
+        const q = interpolate(t, [quitAt, quitAt + 0.35], [0, 1], clamp);
+        const bob = q === 0 ? Math.abs(Math.sin(frame / 5 + i)) * 8 : 0;
+        const keep = i >= 8;
+        return (
+          <div
+            key={i}
+            style={{
+              position: "absolute",
+              left: 165 + col * 150,
+              top: 640 + row * 190 - bob + q * 60,
+              opacity: 1 - q * 0.82,
+              transform: `rotate(${q * (i % 2 ? 80 : -80)}deg)`,
+              filter: keep ? `drop-shadow(0 0 14px ${GOLD})` : q > 0 ? "grayscale(1)" : undefined,
+            }}
+          >
+            <PixelArt grid={CHAR_IDLE} palette={CHAR_PAL} size={8} />
+          </div>
+        );
+      })}
+      <AbsoluteFill style={{ background: RED, opacity: flash }} />
+    </AbsoluteFill>
+  );
+};
+
+const SceneF4: React.FC = () => {
+  const { t, frame } = useT();
+  const step = Math.floor(frame / 5) % 2;
+  const day = Math.round(interpolate(t, [T.f4, T.f5 - 0.2], [61, 179], clamp));
+  return (
+    <AbsoluteFill style={{ opacity: sceneOpacity(t, T.f4, T.f5) }}>
+      <div style={{ position: "absolute", left: 540 - 91, top: 760 - step * 6 }}>
+        <PixelArt grid={CHAR_IDLE} palette={CHAR_PAL} size={14} />
+      </div>
+      <Floor y={1046} moving />
+      <Pop at={T.f4 + 0.2} style={{ position: "absolute", left: 120, top: 640 }}>
+        <div style={{ fontFamily: MONO, fontWeight: 800, fontSize: 34, color: "#8a8a8a" }}>DIA</div>
+        <div style={{ fontFamily: MONO, fontWeight: 800, fontSize: 90, color: GOLD, lineHeight: 1 }}>{day}</div>
+      </Pop>
+      <Pop at={capTime("sem", 10)} style={{ position: "absolute", left: 700, top: 640 }}>
+        <div style={{ fontFamily: MONO, fontWeight: 800, fontSize: 34, color: "#8a8a8a" }}>RESULTADO</div>
+        <div style={{ fontFamily: MONO, fontWeight: 800, fontSize: 90, color: RED, lineHeight: 1 }}>0</div>
+      </Pop>
+    </AbsoluteFill>
+  );
+};
+
+const SceneF5: React.FC = () => {
+  const { t, frame } = useT();
+  const spike = capTime("aparece", 11);
+  const k = interpolate(t, [spike, spike + 0.45], [0, 1], clamp);
+  const pts: string[] = [];
+  for (let i = 0; i <= 40; i++) {
+    const x = 140 + i * 20;
+    const flat = 1000 - i * 0.6;
+    const y = i < 34 ? flat : flat - (i - 33) * 70 * k;
+    pts.push(`${x},${y}`);
+  }
+  const drawn = interpolate(t, [T.f5, T.f5 + 0.9], [0, 1], clamp);
+  const sorte = capTime("sorte", 12);
+  const custou = capTime("custou", 12);
+  const jump = t >= spike ? Math.abs(Math.sin(frame / 6)) * 34 : 0;
+  return (
+    <AbsoluteFill style={{ opacity: sceneOpacity(t, T.f5, T.end) }}>
+      {t < sorte ? (
+        <>
+          <svg width={1080} height={1100} style={{ position: "absolute", left: 0, top: 0 }}>
+            <line x1={140} y1={1010} x2={940} y2={1010} stroke="#333" strokeWidth={4} />
+            <polyline points={pts.join(" ")} fill="none" stroke={k > 0 ? GOLD : DIM} strokeWidth={10} strokeDasharray={2000} strokeDashoffset={2000 * (1 - drawn)} />
+          </svg>
+          {k > 0 &&
+            Array.from({ length: 18 }).map((_, i) => {
+              const a = (i / 18) * Math.PI * 2;
+              const r = (t - spike) * 600;
+              return (
+                <div
+                  key={i}
+                  style={{
+                    position: "absolute",
+                    left: 820 + Math.cos(a) * r,
+                    top: 600 + Math.sin(a) * r + (t - spike) * (t - spike) * 500,
+                    width: 18,
+                    height: 18,
+                    background: i % 2 ? GOLD : WHITE,
+                    opacity: interpolate(t - spike, [0, 1.2], [1, 0], clamp),
+                  }}
+                />
+              );
+            })}
+        </>
+      ) : (
+        <>
+          <div style={{ position: "absolute", left: 540 - 91, top: 690 - jump }}>
+            <PixelArt grid={CHAR_ARMS_UP} palette={CHAR_PAL} size={14} />
+          </div>
+          <Floor y={1000} />
+          <Chip at={sorte} text="SORTE" color={DIM} x={120} y={620} crossAt={custou - 0.3} />
+          <Chip at={custou} text="TODO DIA" color={GOLD} x={640} y={640} />
+        </>
+      )}
+    </AbsoluteFill>
+  );
+};
+
+const SceneEnd: React.FC = () => {
+  const { t, frame } = useT();
+  const comenta = capTime("número", 13);
+  return (
+    <AbsoluteFill style={{ opacity: sceneOpacity(t, T.end, TOTAL + 1) }}>
+      <div style={{ position: "absolute", top: 660, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 22 }}>
+        {[1, 2, 3, 4, 5].map((n, i) => {
+          const pulse = t >= comenta ? 1 + Math.max(0, Math.sin(frame / 4 - i * 0.9)) * 0.12 : 1;
+          return (
+            <Pop key={n} at={T.end + 0.2 + i * 0.1}>
+              <div
+                style={{
+                  width: 140,
+                  height: 160,
+                  border: `5px solid ${n === 3 ? RED : GOLD}`,
+                  background: "#1a1a1a",
+                  borderRadius: 12,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontFamily: MONO,
+                  fontWeight: 800,
+                  fontSize: 96,
+                  color: n === 3 ? RED : GOLD,
+                  transform: `scale(${pulse})`,
+                }}
+              >
+                {n}
+              </div>
+            </Pop>
+          );
+        })}
+      </div>
+      <Pop at={comenta} style={{ position: "absolute", left: 0, right: 0, top: 900, textAlign: "center" }}>
+        <div style={{ display: "inline-block", padding: "16px 34px", background: GOLD, borderRadius: 10, fontFamily: HEAD, fontWeight: 700, fontSize: 56, color: BG }}>
+          COMENTA O NÚMERO
+        </div>
+      </Pop>
+    </AbsoluteFill>
+  );
+};
+
+// ---------- Legenda palavra por palavra ----------
+const GOLD_WORDS = new Set(
+  ["vida.", "cinco", "um:", "igual.", "dois:", "nada.", "três:", "começa.", "nada", "maioria", "para.", "quatro:", "continua,", "cinco:", "vez.", "sorte.", "custou.", "número", "fase."].map((w) => w.toLowerCase())
+);
+const RED_WORDS = new Set(["terceira.", "para."]);
+
+const Captions: React.FC = () => {
+  const { t } = useT();
+  const started = CAPS.filter((c) => c.s <= t + 0.05);
+  if (!started.length) return null;
+  const line = started[started.length - 1].line;
+  const words = CAPS.filter((c) => c.line === line);
+  return (
+    <div style={{ position: "absolute", top: 1400, left: 90, right: 90, textAlign: "center", fontFamily: HEAD, fontWeight: 700, fontSize: 52, lineHeight: 1.25 }}>
+      {words.map((c, i) => {
+        const spoken = c.s <= t + 0.05;
+        const lw = c.w.toLowerCase();
+        const color = !spoken ? "#4a4a4a" : RED_WORDS.has(lw) ? RED : GOLD_WORDS.has(lw) ? GOLD : WHITE;
+        const justNow = spoken && t - c.s < 0.15;
+        return (
+          <React.Fragment key={i}>
+            <span style={{ color, display: "inline-block", transform: `scale(${justNow ? 1.1 : 1})` }}>{c.w}</span>
+            {i < words.length - 1 ? " " : ""}
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+};
+
+export const CincoFases: React.FC = () => {
+  const { t } = useT();
+  const { zoom, sx, sy } = useCamera();
+  return (
+    <AbsoluteFill
+      style={{
+        background: BG,
+        backgroundImage:
+          "linear-gradient(rgba(255,255,255,0.025) 2px, transparent 2px), linear-gradient(90deg, rgba(255,255,255,0.025) 2px, transparent 2px)",
+        backgroundSize: "60px 60px",
+      }}
+    >
+      <Audio src={staticFile("narracao.wav")} />
+      {/* área segura dos Reels: tudo reduzido a 90% e descido 20 px */}
+      <AbsoluteFill style={{ transform: `translate(${sx}px, ${20 + sy}px) scale(0.9)`, transformOrigin: "540px 960px" }}>
+        <Hud />
+        <Headline />
+        <AbsoluteFill style={{ transform: `scale(${zoom})`, transformOrigin: "540px 860px" }}>
+          {t < T.f1 && <SceneHook />}
+          {t >= T.f1 && t < T.f2 && <SceneF1 />}
+          {t >= T.f2 && t < T.f3 && <SceneF2 />}
+          {t >= T.f3 && t < T.stop && <SceneF3 />}
+          {t >= T.stop && t < T.f4 && <SceneStop />}
+          {t >= T.f4 && t < T.f5 && <SceneF4 />}
+          {t >= T.f5 && t < T.end && <SceneF5 />}
+          {t >= T.end && <SceneEnd />}
+        </AbsoluteFill>
+        <Track y={1110} />
+        <Captions />
+      </AbsoluteFill>
+    </AbsoluteFill>
+  );
+};
