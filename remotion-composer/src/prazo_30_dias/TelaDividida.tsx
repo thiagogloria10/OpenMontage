@@ -815,7 +815,7 @@ const Final: React.FC = () => {
   const slump = P(498, 384, 124, [100, 78], [108, 70], [95, 5], [85, 0]);
   const hd = headOf(slump);
   const breathe = Math.sin(t * 2) * 1.5;
-  const goldPose = { ...P(800, 342 + breathe * 0.3, 180, [12, 4], [42, 150], [-5, 0], [5, 0]) };
+  const goldPose = { ...P(752, 342 + breathe * 0.3, 180, [12, 4], [42, 150], [-5, 0], [5, 0]) };
   const sip = k > 1.8 && k < 2.6 ? er(t, STREET + 1.8, STREET + 2.1) * (1 - er(t, STREET + 2.3, STREET + 2.6)) : 0;
   goldPose.aN = [lerp(42, 60, sip), lerp(150, 175, sip)];
   return (
