@@ -18,7 +18,7 @@ const MONO = "'JetBrains Mono', 'DejaVu Sans Mono', monospace";
 const SKIN = "#f3efe7", SKIN2 = "#d9d2c5";
 
 // ------------------------------------------------------------------ cenas (duração em s) e falas
-const DUR = [4.0, 1.2, 1.2, 4.4, 7.0, 3.4, 3.4, 3.4, 3.0, 3.2, 6.6, 3.0, 6.2, 2.1, 1.8, 2.6, 4.4, 4.6, 4.0];
+const DUR = [4.0, 1.2, 1.2, 4.4, 7.0, 3.4, 3.8, 3.4, 3.0, 3.2, 6.6, 3.2, 6.2, 2.1, 1.8, 2.6, 4.6, 4.6, 4.0];
 const ST: number[] = DUR.reduce<number[]>((a, d, i) => [...a, i === 0 ? 0 : a[i - 1] + DUR[i - 1]], []);
 export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
 // [texto, arquivo, início relativo à cena, duração da fala]
@@ -27,26 +27,26 @@ const LINES: LineT[] = [
   ["Pai, posso ir no passeio? É cem reais.", 90, 0.15, 3.56],
   null,
   null,
-  ["Esse é o Marcos. Ele sempre acorda atrasado.", 1, 0.3, 3.7],
-  ["O Lucas, o filho, já foi pra escola. A Juliana, a esposa, pro trabalho.", 2, 0.4, 4.6],
-  ["Ônibus lotado. Como todo dia.", 3, 0.4, 2.2],
-  ["No escritório, o emprego que ele não aguenta mais.", 4, 0.3, 2.83],
-  ["E esse... é o seu Roberto. O chefe dele.", 5, 0.5, 2.56],
-  ["E o Marcos leva mais uma bronca.", 6, 0.3, 1.72],
-  ["Mas hoje é dia de pagamento.", 7, 0.4, 2.26],
-  ["Em casa, as contas. Água. Luz. Internet. Aluguel. Mercado. Remédios.", 8, 0.3, 5.98],
-  ["Aí o Lucas chega da escola, animado:", 9, 0.3, 2.46],
+  ["Esse é o Marcos. Ele sempre acorda atrasado.", 1, 0.3, 3.14],
+  ["O Lucas, o filho, já foi para a escola. A Juliana, a esposa, para o trabalho.", 2, 0.4, 5.0],
+  ["Ônibus lotado. Como todo dia.", 3, 0.4, 2.43],
+  ["Aí, no escritório, o emprego que ele não aguenta mais.", 4, 0.3, 3.38],
+  ["E esse... é o seu Roberto. O chefe dele.", 5, 0.5, 2.49],
+  ["E o Marcos leva mais uma bronca.", 6, 0.3, 1.8],
+  ["Mas hoje é dia de pagamento.", 7, 0.4, 2.27],
+  ["Em casa, as contas. Água. Luz. Internet. Aluguel. Mercado. Remédios.", 8, 0.3, 5.09],
+  ["Aí o Lucas chega da escola, animado:", 9, 0.3, 2.87],
   ["Pai, a escola vai fazer um passeio! Custa cem reais. Posso ir?", 10, 0.25, 5.72],
-  ["Marcos olha o extrato...", 11, 0.3, 1.04],
-  ["Zerado.", 12, 0.25, 0.96],
-  ["E tem que dizer não.", 13, 0.4, 1.3],
-  ["Depois, vê o olhar da Juliana. Preocupação. Tristeza.", 14, 0.4, 3.5],
-  ["É ali que Marcos decide: alguma coisa vai mudar.", 15, 0.4, 2.91],
-  ["O que Marcos vai fazer? Segue pra ver a parte dois.", 16, 0.3, 3.51],
+  ["Marcos olha o extrato...", 11, 0.3, 1.11],
+  ["Zerado.", 12, 0.25, 0.77],
+  ["E tem que dizer não.", 13, 0.4, 1.6],
+  ["Depois, vê o olhar da Juliana. Preocupação. Tristeza.", 14, 0.4, 4.05],
+  ["É ali que Marcos decide: alguma coisa vai mudar.", 15, 0.4, 3.03],
+  ["O que Marcos vai fazer? Segue para ver a parte dois.", 16, 0.3, 3.38],
 ];
 // tempos reais de cada palavra (voz ElevenLabs), relativos ao início do arquivo da fala
-const WORDT: Record<number, number[]> = {"1": [0, 0.66, 0.78, 1.04, 1.9, 2.06, 2.4, 2.78], "2": [0.06, 0.08, 0.52, 0.68, 0.9, 1.14, 1.26, 1.42, 2.24, 2.42, 3.02, 3.2, 3.88, 3.92], "3": [0.1, 0.5, 1.24, 1.5, 1.88], "4": [0.08, 0.28, 1.06, 1.26, 1.56, 1.72, 1.88, 2.06, 2.34], "5": [0.08, 0.36, 0.62, 0.96, 1.06, 1.18, 1.76, 1.96, 2.3], "6": [0.04, 0.16, 0.34, 0.58, 0.88, 1.1, 1.36], "7": [0.04, 0.28, 0.7, 1.14, 1.4, 1.64], "8": [0.06, 0.22, 0.84, 1.02, 1.78, 2.6, 3.36, 4.24, 4.92, 5.58], "9": [0.02, 0.4, 0.58, 0.78, 1.04, 1.2, 1.9], "11": [0.08, 0.38, 0.56, 0.82], "12": [0.08], "13": [0.11, 0.25, 0.43, 0.59, 0.89], "14": [0.08, 0.28, 0.48, 0.6, 0.82, 1.04, 1.94, 2.86], "15": [0.06, 0.18, 0.38, 0.62, 0.94, 1.66, 2.04, 2.24, 2.42], "16": [0.1, 0.2, 0.42, 0.7, 0.86, 1.98, 2.28, 2.5, 2.66, 2.86, 3.04], "90": [0.0, 0.96, 1.16, 1.4, 1.6, 2.52, 2.64, 2.9], "10": [0.0, 0.6, 0.82, 1.14, 1.42, 1.78, 1.98, 3.64, 3.88, 4.08, 5.16, 5.36]};
-const VOICE_DIR = "marcos_dia1/fala_el2";
+const WORDT: Record<number, number[]> = {"1": [0, 0.9, 1.02, 1.28, 1.68, 1.88, 2.22, 2.58], "2": [0.16, 0.28, 0.68, 0.88, 1.12, 1.3, 1.46, 1.6, 1.8, 2.4, 2.6, 3.32, 3.54, 4.28, 4.4, 4.56], "3": [0.3, 0.68, 1.32, 1.66, 2.02], "4": [0.21, 0.49, 0.67, 1.45, 1.67, 1.99, 2.15, 2.27, 2.45, 2.73], "5": [0.11, 0.43, 0.59, 0.75, 0.79, 0.95, 1.65, 1.85, 2.11], "6": [0.06, 0.18, 0.34, 0.58, 0.86, 1.16, 1.42], "7": [0.2, 0.42, 0.8, 1.18, 1.46, 1.66], "8": [0.13, 0.29, 0.67, 0.83, 1.35, 1.79, 2.39, 3.11, 3.89, 4.55], "9": [0.12, 0.32, 0.54, 0.74, 1.02, 1.18, 2.06], "11": [0, 0.27, 0.53, 0.79], "12": [0.12], "13": [0.19, 0.41, 0.59, 0.81, 1.17], "14": [0.37, 0.91, 1.07, 1.17, 1.35, 1.55, 2.61, 3.59], "15": [0.14, 0.3, 0.52, 0.74, 1.04, 1.78, 2.14, 2.38, 2.56], "16": [0.23, 0.33, 0.55, 0.87, 1.05, 1.93, 2.23, 2.41, 2.57, 2.73, 2.93], "90": [0.0, 0.96, 1.16, 1.4, 1.6, 2.52, 2.64, 2.9], "10": [0.0, 0.6, 0.82, 1.14, 1.42, 1.78, 1.98, 3.64, 3.88, 4.08, 5.16, 5.36]};
+const VOICE_DIR = "marcos_dia1/fala_el3";
 const KEY = ["passeio", "cem", "roberto", "bronca", "marcos", "lucas", "esse", "atrasado", "dia", "lotado", "chefe", "pagamento", "contas", "cem", "reais", "zerado", "não", "juliana", "mudar", "dois", "remédios"];
 
 // ------------------------------------------------------------------ utilidades
@@ -854,7 +854,7 @@ const S6 = (t: number) => {
 const CAM6 = (t: number): Cam => ({ z: kf(t, [[0, 1.0], [1.8, 1.0], [3.4, 1.18]]), fx: 540, fy: kf(t, [[0, 640], [3.4, 600]]) });
 
 // --- casa à noite: Marcos sentado na cadeira (pernas aparecem), mesa ao lado, porta à direita
-const BILLS: [string, string, string, number][] = [["ÁGUA", "R$ 120", "💧", 2.08], ["LUZ", "R$ 190", "⚡", 2.9], ["INTERNET", "R$ 100", "📶", 3.66], ["ALUGUEL", "R$ 900", "🏠", 4.54], ["MERCADO", "R$ 650", "🛒", 5.22], ["REMÉDIOS", "R$ 340", "💊", 5.88]];
+const BILLS: [string, string, string, number][] = [["ÁGUA", "R$ 120", "💧", 1.65], ["LUZ", "R$ 190", "⚡", 2.09], ["INTERNET", "R$ 100", "📶", 2.69], ["ALUGUEL", "R$ 900", "🏠", 3.41], ["MERCADO", "R$ 650", "🛒", 4.19], ["REMÉDIOS", "R$ 340", "💊", 4.85]];
 const BILL_POS: V[] = [[250, 300], [540, 225], [830, 300], [250, 520], [830, 520], [830, 740]];
 const FLOOR_N = 1012, SEAT_X = 545, SEAT_Y = 852;
 const marcosChair = (x: number, o: Partial<Ch> = {}): Ch => base({
@@ -1047,7 +1047,7 @@ const CAM14 = (t: number): Cam => ({ z: kf(t, [[0, 1.25], [2.2, 1.35], [3.3, 1.6
 const CAM15 = (t: number): Cam => ({ z: 1.8 + t * 0.02, fx: SEAT_X, fy: 450 });
 
 // ---- abertura: o momento mais forte, depois rebobina para a manhã (o resto é a v9)
-const famT = (t: number) => (t < 3.6 ? interpolate(t, [0, 0.48, 2.82, 3.6], [0, 0.55, 2.3, 3.0]) : t - 0.6);
+const famT = (t: number) => (t < 3.6 ? interpolate(t, [0, 0.68, 3.0, 3.6], [0, 0.55, 2.3, 3.0]) : t - 0.6);
 const COLD = (t: number) => {
   const m = follow((x) => { const c = marcosLooks(x + 2, 1); c.face = F({ lx: 0.7, px: 1, curve: lerp(0.15, -0.1, er(x, 1.5, 2.5)), worry: lerp(0.3, 0.7, er(x, 1.5, 2.5)), open: 1 - blinkAt(x, 2.4, 0.9), raise: 0.2 }); return c; }, t);
   const l = follow((x) => lucasAt(x + 2.0, "ask"), t);
