@@ -26,7 +26,7 @@ def thud(): t=np.arange(int(SR*0.3))/SR; return np.sin(2*np.pi*(80+60*np.exp(-t*
 def chime():
     t=np.arange(int(SR*1.4))/SR; return sum(np.sin(2*np.pi*f*t)*np.exp(-t*3) for f in (660,880,1320))/3
 for s in range(1,len(DUR)): add(whoosh(),s,-0.12,0.18)
-amb=lp(noise(TOTAL),60); add(amb/np.abs(amb).max(),0,0,0.03)
+# (sem ruído de fundo: o Thiago pediu só os efeitos)
 # S1-S3: passos, balões, escrevendo
 for k in np.arange(0.0,1.1,0.25): add(step(),0,k,0.3)
 add(pop(),0,1.2,0.5); add(pop(),0,2.5,0.45)

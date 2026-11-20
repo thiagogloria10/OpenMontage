@@ -783,8 +783,8 @@ export const AgoraDepois: React.FC = () => {
       {/* frase de impacto no meio da tela dividida (sobre a linha dourada) */}
       {s === 7 && (() => { const k = er(lt, 0.25, 0.6); return (
         <div style={{ position: "absolute", left: 0, right: 0, top: 960 - 112, height: 224, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: `rgba(10,6,5,${0.82 * k})`, borderTop: `5px solid rgba(232,184,74,${k})`, borderBottom: `5px solid rgba(232,184,74,${k})` }}>
-          <div style={{ fontFamily: BARLOW, fontWeight: 700, fontSize: 76, lineHeight: 1.0, letterSpacing: 2, color: WHITE, opacity: k, transform: `scale(${0.92 + 0.08 * k})` }}>QUEM SE ESFORÇA AGORA,</div>
-          <div style={{ fontFamily: BARLOW, fontWeight: 700, fontSize: 76, lineHeight: 1.05, letterSpacing: 2, color: GOLD, opacity: er(lt, 0.7, 1.05), transform: `scale(${0.92 + 0.08 * er(lt, 0.7, 1.05)})` }}>DESCANSA DEPOIS.</div>
+          <div style={{ fontFamily: BARLOW, fontWeight: 700, fontSize: 76, lineHeight: 1.0, letterSpacing: 2, color: WHITE, opacity: k, transform: `scale(${0.92 + 0.08 * k})` }}>O SACRIFÍCIO DE HOJE</div>
+          <div style={{ fontFamily: BARLOW, fontWeight: 700, fontSize: 76, lineHeight: 1.05, letterSpacing: 2, color: GOLD, opacity: er(lt, 0.7, 1.05), transform: `scale(${0.92 + 0.08 * er(lt, 0.7, 1.05)})` }}>É A PAZ DE AMANHÃ.</div>
         </div>); })()}
       {card > 0 && (
         <div style={{ position: "absolute", left: 120, right: 120, top: 860, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, fontSize: 96, letterSpacing: 3, color: GOLD, opacity: card, transform: `translateY(${(1 - card) * 14}px)` }}>2 SEMANAS<br /><span style={{ color: WHITE }}>DEPOIS…</span></div>
