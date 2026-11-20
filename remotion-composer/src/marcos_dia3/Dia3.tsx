@@ -19,29 +19,29 @@ const MONO = "'JetBrains Mono', 'DejaVu Sans Mono', monospace";
 const SKIN = "#f3efe7", SKIN2 = "#d9d2c5";
 
 // ------------------------------------------------------------------ cenas (duração em s) e falas
-const DUR = [5.0, 4.2, 4.3, 3.9, 2.6, 7.6, 4.3, 2.8, 2.9, 3.8, 5.0, 5.6];
+const DUR = [5.7, 4.5, 5.1, 4.7, 2.6, 9.2, 5.3, 3.0, 3.8, 4.1, 5.6, 6.3];
 const ST: number[] = DUR.reduce<number[]>((a, d, i) => [...a, i === 0 ? 0 : a[i - 1] + DUR[i - 1]], []);
 export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
 // [texto, arquivo, início relativo à cena, duração da fala]
 type LineT = [string, number, number, number] | null;
 const LINES: LineT[] = [
-  ["Ontem, o Marcos prometeu que tudo ia mudar. E hoje é aniversário da Juliana.", 0, 0.3, 4.15],
-  ["Hoje, o Marcos acorda mais cedo. Pra fazer o café da família.", 1, 0.3, 3.3],
-  ["Ovos, pão, café. E um cartão: feliz aniversário, Ju.", 2, 0.3, 3.35],
-  ["Mas ele se atrasa de novo. E não dá tempo de comer com eles.", 3, 0.3, 2.95],
-  ["O lugar dele fica vazio.", 4, 0.3, 1.45],
-  ["No trabalho, o seu Roberto continua pegando no pé. Mas o Marcos faz tudo. E termina mais cedo, pensando no aniversário da Juliana.", 5, 0.3, 6.9],
-  ["Na volta, ele passa numa joalheria. Procurando um presente pra Juliana.", 7, 0.3, 3.4],
-  ["E vê um anel enorme. Brilhando.", 8, 0.3, 1.85],
-  ["Ele olha a conta... Zerada. De novo.", 9, 0.25, 1.8],
-  ["Mas ele não desiste. Sai dali ainda mais motivado.", 10, 0.3, 2.95],
-  ["No caminho, ele colhe uma flor. Não é o anel. Mas ela sorri como se fosse.", 12, 0.3, 4.2],
-  ["E amanhã, no caminho de casa, ele vai ver algo que muda tudo. Segue pra ver a parte quatro.", 11, 0.3, 4.55],
+  ["Ontem, o Marcos prometeu que tudo ia mudar, e hoje é aniversário da Juliana.", 1, 0.2, 5.04],
+  ["Hoje, o Marcos acorda mais cedo, para fazer o café da família.", 2, 0.05, 3.9],
+  ["Ovos, pão, café e um cartão. Feliz aniversário, Ju.", 3, 0.0, 4.36],
+  ["Mas ele se atrasa de novo, e não dá tempo de comer com eles.", 4, 0.09, 4.06],
+  ["O lugar dele fica vazio.", 5, 0.01, 1.48],
+  ["No trabalho, o seu Roberto continua pegando no pé, mas o Marcos faz tudo. E termina mais cedo, pensando no aniversário da Juliana.", 6, 0.03, 8.58],
+  ["Na volta, ele passa numa joalheria, procurando um presente para Juliana.", 7, 0.2, 4.67],
+  ["E vê um anel enorme, brilhando.", 8, 0.0, 2.34],
+  ["Ele olha a conta, zerada. De novo,", 9, 0.05, 3.16],
+  ["mas ele não desiste. Sai dali ainda mais motivado.", 10, 0.05, 3.44],
+  ["No caminho, ele colhe uma flor. Não é o anel, mas ela sorri como se fosse.", 11, 0.06, 4.98],
+  ["E amanhã, no caminho de casa, ele vai ver algo que muda tudo. Segue para ver a parte 4.", 12, 0.0, 5.62],
 ];
 // tempos reais de cada palavra (preencher com a voz da ElevenLabs via sincronizar_voz.py)
-const WORDT: Record<number, number[]> = {};
-const VOICE_DIR = "marcos_dia3/fala";
-const KEY = ["prometeu", "aniversário", "juliana", "cedo", "café", "lucas", "atrasa", "vazio", "roberto", "abala", "excelência", "joalheria", "presente", "anel", "zerada", "desiste", "motivado", "tudo", "quatro", "marcos", "cartão", "ju", "cedo", "flor", "sorri"];
+const WORDT: Record<number, number[]> = {"1": [0, 0.98, 1.18, 1.36, 1.82, 2.02, 2.28, 2.42, 3.02, 3.22, 3.46, 3.6, 4.22, 4.44], "2": [0.15, 0.63, 0.81, 1.05, 1.47, 1.79, 2.41, 2.53, 2.87, 3.07, 3.23, 3.45], "3": [0.32, 0.86, 1.38, 1.64, 2.0, 2.2, 2.92, 3.32, 4.08], "4": [0.11, 0.37, 0.57, 0.87, 1.17, 1.37, 2.27, 2.37, 2.47, 2.63, 2.91, 3.11, 3.31, 3.57], "5": [0.19, 0.33, 0.61, 0.83, 1.07], "6": [0.17, 0.33, 1.21, 1.31, 1.41, 1.85, 2.29, 2.81, 3.03, 3.51, 3.67, 3.89, 4.23, 4.57, 5.33, 5.67, 5.89, 6.21, 6.87, 7.15, 7.33, 7.97, 8.15], "7": [0, 0.69, 1.01, 1.21, 1.55, 1.81, 2.89, 3.19, 3.49, 3.81, 4.07], "8": [0.23, 0.41, 0.55, 0.79, 1.07, 1.97], "9": [0.15, 0.33, 0.57, 0.79, 1.73, 2.51, 2.71], "10": [0.15, 0.35, 0.53, 0.75, 1.91, 2.09, 2.43, 2.73, 2.99], "11": [0.14, 0.26, 0.84, 1.0, 1.14, 1.56, 2.16, 2.36, 2.54, 2.68, 3.24, 3.48, 3.72, 4.04, 4.24, 4.52], "12": [0.25, 0.41, 1.01, 1.11, 1.33, 1.59, 2.13, 2.21, 2.39, 2.59, 2.83, 3.13, 3.43, 4.17, 4.41, 4.63, 4.87, 5.09, 5.27]};
+const VOICE_DIR = "marcos_dia3/fala_el";
+const KEY = ["prometeu", "aniversário", "juliana", "cedo", "café", "lucas", "atrasa", "vazio", "roberto", "abala", "excelência", "joalheria", "presente", "anel", "zerada", "desiste", "motivado", "tudo", "quatro", "4", "marcos", "cartão", "ju", "cedo", "flor", "sorri"];
 
 // ------------------------------------------------------------------ utilidades
 type V = [number, number];
@@ -1898,10 +1898,10 @@ export const MarcosDia3: React.FC = () => {
   const c = cam(lt);
   const flash = s > 0 ? Math.max(0, 1 - lt / 0.14) * 0.18 : 0;
   const LAST = SCENES.length - 1;
-  const endP = s === LAST ? er(lt, 0.3, 0.8) : 0;
-  const endOut = s === LAST ? er(lt, 1.9, 2.1) : 0;
-  const endP2 = s === LAST ? er(lt, 2.1, 2.4) : 0;
-  const endP3 = s === LAST ? er(lt, 3.7, 4.1) : 0;
+  const endP = s === LAST ? er(lt, 0.25, 0.65) : 0;
+  const endOut = s === LAST ? er(lt, 1.88, 2.08) : 0;
+  const endP2 = s === LAST ? er(lt, 2.08, 2.38) : 0;
+  const endP3 = s === LAST ? er(lt, 4.07, 4.42) : 0;
   const morning = s === 1 ? er(lt, 0.0, 0.25) * (1 - er(lt, 1.8, 2.1)) : 0;
   const recap = s === 0 ? er(lt, 0, 0.2) * (1 - er(lt, 4.7, 5.0)) : 0;
   const stroke = (w: number) => ({ WebkitTextStroke: `${w}px #0a0605`, paintOrder: "stroke fill" as const });
