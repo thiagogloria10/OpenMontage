@@ -10,10 +10,13 @@ def sim(yf):
         v=math.sqrt(v0*v0+2*G*(y0-ym))*0.97;t+=ds/v;ts.append(t);vs.append(v)
     return t,np.array(ts),np.array(vs)
 TS,tss,vss=sim(lambda s:H*(1-s)); TW,tsw,vsw=sim(lambda s:H*(1-s)-A*math.sin(3*math.pi*s)**2)
+def _rate(x,tw):
+    u=max(0,min(1,(x-(tw-2.2))/1.6)); k=u*u*(3-2*u); return (1/SLOW)*(1-k)+(1/(SLOW*2.2))*k
+_TW=TW*SLOW; _S=[0.0]; _acc=0.0
+for _i in range(1,6001):
+    _x=_i/300; _acc+=_rate(_x-1/600,_TW)/300; _S.append(_acc)
 def simTime(t):
-    x=max(0,t-START); twv=TW*SLOW
-    if x<twv-1.2: return x/SLOW
-    return (twv-1.2)/SLOW+(x-(twv-1.2))/(SLOW*2.2)
+    x=max(0,t-START)*300; i=min(len(_S)-2,int(x)); return _S[i]+(_S[i+1]-_S[i])*(x-i)
 def fin(T):
     t=0
     while simTime(t)<T: t+=1/240
@@ -45,7 +48,7 @@ def chime(f):
 # drone de fundo
 drone=(np.sin(2*np.pi*55*tt)*0.5+np.sin(2*np.pi*110.5*tt)*0.2)*env(len(tt),0.8,1.0); out[:len(tt)]+=drone*0.12
 add(clack(2200),0.12,0.5); add(clack(1700),0.16,0.4)
-for c in (2.3,4.6,6.4,8.2,10.6): add(whoosh(0.35),c-0.15,0.25)
+for c in (2.4,4.7,6.8,8.6,11.2): add(whoosh(0.9),c-0.45,0.08)  # passagens suaves de câmera
 add(boom(),FW,0.7); add(chime(988),FW,0.45); add(clack(1500),FW,0.5)
 add(clack(1300),FS,0.4); add(chime(660),FS,0.22)
 out=out[:int(SR*TOTAL)]; out=out/np.abs(out).max()*0.9

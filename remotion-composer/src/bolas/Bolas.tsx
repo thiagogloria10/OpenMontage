@@ -41,14 +41,9 @@ const sAt = (sim: Sim, t: number) => {
 // tempo do vídeo → tempo da simulação (câmera lenta no começo e na chegada)
 const START = 0.15;              // as bolas ficam paradas no começo por 0,6 s
 const SLOW = 2.0;               // fator de câmera lenta geral
-const simTime = (t: number) => {
-  const x = Math.max(0, t - START);
-  // perto da chegada da ondulada, desacelera mais (câmera lenta)
-  const tw = SIM_W.T * SLOW;
-  if (x < tw - 1.2) return x / SLOW;
-  const base = (tw - 1.2) / SLOW, extra = x - (tw - 1.2);
-  return base + extra / (SLOW * 2.2);
-};
+const rate = (x: number, tw: number) => { const u = Math.max(0, Math.min(1, (x - (tw - 2.2)) / 1.6)); const k = u * u * (3 - 2 * u); return (1 / SLOW) * (1 - k) + (1 / (SLOW * 2.2)) * k; };
+const SIMT: number[] = (() => { const out = [0]; const tw = SIM_W.T * SLOW; let acc = 0; for (let i = 1; i <= 6000; i++) { const x = i / 300; acc += rate(x - 1 / 600, tw) / 300; out.push(acc); } return out; })();
+const simTime = (t: number) => { const x = Math.max(0, t - START) * 300; const i = Math.min(SIMT.length - 2, Math.floor(x)); return SIMT[i] + (SIMT[i + 1] - SIMT[i]) * (x - i); };
 export const T_FINISH_W = (() => { let t = 0; while (simTime(t) < SIM_W.T) t += 1 / 60; return t; })();
 export const T_FINISH_S = (() => { let t = 0; while (simTime(t) < SIM_S.T) t += 1 / 60; return t; })();
 const posBall = (which: "s" | "w", t: number): THREE.Vector3 => {
@@ -83,7 +78,7 @@ const Trough: React.FC<{ yf: (s: number) => number; x: number }> = ({ yf, x }) =
     }
     const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g;
   }, [yf, x]);
-  return <mesh geometry={geo}><meshStandardMaterial color="#14171e" metalness={0.6} roughness={0.45} side={THREE.DoubleSide} /></mesh>;
+  return <mesh geometry={geo}><meshStandardMaterial color="#202329" metalness={0.5} roughness={0.5} side={THREE.DoubleSide} /></mesh>;
 };
 // estrutura: base da pista (bloco escuro sob as duas calhas) com pilares
 const Structure: React.FC = () => {
@@ -131,37 +126,50 @@ const Env: React.FC = () => {
   useMemo(() => {
     const pm = new THREE.PMREMGenerator(gl);
     scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture;
-    scene.background = new THREE.Color("#04060b");
-    scene.fog = new THREE.Fog("#04060b", 18, 46);
+    scene.background = new THREE.Color("#cfd1d6");
+    scene.fog = new THREE.Fog("#cfd1d6", 22, 60);
   }, [gl, scene]);
   return null;
 };
 
-// ---------------- câmeras (cortes) — cada plano: posição e alvo em função do tempo
-type Shot = { t0: number; t1: number; cam: (t: number) => { pos: THREE.Vector3; look: THREE.Vector3; fov: number } };
+// ---------------- câmera contínua: passa por vários ângulos sem cortes (transições longas e suaves)
+type CamK = { pos: THREE.Vector3; look: THREE.Vector3; fov: number };
 const mid = (t: number) => posBall("w", t).clone().add(posBall("s", t)).multiplyScalar(0.5);
-const SHOTS: Shot[] = [
-  // 1. de frente, baixo, no começo (como a referência): as duas bolas grandes, pistas indo para longe
-  { t0: 0, t1: 2.3, cam: (t) => { const k = Math.min(1, t / 2.3); const m = mid(t); return { pos: new THREE.Vector3(0, m.y + 2.1, m.z + 5.6 - k * 1.2), look: new THREE.Vector3(0, m.y - 0.6, m.z - 4), fov: 44 }; } },
-  // 2. lateral acompanhando: mostra a ondulada descendo e subindo ao lado da reta
-  { t0: 2.3, t1: 4.6, cam: (t) => { const m = mid(t); return { pos: new THREE.Vector3(7.5, m.y + 1.2, m.z + 1.5), look: new THREE.Vector3(0, m.y - 0.3, m.z - 0.6), fov: 40 }; } },
-  // 3. atrás da bola da ondulada, rasante, entrando na descida
-  { t0: 4.6, t1: 6.4, cam: (t) => { const p = posBall("w", t), q = posBall("w", t + 0.3); return { pos: new THREE.Vector3(p.x - 0.1, p.y + 1.15, p.z + 2.3), look: new THREE.Vector3(q.x - 0.4, q.y - 0.4, q.z - 3.5), fov: 52 }; } },
-  // 4. do alto, de cima: a ondulada abrindo vantagem
-  { t0: 6.4, t1: 8.2, cam: (t) => { const m = mid(t); return { pos: new THREE.Vector3(-2.2, m.y + 7.5, m.z + 2.5), look: new THREE.Vector3(0, m.y, m.z - 1.5), fov: 44 }; } },
-  // 5. na chegada, olhando para trás: as bolas vêm na direção da câmera (câmera lenta)
-  { t0: 8.2, t1: 10.6, cam: (t) => { const k = (t - 8.2) / 2.4; return { pos: new THREE.Vector3(0.15, 1.15, -L - 5.2 + k * 0.8), look: new THREE.Vector3(0.1, 1.5, -L + 6), fov: 34 }; } },
-  // 6. lateral aberta final: as duas na chegada, a ondulada na frente
-  { t0: 10.6, t1: TOTAL, cam: (t) => { const k = (t - 10.6) / (TOTAL - 10.6); return { pos: new THREE.Vector3(6.4 - k * 0.6, 2.6, -L + 4.2), look: new THREE.Vector3(0, 0.7, -L - 0.4), fov: 44 }; } },
+const VIEWS: ((t: number) => CamK)[] = [
+  // de frente, de cima (como a referência)
+  (t) => { const m = mid(t); return { pos: new THREE.Vector3(0, m.y + 2.2, m.z + 5.4), look: new THREE.Vector3(0, m.y - 0.6, m.z - 4), fov: 44 }; },
+  // de lado, acompanhando (mostra a ondulada descendo e subindo)
+  (t) => { const m = mid(t); return { pos: new THREE.Vector3(7.2, m.y + 1.0, m.z + 0.8), look: new THREE.Vector3(0, m.y - 0.3, m.z - 0.8), fov: 40 }; },
+  // atrás da bola da ondulada, mais baixo
+  (t) => { const p = posBall("w", t), q = posBall("w", t + 0.35); return { pos: new THREE.Vector3(p.x - 0.2, p.y + 1.25, p.z + 2.6), look: new THREE.Vector3(q.x - 0.4, q.y - 0.4, q.z - 3.5), fov: 50 }; },
+  // de cima, inclinado
+  (t) => { const m = mid(t); return { pos: new THREE.Vector3(-3.0, m.y + 6.8, m.z + 2.4), look: new THREE.Vector3(0, m.y, m.z - 1.5), fov: 44 }; },
+  // na chegada, olhando para as bolas que vêm
+  (_t) => ({ pos: new THREE.Vector3(0.15, 1.3, -L - 5.0), look: new THREE.Vector3(0.1, 1.4, -L + 6), fov: 36 }),
+  // lateral final, chegada no centro
+  (_t) => ({ pos: new THREE.Vector3(6.0, 2.5, -L + 4.0), look: new THREE.Vector3(0, 0.7, -L - 0.4), fov: 44 }),
 ];
+// [início da troca, fim da troca] entre a vista i e a i+1
+const BLEND: [number, number][] = [[1.6, 3.2], [4.0, 5.4], [6.2, 7.5], [8.0, 9.2], [10.6, 11.8]];
+const sm = (x: number) => { x = Math.max(0, Math.min(1, x)); return x * x * x * (x * (x * 6 - 15) + 10); };
+const camAt = (t: number): CamK => {
+  let i = 0; while (i < BLEND.length && t >= BLEND[i][1]) i++;
+  if (i < BLEND.length && t > BLEND[i][0]) {
+    const u = sm((t - BLEND[i][0]) / (BLEND[i][1] - BLEND[i][0])), a = VIEWS[i](t), b = VIEWS[i + 1](t);
+    const pos = a.pos.clone().lerp(b.pos, u); pos.y += Math.sin(u * Math.PI) * (i === 3 ? 3.2 : 1.4); // sobe num arco para não atravessar a pista
+    return { pos, look: a.look.clone().lerp(b.look, u), fov: a.fov + (b.fov - a.fov) * u };
+  }
+  return VIEWS[i](t);
+};
 const CamRig: React.FC<{ t: number }> = ({ t }) => {
   const { camera } = useThree();
-  const sh = SHOTS.find((s) => t >= s.t0 && t < s.t1) ?? SHOTS[SHOTS.length - 1];
-  const c = sh.cam(t);
-  camera.position.copy(c.pos);
-  (camera as THREE.PerspectiveCamera).fov = c.fov;
+  // média de alguns instantes: movimento ainda mais macio
+  let p = new THREE.Vector3(), l = new THREE.Vector3(), f = 0, n = 0;
+  for (let k = -3; k <= 3; k++) { const w = 4 - Math.abs(k); const c = camAt(Math.max(0, t + k / 60)); p.addScaledVector(c.pos, w); l.addScaledVector(c.look, w); f += c.fov * w; n += w; }
+  camera.position.copy(p.multiplyScalar(1 / n));
+  (camera as THREE.PerspectiveCamera).fov = f / n;
   (camera as THREE.PerspectiveCamera).updateProjectionMatrix();
-  camera.lookAt(c.look);
+  camera.lookAt(l.multiplyScalar(1 / n));
   return null;
 };
 
@@ -172,32 +180,28 @@ export const Bolas: React.FC = () => {
   const pw = posBall("w", t), ps = posBall("s", t);
   const spinW = (-L * sOf("w", t)) / R, spinS = (-L * sOf("s", t)) / R;
   const glow = t >= T_FINISH_W ? Math.max(0, 1 - (t - T_FINISH_W) / 0.8) : 0;
-  const cutFlash = SHOTS.some((s) => s.t0 > 0 && t >= s.t0 && t < s.t0 + 0.08) ? 0.12 : 0;
+  const cutFlash = 0;
   return (
     <AbsoluteFill style={{ background: "#04060b" }}>
       <Audio src={staticFile("bolas/sfx.wav")} />
       <ThreeCanvas width={width} height={height} gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }} camera={{ fov: 45, near: 0.05, far: 200, position: [0, 6, 3] }}>
         <Env />
         <CamRig t={t} />
-        <ambientLight intensity={0.25} />
-        <directionalLight position={[4, 12, 6]} intensity={1.6} color="#ffffff" />
-        <directionalLight position={[-6, 4, -10]} intensity={1.2} color="#5fb8ff" />
-        <pointLight position={[0, 6, -L]} intensity={3} distance={18} color="#5fe0ff" />
-        <Floor />
-        <Structure />
+        <ambientLight intensity={0.55} />
+        <directionalLight position={[5, 14, 4]} intensity={1.7} color="#ffffff" />
+        <directionalLight position={[-6, 6, -8]} intensity={0.6} color="#e8eefc" />
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.2, -12]}><planeGeometry args={[200, 200]} /><meshStandardMaterial color="#c6c8cd" roughness={0.95} metalness={0} /></mesh>
         <Trough yf={yStraight} x={XS} />
         <Trough yf={yWavy} x={XW} />
         {/* trilhos de metal de cada pista + filete de luz na borda */}
         {[-0.22, 0.22].map((dx) => <Rail key={`s${dx}`} yf={yStraight} x={XS} dx={dx} />)}
         {[-0.22, 0.22].map((dx) => <Rail key={`w${dx}`} yf={yWavy} x={XW} dx={dx} />)}
-        <Rail yf={yStraight} x={XS} dx={-0.62} dy={0.3} r={0.022} emissive="#ffb84a" />
-        <Rail yf={yWavy} x={XW} dx={0.62} dy={0.3} r={0.022} emissive="#5fe0ff" />
-        <Finish glow={glow} />
+
         <Ball p={ps} spin={spinS} color="#e9e4d8" />
         <Ball p={pw} spin={spinW} color="#ffffff" />
       </ThreeCanvas>
-      <AbsoluteFill style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,0.6) 100%)" }} />
-      <AbsoluteFill style={{ background: "#fff", opacity: glow * 0.35 + cutFlash }} />
+      <AbsoluteFill style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0) 60%, rgba(0,0,0,0.25) 100%)" }} />
+      <AbsoluteFill style={{ background: "#fff", opacity: glow * 0.18 + cutFlash }} />
     </AbsoluteFill>
   );
 };
