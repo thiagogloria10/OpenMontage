@@ -1,6 +1,6 @@
 # Efeitos do "Escapa" (sem narração): passos, armadilhas, quedas, e a sombra resmungando. DUR igual ao Escapa.tsx.
 import numpy as np, wave, sys
-SR=44100; DUR=[5.2,5.0,5.4,5.0,5.6,3.8]
+SR=44100; DUR=[5.2,5.0,5.4,5.0,4.2]
 ST=[0]
 for d in DUR[:-1]: ST.append(ST[-1]+d)
 TOTAL=ST[-1]+DUR[-1]; out=np.zeros(int(SR*TOTAL)+SR); rng=np.random.default_rng(11)
@@ -68,12 +68,7 @@ add(bell(),2,2.6,0.25); add(crash(0.8),2,3.32,0.6); add(thud(80),2,3.32,0.5); ad
 # S4 garoa, guarda-chuva, carro e poça
 add(drops(5.0),3,0,0.12); steps(3,0.05,1.4); steps(3,2.05,5.0)
 add(whoosh(0.3),3,1.5,0.25); add(car(1.6),3,1.9,0.5); add(splash(),3,2.62,0.6); add(giggle(),3,2.0,0.18)
-# S5 carrinho e caixas
-steps(4,0.05,1.2); add(tone(1200,0.15,20),4,2.35,0.25); steps(4,2.45,4.6)
-add(giggle(),4,0.8,0.25); add(rattle(1.8),4,1.45,0.35); add(crash(0.6),4,3.15,0.55); add(thud(70),4,3.2,0.5)
-for k in (3.3,3.45,3.6): add(thud(110),4,k,0.3)
-add(thud(60),4,4.6,0.5); add(growl(0.7),4,4.65,0.3)
 # S6
-add(thud(120),5,0.95,0.4); steps(5,0.1,3.8,0.55,0.12)
+add(thud(120),4,0.95,0.4); add(growl(0.6),4,1.1,0.25); steps(4,0.1,4.2,0.55,0.12)
 out=out[:int(SR*TOTAL)]; out=out/np.abs(out).max()*0.9
 w=wave.open(sys.argv[1],'wb'); w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((out*32767).astype(np.int16).tobytes()); w.close(); print('ok',TOTAL)

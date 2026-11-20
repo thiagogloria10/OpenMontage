@@ -7,7 +7,7 @@ import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig } from
 // ela escapa de todas sem perceber. Personagens e situações próprios. Sem texto (a frase entra depois).
 // Mundo em 1920×1080 (16:9), mostrado num quadro de 1080×608 centralizado.
 // ==================================================================
-const DUR = [5.2, 5.0, 5.4, 5.0, 5.6, 3.8];
+const DUR = [5.2, 5.0, 5.4, 5.0, 4.2];
 const ST = DUR.reduce<number[]>((a, d, i) => [...a, i === 0 ? 0 : a[i - 1] + DUR[i - 1]], []);
 export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
 const GROUND = 905;
@@ -69,7 +69,8 @@ const Walker: React.FC<{ p: Pose }> = ({ p }) => {
       {/* cabeça, cabelo e fone */}
       <rect x={neck[0] - 8} y={neck[1] - 4} width={16} height={22} fill={SKIN_D} transform={`rotate(${ta * 40} ${neck[0]} ${neck[1]})`} />
       <circle cx={head[0]} cy={head[1]} r={30} fill="url(#skinG)" />
-      <path d={`M${head[0] - 31},${head[1] + 6} Q${head[0] - 34},${head[1] - 36} ${head[0] + 2},${head[1] - 34} Q${head[0] + 30},${head[1] - 30} ${head[0] + 22},${head[1] - 12} Q${head[0] - 2},${head[1] - 20} ${head[0] - 10},${head[1] - 2} Q${head[0] - 14},${head[1] + 30} ${head[0] - 26},${head[1] + 40} Z`} fill={HAIR} />
+      <path d={`M${head[0] - 30},${head[1] + 2} Q${head[0] - 32},${head[1] - 34} ${head[0] + 2},${head[1] - 33} Q${head[0] + 28},${head[1] - 31} ${head[0] + 27},${head[1] - 12} Q${head[0] + 8},${head[1] - 22} ${head[0] - 8},${head[1] - 14} Q${head[0] - 16},${head[1] - 4} ${head[0] - 22},${head[1] + 12} Z`} fill={HAIR} />
+      <path d={`M${head[0] + 6},${head[1] + 18} Q${head[0] + 18},${head[1] + 30} ${head[0] + 28},${head[1] + 16}`} stroke="#6a4a3a" strokeWidth={3} fill="none" opacity={0.35} />
       <path d={`M${head[0] - 22},${head[1] - 22} Q${head[0]},${head[1] - 46} ${head[0] + 20},${head[1] - 24}`} stroke="#1d1d22" strokeWidth={6} fill="none" />
       <ellipse cx={head[0] - 4} cy={head[1] + 2} rx={9} ry={12} fill="#1d1d22" />
       <circle cx={head[0] + 16} cy={head[1] - 4} r={3} fill="#2a1a12" />
@@ -390,7 +391,7 @@ const S5 = (t: number) => {
 };
 // 6) a sombra soterrada nas caixas; ela some no fim da rua, ao sol, com o fone
 const S6 = (t: number) => {
-  const x = walkX(t, [[0, 1180], [3.8, 1500]]);
+  const x = walkX(t, [[0, 1150], [4.2, 1520]]);
   return (
     <g>
       <rect width={1920} height={1080} fill="url(#sky)" />
@@ -411,9 +412,9 @@ const S6 = (t: number) => {
     </g>
   );
 };
-const SCENES = [S1, S2, S3, S4, S5, S6];
+const SCENES = [S1, S2, S3, S4, S6];
 // câmera de cada cena: ponto do mundo que fica no centro do quadro + zoom
-const CAMS: [number, number, number][] = [[1.3, 1000, 690], [1.3, 1020, 690], [1.25, 1060, 650], [1.12, 860, 790], [1.18, 900, 760], [1.22, 820, 700]];
+const CAMS: [number, number, number][] = [[1.3, 1000, 690], [1.3, 1020, 690], [1.25, 1060, 650], [1.12, 860, 790], [1.22, 820, 700]];
 
 export const Escapa: React.FC = () => {
   const frame = useCurrentFrame();
