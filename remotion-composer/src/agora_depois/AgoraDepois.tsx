@@ -11,7 +11,7 @@ const INK = "#1b100a", GOLD = "#E8B84A", RED = "#e0554a", WHITE = "#f4f1ea", GRE
 const BARLOW = "'Barlow Condensed', 'DejaVu Sans Condensed', sans-serif";
 const MONO = "'JetBrains Mono', 'DejaVu Sans Mono', monospace";
 const SKIN = "#f3efe7", SKIN2 = "#d9d2c5";
-const DUR = [4.6, 4.0, 4.4, 3.4, 1.7, 4.4, 5.6, 3.8];
+const DUR = [4.6, 4.0, 4.4, 3.4, 1.7, 4.4, 5.6, 4.6];
 const ST: number[] = DUR.reduce<number[]>((a, d, i) => [...a, i === 0 ? 0 : a[i - 1] + DUR[i - 1]], []);
 export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
 // ------------------------------------------------------------------ utilidades
@@ -780,6 +780,12 @@ export const AgoraDepois: React.FC = () => {
         <g transform={`translate(540,960) scale(${c.z}) translate(${-c.fx},${-c.fy})`}>{draw(lt)}</g>
         <rect width={1080} height={1920} fill="#fff" opacity={flash} />
       </svg>
+      {/* frase de impacto no meio da tela dividida (sobre a linha dourada) */}
+      {s === 7 && (() => { const k = er(lt, 0.25, 0.6); return (
+        <div style={{ position: "absolute", left: 0, right: 0, top: 960 - 112, height: 224, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: `rgba(10,6,5,${0.82 * k})`, borderTop: `5px solid rgba(232,184,74,${k})`, borderBottom: `5px solid rgba(232,184,74,${k})` }}>
+          <div style={{ fontFamily: BARLOW, fontWeight: 700, fontSize: 76, lineHeight: 1.0, letterSpacing: 2, color: WHITE, opacity: k, transform: `scale(${0.92 + 0.08 * k})` }}>QUEM SE ESFORÇA AGORA,</div>
+          <div style={{ fontFamily: BARLOW, fontWeight: 700, fontSize: 76, lineHeight: 1.05, letterSpacing: 2, color: GOLD, opacity: er(lt, 0.7, 1.05), transform: `scale(${0.92 + 0.08 * er(lt, 0.7, 1.05)})` }}>DESCANSA DEPOIS.</div>
+        </div>); })()}
       {card > 0 && (
         <div style={{ position: "absolute", left: 120, right: 120, top: 860, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, fontSize: 96, letterSpacing: 3, color: GOLD, opacity: card, transform: `translateY(${(1 - card) * 14}px)` }}>2 SEMANAS<br /><span style={{ color: WHITE }}>DEPOIS…</span></div>
       )}

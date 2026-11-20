@@ -1,6 +1,6 @@
 # Efeitos do "Agora ou depois" (sem narração). Tempos por cena, DUR igual ao AgoraDepois.tsx.
 import numpy as np, wave, sys
-SR=44100; DUR=[4.6,4.0,4.4,3.4,1.7,4.4,5.6,3.8]
+SR=44100; DUR=[4.6,4.0,4.4,3.4,1.7,4.4,5.6,4.6]
 ST=[0]
 for d in DUR[:-1]: ST.append(ST[-1]+d)
 TOTAL=ST[-1]+DUR[-1]; out=np.zeros(int(SR*TOTAL)+SR); rng=np.random.default_rng(4)
@@ -47,6 +47,6 @@ for k in np.arange(0.0,5.6,0.5): add(tick(),6,k,0.35)
 for k in (0.5,1.5,2.4): add(pop(),6,k,0.5)
 add(thud(),6,3.1,0.5)
 # S8
-add(chime(),7,0.2,0.2)
+add(chime(),7,0.2,0.2); add(thud(),7,0.3,0.45); add(thud(),7,0.75,0.4)
 out=out[:int(SR*TOTAL)]; out=out/np.abs(out).max()*0.9
 w=wave.open(sys.argv[1],'wb'); w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((out*32767).astype(np.int16).tobytes()); w.close(); print('ok',TOTAL)
