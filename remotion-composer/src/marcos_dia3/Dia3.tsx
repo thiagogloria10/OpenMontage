@@ -19,24 +19,24 @@ const MONO = "'JetBrains Mono', 'DejaVu Sans Mono', monospace";
 const SKIN = "#f3efe7", SKIN2 = "#d9d2c5";
 
 // ------------------------------------------------------------------ cenas (duração em s) e falas
-const DUR = [5.7, 4.5, 5.1, 4.7, 2.6, 9.2, 5.3, 3.0, 3.8, 4.1, 5.6, 6.3];
+const DUR = [4.91, 3.99, 4.27, 3.92, 1.76, 8.6, 4.66, 2.48, 3.12, 3.61, 4.95, 6.51];  // = pausas reais do áudio do Thiago (áudio inteiro, sem cortes)
 const ST: number[] = DUR.reduce<number[]>((a, d, i) => [...a, i === 0 ? 0 : a[i - 1] + DUR[i - 1]], []);
 export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
 // [texto, arquivo, início relativo à cena, duração da fala]
 type LineT = [string, number, number, number] | null;
 const LINES: LineT[] = [
-  ["Ontem, o Marcos prometeu que tudo ia mudar, e hoje é aniversário da Juliana.", 1, 0.2, 5.04],
-  ["Hoje, o Marcos acorda mais cedo, para fazer o café da família.", 2, 0.05, 3.9],
-  ["Ovos, pão, café e um cartão. Feliz aniversário, Ju.", 3, 0.0, 4.36],
-  ["Mas ele se atrasa de novo, e não dá tempo de comer com eles.", 4, 0.09, 4.06],
-  ["O lugar dele fica vazio.", 5, 0.01, 1.48],
-  ["No trabalho, o seu Roberto continua pegando no pé, mas o Marcos faz tudo. E termina mais cedo, pensando no aniversário da Juliana.", 6, 0.03, 8.58],
-  ["Na volta, ele passa numa joalheria, procurando um presente para Juliana.", 7, 0.2, 4.67],
-  ["E vê um anel enorme, brilhando.", 8, 0.0, 2.34],
-  ["Ele olha a conta, zerada. De novo,", 9, 0.05, 3.16],
-  ["mas ele não desiste. Sai dali ainda mais motivado.", 10, 0.05, 3.44],
-  ["No caminho, ele colhe uma flor. Não é o anel, mas ela sorri como se fosse.", 11, 0.06, 4.98],
-  ["E amanhã, no caminho de casa, ele vai ver algo que muda tudo. Segue para ver a parte 4.", 12, 0.0, 5.62],
+  ["Ontem, o Marcos prometeu que tudo ia mudar, e hoje é aniversário da Juliana.", 1, 0, 5.04],
+  ["Hoje, o Marcos acorda mais cedo, para fazer o café da família.", 2, 0, 3.9],
+  ["Ovos, pão, café e um cartão. Feliz aniversário, Ju.", 3, 0, 4.36],
+  ["Mas ele se atrasa de novo, e não dá tempo de comer com eles.", 4, 0, 4.06],
+  ["O lugar dele fica vazio.", 5, 0, 1.48],
+  ["No trabalho, o seu Roberto continua pegando no pé, mas o Marcos faz tudo. E termina mais cedo, pensando no aniversário da Juliana.", 6, 0, 8.58],
+  ["Na volta, ele passa numa joalheria, procurando um presente para Juliana.", 7, 0, 4.67],
+  ["E vê um anel enorme, brilhando.", 8, 0, 2.34],
+  ["Ele olha a conta, zerada. De novo,", 9, 0, 3.16],
+  ["mas ele não desiste. Sai dali ainda mais motivado.", 10, 0, 3.44],
+  ["No caminho, ele colhe uma flor. Não é o anel, mas ela sorri como se fosse.", 11, 0, 4.98],
+  ["E amanhã, no caminho de casa, ele vai ver algo que muda tudo. Segue para ver a parte 4.", 12, 0, 5.62],
 ];
 // tempos reais de cada palavra (preencher com a voz da ElevenLabs via sincronizar_voz.py)
 const WORDT: Record<number, number[]> = {"1": [0, 0.98, 1.18, 1.36, 1.82, 2.02, 2.28, 2.42, 3.02, 3.22, 3.46, 3.6, 4.22, 4.44], "2": [0.15, 0.63, 0.81, 1.05, 1.47, 1.79, 2.41, 2.53, 2.87, 3.07, 3.23, 3.45], "3": [0.32, 0.86, 1.38, 1.64, 2.0, 2.2, 2.92, 3.32, 4.08], "4": [0.11, 0.37, 0.57, 0.87, 1.17, 1.37, 2.27, 2.37, 2.47, 2.63, 2.91, 3.11, 3.31, 3.57], "5": [0.19, 0.33, 0.61, 0.83, 1.07], "6": [0.17, 0.33, 1.21, 1.31, 1.41, 1.85, 2.29, 2.81, 3.03, 3.51, 3.67, 3.89, 4.23, 4.57, 5.33, 5.67, 5.89, 6.21, 6.87, 7.15, 7.33, 7.97, 8.15], "7": [0, 0.69, 1.01, 1.21, 1.55, 1.81, 2.89, 3.19, 3.49, 3.81, 4.07], "8": [0.23, 0.41, 0.55, 0.79, 1.07, 1.97], "9": [0.15, 0.33, 0.57, 0.79, 1.73, 2.51, 2.71], "10": [0.15, 0.35, 0.53, 0.75, 1.91, 2.09, 2.43, 2.73, 2.99], "11": [0.14, 0.26, 0.84, 1.0, 1.14, 1.56, 2.16, 2.36, 2.54, 2.68, 3.24, 3.48, 3.72, 4.04, 4.24, 4.52], "12": [0.25, 0.41, 1.01, 1.11, 1.33, 1.59, 2.13, 2.21, 2.39, 2.59, 2.83, 3.13, 3.43, 4.17, 4.41, 4.63, 4.87, 5.09, 5.27]};
@@ -1640,7 +1640,7 @@ const S8d3 = (t: number) => (<g><Store t={t} /><rect x={-400} y={-400} width={18
 const CAM8d3 = (t: number): Cam => ({ z: kf(t, [[0, 2.2], [2.8, 2.9]]), fx: RING[0] + 20, fy: RING[1] - 10 });
 
 // celular: saldo da conta carregando → R$ 0,00 ZERADA
-const ZT = 1.3;
+const ZT = 1.68; // R$ 0,00 aparece junto com a palavra "zerada" da voz
 const PhoneZ = (t: number) => {
   const hit = backPop(t - ZT);
   const shake = t > ZT && t < ZT + 0.5 ? Math.sin(t * 90) * 10 * (1 - (t - ZT) / 0.5) : 0;
@@ -1907,9 +1907,8 @@ export const MarcosDia3: React.FC = () => {
   const stroke = (w: number) => ({ WebkitTextStroke: `${w}px #0a0605`, paintOrder: "stroke fill" as const });
   return (
     <AbsoluteFill style={{ background: "#0a0605" }}>
-      {LINES.map((ln, i) => ln && (
-        <Sequence key={i} from={Math.round((ST[i] + ln[2]) * fps)}><Audio src={staticFile(`${VOICE_DIR}/n${ln[1]}.wav`)} /></Sequence>
-      ))}
+      {/* áudio do narrador inteiro, do jeito que o Thiago gravou (as cenas seguem as pausas dele) */}
+      <Audio src={staticFile("marcos_dia3/narrador.wav")} />
       <Audio src={staticFile("marcos_dia3/sfx.wav")} volume={0.45} />
       <div style={{ position: "absolute", left: 0, top: SCENE_Y, width: 1080, height: SCENE_H, overflow: "hidden" }}>
         <svg width={1080} height={SCENE_H} viewBox={`0 0 1080 ${SCENE_H}`}>
