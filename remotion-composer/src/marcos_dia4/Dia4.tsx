@@ -22,25 +22,25 @@ const MONO = "'JetBrains Mono', 'DejaVu Sans Mono', monospace";
 const SKIN = "#f3efe7", SKIN2 = "#d9d2c5";
 
 // ------------------------------------------------------------------ cenas (duração em s) e falas
-const DUR = [5.9, 3.4, 4.6, 3.4, 5.6, 3.2, 5.0, 4.8, 3.0, 5.6];
+const DUR = [7.33, 2.57, 3.6, 3.39, 5.51, 1.49, 5.62, 4.64, 2.54, 6.75];  // = pausas reais do áudio do Thiago (áudio inteiro, sem cortes)
 const ST: number[] = DUR.reduce<number[]>((a, d, i) => [...a, i === 0 ? 0 : a[i - 1] + DUR[i - 1]], []);
 export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
 // [texto, arquivo, início relativo à cena, duração da fala]
 type LineT = [string, number, number, number] | null;
 const LINES: LineT[] = [
-  ["Ontem, no aniversário da Juliana, o Marcos não pôde dar um presente melhor. Mas uma flor fez ela sorrir.", 0, 0.3, 5.15],
-  ["Hoje, o Marcos acorda ainda mais cedo.", 1, 0.3, 2.15],
-  ["Faz o café. E, dessa vez, come junto com a família.", 2, 0.3, 2.95],
-  ["No trabalho, o seu Roberto não para de pegar no pé.", 3, 0.3, 2.5],
-  ["Na volta pra casa, um anúncio de emprego. Quase três vezes o que ele ganha. Os olhos dele brilham.", 4, 0.3, 4.8],
-  ["Ele anota o número.", 5, 0.3, 1.05],
-  ["Em casa, ele liga. E consegue uma entrevista. Amanhã, às dez.", 6, 0.3, 4.0],
-  ["Mas ele não tem experiência na área. E às dez, ele devia estar no trabalho.", 7, 0.3, 3.95],
-  ["Se faltar, pode ser demitido.", 8, 0.3, 1.6],
-  ["A entrevista, ou o emprego que ele já tem? O que o Marcos vai fazer? Segue pra ver a parte cinco.", 9, 0.3, 4.7],
+  ["Ontem, no aniversário da Juliana, o Marcos não pôde dar um presente melhor. Mas uma flor fez ela sorrir.", 1, 0, 7.22],
+  ["Hoje, o Marcos acorda ainda mais cedo.", 2, 0, 2.63],
+  ["Faz o café. E, dessa vez, come junto com a família.", 3, 0, 3.72],
+  ["No trabalho, o seu Roberto não para de pegar no pé.", 4, 0, 3.4],
+  ["Na volta para casa, um anúncio de emprego. Quase três vezes o que ele ganha. Os olhos dele brilham.", 5, 0, 5.57],
+  ["Ele anota o número.", 6, 0, 1.36],
+  ["Em casa, ele liga. E consegue uma entrevista. Amanhã, às dez.", 7, 0, 5.17],
+  ["Mas ele não tem experiência na área. E, às dez, ele devia estar no trabalho.", 8, 0, 4.49],
+  ["Se faltar, pode ser demitido.", 9, 0, 2.21],
+  ["A entrevista ou o emprego que ele já tem. O que o Marcos vai fazer? Segue para ver a parte cinco.", 10, 0, 6.15],
 ];
 // tempos reais de cada palavra (preencher com a voz da ElevenLabs via sincronizar_voz.py)
-const WORDT: Record<number, number[]> = {};
+const WORDT: Record<number, number[]> = {"1": [0, 1.02, 1.08, 1.7, 1.92, 2.66, 2.8, 3.04, 3.32, 3.54, 3.74, 3.98, 4.22, 5.4, 5.54, 5.84, 6.08, 6.36, 6.62], "2": [0.23, 0.75, 0.97, 1.25, 1.55, 1.71, 2.03], "3": [0.28, 0.4, 0.62, 1.38, 1.58, 1.82, 2.42, 2.56, 2.84, 3.0, 3.12], "4": [0.1, 0.24, 0.88, 0.9, 1.08, 1.54, 1.94, 2.12, 2.34, 2.56, 2.8], "5": [0.21, 0.43, 0.69, 0.93, 1.33, 1.57, 1.87, 2.05, 2.59, 2.91, 3.21, 3.41, 3.55, 3.63, 3.85, 4.21, 4.41, 4.67, 4.97], "6": [0.06, 0.3, 0.6, 0.76], "7": [0.21, 0.41, 1.29, 1.55, 2.07, 2.39, 2.69, 2.97, 3.85, 4.43, 4.57], "8": [0, 0.39, 0.59, 0.83, 0.95, 1.49, 1.71, 2.25, 2.43, 2.61, 3.05, 3.29, 3.53, 3.71, 3.89], "9": [0.13, 0.29, 1.13, 1.23, 1.61], "10": [0.27, 0.53, 1.15, 1.69, 1.89, 2.13, 2.25, 2.33, 2.57, 3.15, 3.23, 3.39, 3.57, 3.81, 3.97, 4.69, 4.91, 5.11, 5.25, 5.39, 5.55]};
 const VOICE_DIR = "marcos_dia4/fala";
 const KEY = ["aniversário", "presente", "flor", "sorrir", "cedo", "família", "roberto", "anúncio", "emprego", "três", "brilham", "número", "entrevista", "dez", "experiência", "trabalho", "demitido", "cinco", "marcos", "juliana"];
 
@@ -1929,13 +1929,13 @@ const S4d4 = (t: number) => {
     const see = er(x, 1.2, 1.7);
     return base({ x: wx, y: 690, k: 1, feet: w.feet, kneeDir: -1, sy: w.sy, lean: w.lean, hands: v > 0.05 ? w.hands : HANG, holdL: <Briefcase />, face: F({ lx: lerp(-0.3, -0.85, see), px: -1, ly: -0.1, py: -0.2, eyeS: 1 + see * 0.3 + er(x, 2.4, 2.8) * 0.15, pupil: 1 + see * 0.25, raise: see * 0.9 + er(x, 2.4, 2.8) * 0.3, curve: lerp(0, 0.6, er(x, 3.4, 3.9)), mo: see * 0.25 * (1 - er(x, 3.4, 3.8)) + er(x, 2.4, 2.7) * 0.2 * (1 - er(x, 3.4, 3.8)), open: 1 - blinkAt(x, 3.0, 0.2) }) });
   }, t);
-  const shine = er(t, 3.8, 4.2);
+  const shine = er(t, 4.25, 4.6);
   const hd = headLocal(m);
   return (
     <g>
       <Street t={t} picked={false} planter={false} />
       <JobAd glow={er(t, 1.4, 2.2)} t={t} />
-      <NowPay p={t - 2.3} />
+      <NowPay p={t - 2.55} />
       <Person c={m} look={MARCOS_SUIT} t={t} />
       {/* brilho nos olhos */}
       {shine > 0 && [-1, 1].map((sd) => <Sparkle key={sd} x={m.x + hd[0] - 20 + sd * 22} y={m.y + hd[1] - 30} s={shine * (0.55 + 0.25 * Math.sin(t * 9 + sd))} />)}
@@ -1955,9 +1955,9 @@ const Notepad: React.FC<{ n: number }> = ({ n }) => (
   </g>
 );
 const S5d4 = (t: number) => {
-  const n = Math.floor(clamp01((t - 1.3) / 1.4) * PHONE_NUM.length);
+  const n = Math.floor(clamp01((t - 0.5) / 0.85) * PHONE_NUM.length);
   const m = follow((x) => {
-    const w = x > 1.2 ? 1 : 0;
+    const w = x > 0.45 ? 1 : 0;
     return base({ x: AD_X, y: 690, k: 1, hands: w ? [[-40, -150], [26 + Math.sin(x * 22) * 6, -146 + Math.cos(x * 17) * 4]] : HANG, holdL: w ? <Notepad n={n} /> : <Briefcase />, holdR: w ? <path d="M0,0 L18,-34" stroke="#2a2836" strokeWidth={6} strokeLinecap="round" /> : undefined, face: F({ lx: -0.5, px: -0.6, ly: 0.45, py: 0.9, curve: 0.5, raise: 0.2, open: 1 - blinkAt(x, 2.5, 0.2) * 0.8 }) });
   }, t);
   return (
@@ -1965,12 +1965,12 @@ const S5d4 = (t: number) => {
       <Street t={t} picked={false} planter={false} />
       <JobAd glow={1} t={t} />
       <NowPay p={1} />
-      {t > 1.2 && <g transform="translate(905,935) rotate(4)"><Briefcase /></g>}
+      {t > 0.45 && <g transform="translate(905,935) rotate(4)"><Briefcase /></g>}
       <Person c={m} look={MARCOS_SUIT} t={t} />
     </g>
   );
 };
-const CAM5d4 = (t: number): Cam => t < 1.2
+const CAM5d4 = (t: number): Cam => t < 0.45
   ? { z: kf(t, [[0, 2.4], [1.2, 2.6]]), fx: 520, fy: 720 }
   : { z: 2.6, fx: AD_X - 40, fy: 690 - 150 };
 
@@ -1996,7 +1996,7 @@ const InterviewCard: React.FC<{ p: number }> = ({ p }) => p <= 0 ? null : (
 );
 const S6d4 = (t: number) => {
   const m = follow((x) => callPose(x, { phone: er(x, 0.2, 0.5) }), t);
-  return (<g><HouseNight t={t} door={0} /><NightChair /><Person c={m} look={MARCOS_HOME} t={t} /><NightTable papers={0} /><InterviewCard p={t - 2.2} />{lightRoom(0.5)}</g>);
+  return (<g><HouseNight t={t} door={0} /><NightChair /><Person c={m} look={MARCOS_HOME} t={t} /><NightTable papers={0} /><InterviewCard p={t - 2.9} />{lightRoom(0.5)}</g>);
 };
 const CAM6d4 = (t: number): Cam => ({ z: kf(t, [[0, 1.25], [5.0, 1.35]]), fx: 545, fy: kf(t, [[0, 580], [5.0, 540]]) });
 // balões de pensamento
@@ -2010,7 +2010,7 @@ const Bubble: React.FC<{ x: number; y: number; p: number; w?: number; h?: number
 );
 const S7d4 = (t: number) => {
   const m = follow((x) => callPose(x + 6, { phone: 0, worry: er(x, 0.3, 1.2) }), t);
-  const b1 = t - 0.6, b2 = t - 2.3;
+  const b1 = t - 0.9, b2 = t - 2.4;
   return (
     <g>
       <HouseNight t={t} door={0} /><NightChair /><Person c={m} look={MARCOS_HOME} t={t} /><NightTable papers={0} />
@@ -2034,7 +2034,7 @@ const CAM7d4 = (t: number): Cam => ({ z: kf(t, [[0, 1.2], [4.8, 1.28]]), fx: 545
 const S8d4 = (t: number) => {
   const m = follow((x) => { const c = callPose(x + 9, { phone: 0, worry: 1 }); c.tremble = 0.3; return c; }, t);
   const boss = base({ x: 545, y: 622, k: 1.0, hands: [[-150, -200], [150, -200]], face: F({ lx: 0, worry: -0.9, raise: -0.2, mo: 0.6 + 0.3 * Math.sin(t * 18), curve: -0.4 }), red: 1, tremble: 0.6 });
-  const stamp = t - 1.0;
+  const stamp = t - 1.55;
   return (
     <g>
       <HouseNight t={t} door={0} /><NightChair /><Person c={m} look={MARCOS_HOME} t={t} /><NightTable papers={0} />
@@ -2117,17 +2117,16 @@ export const MarcosDia4: React.FC = () => {
   const flash = s > 0 ? Math.max(0, 1 - lt / 0.14) * 0.18 : 0;
   const LAST = SCENES.length - 1;
   const endP = s === LAST ? er(lt, 0.3, 0.8) : 0;
-  const endOut = s === LAST ? er(lt, 1.9, 2.1) : 0;
-  const endP2 = s === LAST ? er(lt, 2.1, 2.4) : 0;
-  const endP3 = s === LAST ? er(lt, 3.8, 4.2) : 0;
+  const endOut = s === LAST ? er(lt, 2.95, 3.15) : 0;
+  const endP2 = s === LAST ? er(lt, 3.15, 3.45) : 0;
+  const endP3 = s === LAST ? er(lt, 4.6, 4.95) : 0;
   const morning = s === 1 ? er(lt, 0.0, 0.25) * (1 - er(lt, 1.8, 2.1)) : 0;
-  const recap = s === 0 ? er(lt, 0, 0.2) * (1 - er(lt, 5.6, 5.9)) : 0;
+  const recap = s === 0 ? er(lt, 0, 0.2) * (1 - er(lt, 7.0, 7.33)) : 0;
   const stroke = (w: number) => ({ WebkitTextStroke: `${w}px #0a0605`, paintOrder: "stroke fill" as const });
   return (
     <AbsoluteFill style={{ background: "#0a0605" }}>
-      {LINES.map((ln, i) => ln && (
-        <Sequence key={i} from={Math.round((ST[i] + ln[2]) * fps)}><Audio src={staticFile(`${VOICE_DIR}/n${ln[1]}.wav`)} /></Sequence>
-      ))}
+      {/* áudio do narrador inteiro, do jeito que o Thiago gravou (as cenas seguem as pausas dele) */}
+      <Audio src={staticFile("marcos_dia4/narrador.wav")} />
       <Audio src={staticFile("marcos_dia4/sfx.wav")} volume={0.45} />
       <div style={{ position: "absolute", left: 0, top: SCENE_Y, width: 1080, height: SCENE_H, overflow: "hidden" }}>
         <svg width={1080} height={SCENE_H} viewBox={`0 0 1080 ${SCENE_H}`}>
