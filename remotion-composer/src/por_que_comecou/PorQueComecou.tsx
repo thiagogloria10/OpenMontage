@@ -508,88 +508,104 @@ const SHRUG = P(700, 342, 180, [-30, -120], [30, 120], [-4, 0], [4, 0]);
 const COOK = P(500, 342, 172, [40, 80], [24, 24], [-4, 0], [4, 0]);
 const DRINK = P(380, 342, 180, [20, 60], [60, -153], [-4, 0], [4, 0]);
 // ==================================================================
-// "POR QUE VOCÊ COMEÇOU?" — narração + boneco branco/dourado em tela cheia
+// "POR QUE VOCÊ COMEÇOU?" v5 — roteiro novo (uma ideia só): o caderno com o motivo (o filho)
 // ==================================================================
-const HOOK = ["VOCÊ LEMBRA", "POR QUE COMEÇOU?"];
-const DUR = [2.9, 5.6, 4.6, 3.2, 5.2, 4.4, 5.7, 7.2]; // narração PROVISÓRIA (Piper)
+const HOOK = ["QUANDO DER VONTADE DE PARAR,", "LEMBRE POR QUE COMEÇOU."];
+const DUR = [3.2, 5.4, 4.0, 5.0, 5.0, 3.4]; // narração PROVISÓRIA (Piper)
 const ST: number[] = DUR.reduce<number[]>((a, d, i) => [...a, i === 0 ? 0 : a[i - 1] + DUR[i - 1]], []);
 export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
-type LineT = [string, number, number, number];
-const LINES: LineT[] = [["Você lembra do dia em que decidiu mudar de vida?", 0, 0.25, 2.16], ["Hoje, no meio de notificação, cansaço e mil coisas pra fazer, essa lembrança some.", 1, 0.25, 4.94], ["Eu vejo muita gente tão ocupada em sobreviver ao dia que esquece por que começou.", 2, 0.25, 3.90], ["Aí a rotina vira só uma lista de tarefas pra riscar.", 3, 0.25, 2.53], ["Faz um teste agora. Lembra da primeira vez que você cumpriu uma promessa que fez pra você mesmo.", 4, 0.25, 4.42], ["Aquilo que você sentiu ali continua valendo. Só ficou embaixo do barulho.", 5, 0.25, 3.72], ["E quando você lembra, fica mais fácil escolher o que importa amanhã, porque você sabe pra onde está indo.", 6, 0.25, 4.98], ["Comenta aqui por que você começou. Salva esse vídeo pra rever nos dias pesados, ou manda pra alguém que anda perdido na correria.", 7, 0.25, 6.34]];
+// [texto, arquivo, início relativo à cena, duração da fala, mostra legenda]
+type LineT = [string, number, number, number, boolean] | null;
+const LINES: LineT[] = [["Dia um. Ele escreveu as metas dele.", 0, 0.2, 2.53, true], ["Os dias passaram. O cansaço chegou. E o caderno foi parar no fundo da gaveta.", 1, 0.3, 4.39, true], ["Até o dia em que ele pensou: pra quê?", 2, 1.0, 1.95, true], ["Aí ele abriu a gaveta. E lembrou.", 3, 0.2, 2.25, true], null, ["Quando der vontade de parar, lembre por que começou.", 4, 0.3, 2.45, false]];
 const WORDT: Record<number, number[]> = {};
-const KEY = ["lembra", "mudar", "vida", "lembrança", "some", "esquece", "começou", "lista", "riscar", "promessa", "valendo", "barulho", "importa", "indo", "comenta", "salva"];
-const VOICE_DIR = "por_que_comecou/fala";
+const KEY = ["um", "metas", "cansaço", "caderno", "gaveta", "quê", "lembrou", "parar", "começou"];
+const VOICE_DIR = "por_que_comecou/fala5";
+const MOTIVO = ["QUERO ESTUDAR", "TODOS OS DIAS."]; // v6 (antes: energia pro filho)
+const METAS = ["ESTUDAR TODOS OS DIAS", "2 HORAS DE ESTUDO POR DIA", "LER 1 LIVRO POR MÊS", "APRENDER INGLÊS", "PASSAR NA PROVA"]; // v7: bilhete de metas
 const sceneOf = (t: number) => { let s = 0; for (let i = 0; i < ST.length; i++) if (t >= ST[i]) s = i; return s; };
 const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const backPop = (x: number) => { if (x <= 0) return 0; if (x >= 0.3) return 1; const k = x / 0.3; return 1 + 2.2 * Math.pow(k - 1, 3) + 1.2 * Math.pow(k - 1, 2); };
+function kfT(t: number, keys: [number, number][]) {
+  if (t <= keys[0][0]) return keys[0][1];
+  for (let i = 1; i < keys.length; i++) {
+    const [t1, v1] = keys[i];
+    if (t <= t1) { const [t0, v0] = keys[i - 1]; return lerp(v0, v1, ease((t - t0) / (t1 - t0))); }
+  }
+  return keys[keys.length - 1][1];
+}
 
-// --- câmera: centro (cx, cy) no mundo do quarto e zoom (px por unidade)
-type Cam = { cx: number; cy: number; z: number };
+// câmera: centro e zoom no mundo do quarto; screen = desenho direto em 1080×1260 (closes)
+type Cam = { cx: number; cy: number; z: number; screen?: boolean };
 const VIEW_W = 1080, VIEW_H = 1260;
 
-// --- poses próprias
-const SIT_BOOK = P(560, 372, 182, [40, 125], [30, 112], [95, 5], [85, 0]);
-const SIT_STILL = P(560, 372, 180, [12, 30], [-6, 22], [95, 5], [85, 0]);
+// --- poses
+const SIT_PHONE5 = P(560, 372, 180, [30, 120], [20, 105], [95, 5], [85, 0]);
 const STAND_C = P(560, 342, 180, [-8, -4], [8, 4], [-4, 0], [4, 0]);
-const ARMS_UP = P(560, 342, 180, [160, 175], [200, 185], [-6, 0], [6, 0]);
 const walkP = (x: number, y: number, ph: number, amp = 1): Pose => {
   const s = Math.sin(ph), c = Math.cos(ph);
   return P(x, y - Math.abs(c) * 3 * amp, 172, [(-22 * s - 4) * amp, (-22 * s + 30) * amp], [(22 * s - 4) * amp, (22 * s + 30) * amp], [26 * s * amp, (26 * s - 10 - 14 * Math.max(0, s)) * amp], [-26 * s * amp, (-26 * s - 10 - 14 * Math.max(0, -s)) * amp]);
 };
-const runP = (x: number, y: number, ph: number): Pose => {
-  const s = Math.sin(ph), c = Math.cos(ph);
-  return P(x, y - Math.abs(c) * 8, 168, [-40 * s - 10, -40 * s + 80], [40 * s - 10, 40 * s + 80], [35 * s, 35 * s - 30 - 20 * Math.max(0, s)], [-35 * s, -35 * s - 30 - 20 * Math.max(0, -s)]);
-};
 
-// --- boneco que passa de cinza para dourado (k = 0 cinza, 1 dourado)
-const Duo: React.FC<{ k: number; pose: Pose; t: number; outfit: [Outfit, Outfit]; eyes: [Eyes, Eyes]; mouth: [Mouth, Mouth]; glow?: number; holdN?: React.ReactNode; dir?: 1 | -1; messy?: boolean }> = ({ k, pose, t, outfit, eyes, mouth, glow = 0, holdN, dir = 1, messy }) => (
+// --- boneco que passa de dourado para cinza (k = 1 dourado, 0 cinza)
+const Duo: React.FC<{ k: number; pose: Pose; t: number; eyes: [Eyes, Eyes]; mouth: [Mouth, Mouth]; glow?: number; holdN?: React.ReactNode; dir?: 1 | -1; messy?: boolean }> = ({ k, pose, t, eyes, mouth, glow = 0, holdN, dir = 1, messy }) => (
   <g>
-    {k < 1 && <g opacity={1 - k}><Body t={t} pose={pose} kind="gray" outfit={outfit[0]} eyes={eyes[0]} mouth={mouth[0]} holdN={holdN} dir={dir} messy={messy} /></g>}
-    {k > 0 && <g opacity={k}><Body t={t} pose={pose} kind="gold" outfit={outfit[1]} eyes={eyes[1]} mouth={mouth[1]} glow={glow * k} holdN={holdN} dir={dir} /></g>}
-  </g>
-);
-const HOME_GOLD: Outfit = { shirt: "#1f2a48", pants: "#2a2a36", shoes: "#f2f2f2" };
-const HOME_GRAY: Outfit = { shirt: "#5d586e", pants: "#3e3b4a", shoes: "#2a2a33" };
-
-// --- caderno aberto (nas mãos)
-const Notebook: React.FC = () => (
-  <g transform="translate(-6,-4) rotate(-8)">
-    <rect x={-26} y={-16} width={26} height={30} fill="#f6efdc" stroke="#b9ae92" strokeWidth={1.6} />
-    <rect x={0} y={-16} width={26} height={30} fill="#f6efdc" stroke="#b9ae92" strokeWidth={1.6} />
-    <rect x={-2} y={-17} width={4} height={32} fill={GOLD} />
-    {[0, 1, 2].map((i) => <line key={i} x1={-22} y1={-8 + i * 8} x2={-5} y2={-8 + i * 8} stroke="#c9b98a" strokeWidth={1.4} />)}
-    {[0, 1, 2].map((i) => <line key={i} x1={5} y1={-8 + i * 8} x2={22} y2={-8 + i * 8} stroke="#c9b98a" strokeWidth={1.4} />)}
+    {k < 1 && <g opacity={1 - k}><Body t={t} pose={pose} kind="gray" eyes={eyes[0]} mouth={mouth[0]} holdN={holdN} dir={dir} messy={messy} /></g>}
+    {k > 0 && <g opacity={k}><Body t={t} pose={pose} kind="gold" eyes={eyes[1]} mouth={mouth[1]} glow={glow * k} holdN={holdN} dir={dir} /></g>}
   </g>
 );
 
-// --- bolha da lembrança (DIA 1: o boneco dourado de braços para cima no nascer do sol)
-const Memory: React.FC<{ x: number; y: number; p: number; t: number; r?: number }> = ({ x, y, p, t, r = 74 }) => {
-  const k = backPop(p);
-  if (k <= 0) return null;
+// --- caderno fechado (objeto pequeno no mundo)
+const NoteClosed: React.FC<{ rot?: number }> = ({ rot = 0 }) => (
+  <g transform={`rotate(${rot})`}>
+    <rect x={-16} y={-5} width={32} height={10} rx={2} fill="#8a5a2a" stroke="#4a2e14" strokeWidth={1.5} />
+    <rect x={-16} y={-5} width={4} height={10} fill={GOLD} />
+  </g>
+);
+// --- página do caderno em close (tela cheia, legível no celular)
+const Page: React.FC<{ t: number; reveal: number; glow: number; gray?: number; hand?: boolean }> = ({ t, reveal, glow, gray = 0, hand = true }) => {
+  // v7: "METAS:" + lista de metas de estudo, escritas uma a uma
+  const total = METAS.reduce((a, m) => a + m.length, 0);
+  let left = Math.floor(clamp01(reveal) * total);
+  const shown = METAS.map((m) => { const n = Math.max(0, Math.min(m.length, left)); left -= m.length; return m.slice(0, n); });
+  let cur = shown.findIndex((x, k) => x.length < METAS[k].length);
+  if (cur < 0) cur = METAS.length - 1;
+  const penX = 210 + shown[cur].length * 27.5;
+  const penY = 520 + cur * 92;
   return (
-    <g transform={`translate(${x},${y}) scale(${k})`}>
-      <defs>
-        <clipPath id="memClip"><circle r={r} /></clipPath>
-        <linearGradient id="memSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#6a5fa0" /><stop offset="0.7" stopColor="#ffb36b" /><stop offset="1" stopColor="#ffd28a" /></linearGradient>
-      </defs>
-      <circle r={r + 14} fill={GOLD} opacity={0.25 + 0.08 * Math.sin(t * 4)} filter="url(#glowGold)" />
-      <g clipPath="url(#memClip)">
-        <rect x={-r} y={-r} width={r * 2} height={r * 2} fill="url(#memSky)" />
-        <circle cx={0} cy={r * 0.42} r={r * 0.42} fill="#fff1c0" opacity={0.9} />
-        <rect x={-r} y={r * 0.45} width={r * 2} height={r} fill="#3a3550" />
-        <g transform={`translate(0,${r * 0.62}) scale(0.34) translate(-560,-442)`}><Body t={t} pose={ARMS_UP} kind="gold" outfit={HOME_GOLD} eyes="closed" mouth="smile" glow={0.8} /></g>
+    <g>
+      <rect x={-50} y={-50} width={1180} height={1360} fill="#1a1410" />
+      <circle cx={540} cy={640} r={620} fill={GOLD} opacity={0.18 * glow} filter="url(#glowGold)" />
+      <g transform={`rotate(-3 540 640)`}>
+        <rect x={110} y={300} width={860} height={700} rx={14} fill="#f6efdc" stroke="#b9ae92" strokeWidth={4} />
+        <rect x={110} y={300} width={18} height={700} fill={GOLD} />
+        {Array.from({ length: 7 }).map((_, k) => <line key={k} x1={150} y1={438 + k * 92} x2={940} y2={438 + k * 92} stroke="#d9cfb2" strokeWidth={3} />)}
+        <text x={160} y={410} fontFamily={BARLOW} fontWeight={700} fontSize={72} fill="#9a6a10" letterSpacing={3}>METAS:</text>
+        {METAS.map((m, k) => (
+          <g key={k}>
+            <rect x={160} y={482 + k * 92} width={34} height={34} rx={5} fill="none" stroke="#1e1c28" strokeWidth={4} opacity={shown[k].length > 0 ? 1 : 0} />
+            <text x={212} y={516 + k * 92} fontFamily={BARLOW} fontWeight={700} fontSize={56} fill="#1e1c28" letterSpacing={1}>{shown[k]}</text>
+          </g>
+        ))}
+        {reveal >= 1 && <path d="M205 532 Q 470 548 770 528" stroke={GOLD} strokeWidth={8} fill="none" strokeLinecap="round" opacity={clamp01((reveal - 1) * 4)} />}
       </g>
-      <circle r={r} fill="none" stroke={GOLD} strokeWidth={5} />
-      <text x={0} y={-r * 0.5} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={r * 0.36} fill={WHITE} stroke="#2a1a08" strokeWidth={3} paintOrder="stroke">DIA 1</text>
-      <circle cx={-r * 0.55} cy={r + 22} r={9} fill={GOLD} opacity={0.8} />
-      <circle cx={-r * 0.8} cy={r + 44} r={5} fill={GOLD} opacity={0.6} />
+      {hand && (
+        <g transform={`translate(${penX + Math.sin(t * 30) * 4},${penY + Math.cos(t * 26) * 3}) rotate(-25)`}>
+          <rect x={-6} y={-150} width={12} height={150} rx={4} fill="#2a2836" />
+          <path d="M-6 0 L0 18 L6 0 Z" fill="#2a2836" />
+          <path d="M0 -40 Q 40 40 110 120 Q 190 210 250 330" stroke={GOLD} strokeWidth={46} fill="none" strokeLinecap="round" opacity={0.35 * glow} filter="url(#glowGold)" />
+          <path d="M0 -40 Q 40 40 110 120 Q 190 210 250 330" stroke={GOLD} strokeWidth={36} fill="none" strokeLinecap="round" />
+          <path d="M0 -40 Q 40 40 110 120 Q 190 210 250 330" stroke={WHITE} strokeWidth={28} fill="none" strokeLinecap="round" />
+          <circle cx={0} cy={-40} r={22} fill={WHITE} stroke={GOLD} strokeWidth={4} />
+        </g>
+      )}
+      {gray > 0 && <rect x={-50} y={-50} width={1180} height={1360} fill="#2a2836" opacity={gray} />}
     </g>
   );
 };
 
 // --- notificação
-const NOTIF = ["MENSAGEM", "E-MAIL", "BOLETO", "LEMBRETE", "REUNIÃO", "GRUPO (99+)", "COBRANÇA", "PROMOÇÃO", "CHAMADA PERDIDA", "PRAZO HOJE"];
-const NOTIF_C = ["#3ac06a", "#4a8ae8", "#e0554a", "#e8b04b", "#8a6ae0", "#3ac06a", "#e0554a", "#ff7aa8", "#e0554a", "#e8b04b"];
+const NOTIF = ["MENSAGEM", "E-MAIL", "BOLETO", "LEMBRETE", "REUNIÃO", "GRUPO (99+)", "COBRANÇA", "PRAZO HOJE"];
+const NOTIF_C = ["#3ac06a", "#4a8ae8", "#e0554a", "#e8b04b", "#8a6ae0", "#3ac06a", "#e0554a", "#e8b04b"];
 const Notif: React.FC<{ i: number; x: number; y: number; p: number; rot?: number; s?: number }> = ({ i, x, y, p, rot = 0, s = 1 }) => {
   const k = backPop(p);
   if (k <= 0) return null;
@@ -603,55 +619,62 @@ const Notif: React.FC<{ i: number; x: number; y: number; p: number; rot?: number
   );
 };
 
-// --- cartão de tarefa (cena da correria)
-const Task: React.FC<{ txt: string; x: number; y: number; p: number; c: string }> = ({ txt, x, y, p, c }) => {
-  const k = backPop(p);
-  if (k <= 0) return null;
-  return (
-    <g transform={`translate(${x},${y}) scale(${k}) rotate(${Math.sin(x) * 6})`}>
-      <rect x={-52} y={-16} width={104} height={32} rx={6} fill={c} stroke="#2a2836" strokeWidth={2} />
-      <text x={0} y={6} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={16} fill="#1e1c28">{txt}</text>
+// --- sala: sofá, cômoda com gaveta, porta, tênis jogado (mundo: chão em 440)
+const Living: React.FC<{ t: number; drawer: number; night: number; shoes?: "corner" | "none"; sofa?: boolean }> = ({ t, drawer, night, shoes = "corner", sofa = true }) => (
+  <g>
+    <rect x={-200} y={-200} width={1480} height={640} fill="#4a4e6e" />
+    <rect x={-200} y={430} width={1480} height={10} fill="#3b3f5c" />
+    <rect x={-200} y={440} width={1480} height={400} fill="#33364f" />
+    {/* janela */}
+    <rect x={140} y={150} width={150} height={150} fill={night > 0.5 ? "#141a3c" : "#ffb36b"} />
+    <rect x={134} y={144} width={162} height={162} fill="none" stroke="#2b2e45" strokeWidth={10} />
+    <line x1={215} y1={150} x2={215} y2={300} stroke="#2b2e45" strokeWidth={7} />
+    {night > 0.5 && <circle cx={255} cy={185} r={14} fill="#e8e4d0" opacity={0.8} />}
+    {/* porta (direita) */}
+    <rect x={900} y={170} width={110} height={270} fill="#2b2e45" />
+    <rect x={906} y={176} width={98} height={264} fill="#3b3f5c" />
+    <circle cx={920} cy={320} r={5} fill="#c9a24a" />
+    {/* cômoda com gaveta (esquerda) */}
+    <rect x={40} y={350} width={130} height={90} fill="#7a563f" />
+    <rect x={40 + drawer * 50} y={366} width={130} height={34} fill="#8a6449" stroke="#5a3e2c" strokeWidth={3} />
+    <circle cx={105 + drawer * 50} cy={383} r={4} fill="#c9a24a" />
+    <rect x={40} y={404} width={130} height={30} fill="#8a6449" stroke="#5a3e2c" strokeWidth={3} />
+    <rect x={95} y={330} width={30} height={20} fill="#c9a24a" />
+    {/* sofá (v8): cor destacada da parede, encosto e assento com almofadas, braços arredondados, pés de madeira */}
+    {sofa && <g>
+    <g stroke="#1e1c28" strokeWidth={3} strokeLinejoin="round">
+      <rect x={428} y={286} width={334} height={96} rx={24} fill="#2f6f78" />
+      <rect x={440} y={298} width={150} height={74} rx={18} fill="#3f8a94" />
+      <rect x={600} y={298} width={150} height={74} rx={18} fill="#3f8a94" />
+      <rect x={426} y={362} width={170} height={42} rx={14} fill="#4a9aa4" />
+      <rect x={594} y={362} width={170} height={42} rx={14} fill="#4a9aa4" />
+      <rect x={418} y={398} width={354} height={28} rx={10} fill="#25585f" />
+      <rect x={392} y={326} width={56} height={100} rx={26} fill="#2f6f78" />
+      <rect x={742} y={326} width={56} height={100} rx={26} fill="#2f6f78" />
+      <path d="M432 426 L446 426 L443 440 L435 440 Z" fill="#5a3a24" />
+      <path d="M744 426 L758 426 L755 440 L747 440 Z" fill="#5a3a24" />
+      <rect x={452} y={318} width={58} height={50} rx={14} fill={GOLD} transform="rotate(-12 481 343)" />
     </g>
-  );
-};
-
-// --- lista de tarefas (papel comprido que rola)
-const LIST = ["ACORDAR", "TRABALHAR", "RESPONDER", "PAGAR CONTA", "LAVAR LOUÇA", "MERCADO", "REUNIÃO", "E-MAILS", "LIMPAR", "DORMIR"];
-const Checklist: React.FC<{ x: number; y: number; scroll: number; done: number; t: number; gold?: number; cross?: number; pick?: number }> = ({ x, y, scroll, done, t, gold = 0, cross = 0, pick = 0 }) => (
-  <g transform={`translate(${x},${y})`}>
-    <defs><clipPath id="listClip"><rect x={-70} y={-80} width={140} height={176} /></clipPath></defs>
-    <rect x={-74} y={-102} width={148} height={204} rx={6} fill="#fdfbf4" stroke="#2a2836" strokeWidth={2.4} />
-    <rect x={-74} y={-102} width={148} height={20} rx={6} fill={gold > 0.5 ? GOLD : "#8a8798"} />
-    <text x={0} y={-87} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={13} fill="#1e1c28">TAREFAS DE HOJE</text>
-    <g clipPath="url(#listClip)">
-      {Array.from({ length: 24 }).map((_, i) => {
-        const yy = -62 + i * 22 - scroll;
-        if (yy < -90 || yy > 100) return null;
-        const label = i === 3 && pick > 0 ? "O QUE IMPORTA" : LIST[i % LIST.length];
-        const isPick = i === 3 && pick > 0;
-        const ticked = i < done;
-        return (
-          <g key={i}>
-            <rect x={-62} y={yy - 8} width={13} height={13} rx={2} fill="#fff" stroke="#2a2836" strokeWidth={1.6} />
-            {ticked && <path d={`M${-60} ${yy - 1} l4 4 l7 -9`} stroke={gold > 0.5 ? "#3a8a5a" : "#55525f"} strokeWidth={2.4} fill="none" />}
-            <text x={-42} y={yy + 4} fontFamily={BARLOW} fontWeight={700} fontSize={13} fill={isPick ? "#9a6a10" : "#2a2836"}>{label}</text>
-            {cross > 0 && !isPick && <line x1={-44} y1={yy} x2={-44 + 100 * clamp01(cross * 1.4 - i * 0.05)} y2={yy} stroke={GOLD} strokeWidth={2.4} />}
-            {isPick && <ellipse cx={4} cy={yy} rx={56 * backPop(pick)} ry={11 * backPop(pick)} fill="none" stroke={GOLD} strokeWidth={3} />}
-          </g>
-        );
-      })}
-    </g>
+    <path d="M404 334 Q420 326 436 334" stroke="#7fc2ca" strokeWidth={4} fill="none" opacity={0.6} />
+    <path d="M754 334 Q770 326 786 334" stroke="#7fc2ca" strokeWidth={4} fill="none" opacity={0.6} />
+    <path d="M450 306 Q515 298 580 306" stroke="#7fc2ca" strokeWidth={4} fill="none" opacity={0.5} />
+    <path d="M610 306 Q675 298 740 306" stroke="#7fc2ca" strokeWidth={4} fill="none" opacity={0.5} />
+    </g>}
+    {/* tênis jogado no canto */}
+    {shoes === "corner" && (
+      <g>
+        <path d="M820 440 l0 -10 q10 -6 22 0 l6 10 z" fill="#f2f2f2" transform="rotate(-18 834 436)" />
+        <path d="M852 440 l0 -10 q10 -6 22 0 l6 10 z" fill="#f2f2f2" transform="rotate(24 866 436)" />
+      </g>
+    )}
     {void t}
   </g>
 );
 
-// --- rua do amanhecer com caminho dourado (mundo do quarto: chão em 440)
-const Dawn: React.FC<{ t: number; path: number; scroll?: number }> = ({ t, path, scroll = 0 }) => (
+// --- rua do amanhecer
+const Dawn: React.FC<{ t: number; scroll?: number }> = ({ t, scroll = 0 }) => (
   <g>
-    <defs>
-      <linearGradient id="dawnSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#1d2350" /><stop offset="0.55" stopColor="#6a5fa0" /><stop offset="1" stopColor="#ffb36b" /></linearGradient>
-      <linearGradient id="pathG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor={GOLD} stopOpacity={0.9} /><stop offset="1" stopColor={GOLD} stopOpacity={0.1} /></linearGradient>
-    </defs>
+    <defs><linearGradient id="dawnSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#1d2350" /><stop offset="0.55" stopColor="#6a5fa0" /><stop offset="1" stopColor="#ffb36b" /></linearGradient></defs>
     <rect x={-200} y={-200} width={1480} height={640} fill="url(#dawnSky)" />
     <circle cx={880} cy={410} r={70} fill="#ffe2a0" opacity={0.85} />
     {Array.from({ length: 16 }).map((_, i) => {
@@ -661,190 +684,213 @@ const Dawn: React.FC<{ t: number; path: number; scroll?: number }> = ({ t, path,
     })}
     <rect x={-200} y={440} width={1480} height={400} fill="#262a48" />
     {Array.from({ length: 30 }).map((_, i) => <rect key={i} x={((i * 70 - scroll) % 2100 + 2100) % 2100 - 300} y={470} width={36} height={5} fill="#3a3f63" />)}
-    {path > 0 && <path d={`M${300} 448 L${300 + 900 * path} 444 L${300 + 900 * path} 456 L300 470 Z`} fill="url(#pathG)" filter="url(#glowGold)" />}
-    {path > 0 && <path d={`M${300} 450 L${300 + 900 * path} 447 L${300 + 900 * path} 452 L300 462 Z`} fill={GOLD} opacity={0.9} />}
     {void t}
   </g>
 );
-
-// ================================================================== cenas
-// S0 gancho: no quarto à noite, sentado na cama com o caderno; a lembrança dourada aparece
-const S0 = (t: number) => (
+const Ball: React.FC = () => (
   <g>
-    <Room id="a" dawn={0} lamp={1} drawer={0} shirtFold={-1} sneakers={false} alarm={0} t={t} clock="22:10" clockColor="#ffb84a" />
-    <rect x={-200} y={-200} width={1480} height={1000} fill="#0b0d1e" opacity={0.32} />
-    <Body t={t} pose={SIT_BOOK} kind="gold" outfit={HOME_GOLD} eyes={t > 1.2 ? "open" : "down"} mouth="smile" glow={0.7} holdN={<Notebook />} />
-    <Memory x={560} y={150} p={t - 0.6} t={t} />
+    <circle r={11} fill="#e8743a" stroke="#2a2836" strokeWidth={1.6} />
+    <path d="M-11 0 Q0 6 11 0 M0 -11 Q-6 0 0 11" stroke="#2a2836" strokeWidth={1.4} fill="none" />
   </g>
 );
-const C0 = (t: number): Cam => ({ cx: 560, cy: kfT(t, [[0, 270], [2.9, 255]]), z: kfT(t, [[0, 1.9], [2.9, 2.0]]) });
+// --- mesa de estudo (v6): mesa, cadeira, luminária, pilha de livros e livro aberto
+const Desk: React.FC<{ t: number; lamp: number; open?: number; flip?: number; glow?: number }> = ({ t, lamp, open = 1, flip = 0, glow = 0 }) => (
+  <g>
+    {lamp > 0 && <circle cx={720} cy={300} r={170} fill="#ffd28a" opacity={0.22 * lamp} filter="url(#glowGold)" />}
+    <rect x={600} y={350} width={250} height={14} rx={4} fill="#8a6449" />
+    <rect x={612} y={364} width={12} height={76} fill="#6b4a36" />
+    <rect x={826} y={364} width={12} height={76} fill="#6b4a36" />
+    {/* luminária */}
+    <rect x={800} y={340} width={34} height={10} fill="#2a2a33" />
+    <line x1={817} y1={340} x2={790} y2={290} stroke="#2a2a33" strokeWidth={5} />
+    <path d="M770 300 L806 284 L800 270 L766 286 Z" fill={lamp > 0.5 ? "#ffe2a0" : "#5a5a66"} stroke="#2a2a33" strokeWidth={2} />
+    {/* pilha de livros */}
+    {["#4a8ae8", "#e0554a", "#3ac06a", GOLD].map((c, i) => <rect key={i} x={740 + (i % 2) * 4} y={338 - i * 10} width={46} height={10} rx={2} fill={c} stroke="#2a2836" strokeWidth={1.2} />)}
+    {/* caderno aberto (v9): capa marrom, duas páginas com linhas, fita dourada, levemente inclinado para a câmera */}
+    {open > 0 && (
+      <g transform="translate(668,344)">
+        <ellipse cx={0} cy={4} rx={70} ry={16} fill={GOLD} opacity={0.35 * glow} filter="url(#glowGold)" />
+        <path d="M-62 -2 L-4 -12 L4 -12 L62 -2 L58 10 L-58 10 Z" fill="#8a5a2a" stroke="#4a2e14" strokeWidth={1.8} strokeLinejoin="round" />
+        <path d="M-56 -4 Q-30 -12 -2 -12 L-2 6 Q-30 4 -54 7 Z" fill="#fbf6e8" stroke="#b9ae92" strokeWidth={1.4} />
+        <path d="M56 -4 Q30 -12 2 -12 L2 6 Q30 4 54 7 Z" fill="#fbf6e8" stroke="#b9ae92" strokeWidth={1.4} />
+        {[0, 1, 2].map((k) => <path key={k} d={`M-48 ${-4 + k * 4} Q-26 ${-10 + k * 4} -8 ${-9 + k * 4}`} stroke="#c9b98a" strokeWidth={1.1} fill="none" />)}
+        {[0, 1, 2].map((k) => <path key={k} d={`M8 ${-9 + k * 4} Q26 ${-10 + k * 4} 48 ${-4 + k * 4}`} stroke="#c9b98a" strokeWidth={1.1} fill="none" />)}
+        <path d="M-40 -6 L-18 -9" stroke="#2a2836" strokeWidth={1.6} />
+        <path d="M0 6 L3 18 L6 6" fill={GOLD} />
+        {flip > 0 && flip < 1 && <path d={`M2 -12 Q${2 + 26 * Math.cos(flip * Math.PI)} ${-14 - 22 * Math.sin(flip * Math.PI)} ${2 + 52 * Math.cos(flip * Math.PI)} ${-4 - 18 * Math.sin(flip * Math.PI)} L${2 + 50 * Math.cos(flip * Math.PI)} ${6 - 18 * Math.sin(flip * Math.PI)} Q${2 + 26 * Math.cos(flip * Math.PI)} ${4 - 20 * Math.sin(flip * Math.PI)} 2 6 Z`} fill="#fffaf0" stroke="#b9ae92" strokeWidth={1.2} />}
+      </g>
+    )}
+    {void t}
+  </g>
+);
+const STUDY = P(560, 372, 186, [55, 104], [48, 96], [95, 5], [85, 0]);
+const StudyChair: React.FC = () => (
+  <g>
+    <rect x={500} y={300} width={10} height={140} fill="#6b4a36" />
+    <rect x={500} y={372} width={90} height={10} fill="#6b4a36" />
+    <rect x={580} y={382} width={8} height={58} fill="#6b4a36" />
+  </g>
+);
+// filho: mesmo boneco, menor (escala 0,62 a partir dos pés)
+const Kid: React.FC<{ pose: Pose; t: number; ball?: boolean; dir?: 1 | -1 }> = ({ pose, t, ball = true, dir = -1 }) => {
+  const k = 0.62, fy = 442;
+  return (
+    <g transform={`translate(${pose.x},${fy}) scale(${k}) translate(${-pose.x},${-fy})`}>
+      <Body t={t} pose={pose} kind="gold" dir={dir} eyes="open" mouth="smile" glow={0.7} holdN={ball ? <g transform="translate(0,6) scale(1.5)"><Ball /></g> : undefined} />
+    </g>
+  );
+};
 
-// S1 notificações: o celular vibra, as notificações cobrem a lembrança, ele perde o brilho
-const N_AT = [0.5, 0.85, 1.15, 1.45, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0, 3.2, 3.4];
-const N_POS: [number, number, number][] = [[520, 120, -6], [610, 150, 5], [540, 190, 3], [600, 95, -4], [500, 160, 8], [620, 200, -7], [560, 130, 2], [480, 110, -9], [640, 120, 6], [530, 220, -3], [590, 170, 9], [560, 80, -5]];
+// ================================================================== cenas
+// S0 DIA 1: close no caderno, a mão dourada escrevendo o motivo (legível desde o quadro 0)
+const S0 = (t: number) => <Page t={t} reveal={kfT(t, [[0, 0.22], [2.6, 1.0], [3.2, 1.25]])} glow={1} />;
+const C0 = (): Cam => ({ cx: 540, cy: 630, z: 1, screen: true });
+
+// S1 os dias passam: notificações, ele fica cinza, o caderno vai para a gaveta
+const DAY_JUMPS = [0.0, 1.1, 2.2, 3.3];
 const S1 = (t: number) => {
-  const k = 1 - er(t, 2.4, 4.0);
-  const buzz = t < 3.6 ? Math.sin(t * 80) * 1.5 : 0;
+  const k = 1 - er(t, 0.6, 3.6);
+  const drawer = er(t, 3.4, 3.8) * (1 - er(t, 4.5, 4.9));
+  const slide = er(t, 3.7, 4.3);
+  const noteX = lerp(120, 150, slide);
+  const noteY = lerp(345, 383, slide);
   return (
     <g>
-      <Room id="a" dawn={0} lamp={1} drawer={0} shirtFold={-1} sneakers={false} alarm={0} t={t} clock="22:40" clockColor="#ffb84a" />
-      <rect x={-200} y={-200} width={1480} height={1000} fill="#0b0d1e" opacity={0.32 + (1 - k) * 0.15} />
-      <Memory x={560} y={150} p={1} t={t} />
-      <rect x={480} y={70} width={160} height={160} fill="#0b0d1e" opacity={er(t, 2.6, 4.2) * 0.5} />
-      <Duo k={k} t={t} pose={SIT_PHONE} outfit={[HOME_GRAY, HOME_GOLD]} eyes={["droopy", "down"]} mouth={["frown", "flat"]} glow={0.6} holdN={<g transform={`translate(${buzz},0)`}><Phone scroll={t * 2} /></g>} />
-      {N_AT.map((a, i) => <Notif key={i} i={i} x={N_POS[i][0]} y={N_POS[i][1]} rot={N_POS[i][2]} p={t - a} />)}
+      <Living t={t} drawer={drawer} night={1} shoes="none" />
+      <rect x={-200} y={-200} width={1480} height={1000} fill="#0b0d1e" opacity={0.25 + (1 - k) * 0.2} />
+      <Duo k={k} t={t} pose={SIT_PHONE5} eyes={["droopy", "down"]} mouth={["frown", "flat"]} glow={0.6} holdN={<Phone scroll={t * 2} />} />
+      {slide < 0.95 && <g transform={`translate(${noteX},${noteY})`} opacity={1 - ramp(slide, 0.75, 0.95)}><NoteClosed rot={slide * 10} /></g>}
+      {[0.3, 0.7, 1.1, 1.5, 1.9, 2.3, 2.7, 3.1].map((a, i) => <Notif key={i} i={i} x={[480, 640, 520, 610, 470, 650, 560, 540][i]} y={[200, 220, 150, 140, 250, 270, 110, 240][i]} rot={[-6, 5, 3, -4, 8, -7, 2, -3][i]} p={t - a} />)}
     </g>
   );
 };
-const C1 = (t: number): Cam => ({ cx: 560, cy: 255, z: kfT(t, [[0, 2.0], [5.6, 2.12]]) + (t < 3.6 ? Math.sin(t * 50) * 0.01 : 0) });
+const C1 = (t: number): Cam => ({ cx: kfT(t, [[0, 520], [3.2, 520], [3.8, 240], [5.4, 240]]), cy: 0, z: kfT(t, [[0, 2.0], [3.2, 2.0], [3.8, 2.3]]) });
 
-// S2 correria: ele corre de um lado para o outro e as tarefas pipocam em volta
-const TASKS: [string, number, number, string][] = [["TRABALHO", 420, 190, "#7cc4ff"], ["LOUÇA", 700, 210, "#f5d36a"], ["MENSAGENS", 470, 270, "#9ad08a"], ["CONTAS", 660, 140, "#ff9a8a"], ["MERCADO", 560, 110, "#c8a8f0"], ["REUNIÃO", 740, 290, "#7cc4ff"], ["FAXINA", 390, 120, "#f5d36a"], ["PRAZO", 610, 260, "#ff9a8a"]];
+// S2 DIA 247 à noite: afundado no sofá, celular, tênis no canto; "PRA QUÊ?"
+const SOFA = P(590, 376, 160, [25, 70], [10, 100], [95, 10], [85, 5]);
 const S2 = (t: number) => {
-  const xs = kfT(t, [[0, 420], [0.9, 700], [1.8, 430], [2.7, 700], [3.6, 450], [4.6, 650]]);
-  const dirW: 1 | -1 = Math.cos((t / 0.9) * Math.PI) > 0 ? 1 : -1;
+  const q = backPop(t - 1.9);
   return (
     <g>
-      <Kitchen id="k" t={t} toast={0} bread={false} flame={false} mug={false} />
-      <rect x={-200} y={-200} width={1480} height={1000} fill="#20203a" opacity={0.25} />
-      <Body t={t} pose={runP(xs, 342, t * 13)} kind="gray" outfit={HOME_GRAY} dir={dirW} eyes="wide" red mouth="o" messy stink={0.5} />
-      {TASKS.map(([txt, x, y, c], i) => <Task key={i} txt={txt} x={x} y={y} c={c} p={t - 0.25 - i * 0.45} />)}
+      <Living t={t} drawer={0} night={1} />
+      <rect x={-200} y={-200} width={1480} height={1000} fill="#0b0d1e" opacity={0.45} />
+      <defs><radialGradient id="ph5" cx="640" cy="300" r="200" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#7cc4ff" stopOpacity={0.45} /><stop offset="1" stopColor="#7cc4ff" stopOpacity={0} /></radialGradient></defs>
+      <rect x={-200} y={-200} width={1480} height={1000} fill="url(#ph5)" style={{ mixBlendMode: "screen" }} />
+      <Body t={t} pose={SOFA} kind="gray" eyes="droopy" red mouth="frown" messy holdN={<Phone scroll={t * 1.5} rot={-20} />} />
+      {q > 0 && (
+        <g transform={`translate(612,196) scale(${q})`}>
+          <circle cx={-46} cy={74} r={6} fill="#f4f1ea" stroke="#2a2836" strokeWidth={2} />
+          <circle cx={-30} cy={52} r={10} fill="#f4f1ea" stroke="#2a2836" strokeWidth={2} />
+          <ellipse cx={0} cy={0} rx={80} ry={44} fill="#f4f1ea" stroke="#2a2836" strokeWidth={3} />
+          <text x={0} y={12} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={36} fill="#2a2836">PRA QUÊ?</text>
+        </g>
+      )}
     </g>
   );
 };
-const C2 = (t: number): Cam => ({ cx: 560 + Math.sin(t * 17) * 2, cy: 290, z: 2.1 });
+const C2 = (t: number): Cam => ({ cx: kfT(t, [[0, 600], [4, 610]]), cy: 0, z: kfT(t, [[0, 2.1], [4, 2.3]]) });
 
-// S3 lista: a lista não acaba e ele risca no automático
+// S3 abre a gaveta, acha o caderno; close na frase; o filho aparece na porta com a bola
+const PG = 1.7, KID = 3.4;
 const S3 = (t: number) => {
-  const done = Math.floor(t * 3.2);
-  const pen = Math.sin(t * 20) * 3;
-  const pose = P(430, 342, 178, [60, 100], [40 + pen, 70 + pen], [-4, 0], [4, 0]);
-  return (
-    <g>
-      <rect x={-200} y={-200} width={1480} height={1000} fill="#2c2f45" />
-      <rect x={-200} y={440} width={1480} height={400} fill="#22243a" />
-      <Body t={t} pose={pose} kind="gray" outfit={HOME_GRAY} dir={1} eyes="droopy" mouth="flat" messy holdN={<line x1={0} y1={0} x2={8} y2={-14} stroke="#2a2836" strokeWidth={3} strokeLinecap="round" />} />
-      <Checklist x={600} y={240} scroll={t * 30} done={done + Math.floor(t * 30 / 22)} t={t} />
-    </g>
-  );
-};
-const C3 = (t: number): Cam => ({ cx: 515, cy: 300, z: kfT(t, [[0, 2.2], [3.2, 2.32]]) });
-
-// S4 teste: ele para, o barulho some e vem a lembrança da primeira promessa cumprida
-const FB = 1.5; // começa a lembrança
-const S4 = (t: number) => {
-  const stop = er(t, 0.0, 0.5);
-  const mem = er(t, FB, FB + 0.5);
-  const runX = kfT(t, [[FB, 200], [FB + 2.4, 620]]);
-  const through = runX > 560;
-  return (
-    <g>
-      {mem < 1 && (
-        <g opacity={1 - mem}>
-          <rect x={-200} y={-200} width={1480} height={1000} fill="#0a0b16" />
-          <defs><radialGradient id="spot" cx="560" cy="300" r="240" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#ffe9b8" stopOpacity={0.35} /><stop offset="1" stopColor="#ffe9b8" stopOpacity={0} /></radialGradient></defs>
-          <rect x={-200} y={-200} width={1480} height={1000} fill="url(#spot)" opacity={stop} />
-          <Body t={t} pose={STAND_C} kind="gray" outfit={HOME_GRAY} eyes="closed" mouth="flat" />
-        </g>
-      )}
-      {mem > 0 && (
-        <g opacity={mem}>
-          <g filter="url(#memTint)">
-            <Dawn t={t} path={0} scroll={0} />
-            {/* fita de chegada */}
-            <rect x={560} y={300} width={6} height={144} fill="#e9e6de" />
-            <rect x={760} y={300} width={6} height={144} fill="#e9e6de" />
-            {!through && <line x1={566} y1={340} x2={760} y2={340} stroke={RED} strokeWidth={4} />}
-            {through && [0, 1].map((i) => <path key={i} d={i ? `M760 340 q-20 ${10 + (runX - 560) * 0.1} -40 ${30}` : `M566 340 q20 ${10 + (runX - 560) * 0.1} 40 ${30}`} stroke={RED} strokeWidth={4} fill="none" />)}
-            <Body t={t} pose={through ? { ...runP(runX, 342, t * 11), aF: [160, 175], aN: [200, 185] } : runP(runX, 342, t * 11)} kind="gold" outfit={DAY_GOLD} dir={1} eyes={through ? "closed" : "open"} mouth="smile" glow={0.9} />
-          </g>
-          <rect x={-200} y={-200} width={1480} height={1000} fill="none" stroke={GOLD} strokeWidth={0} />
-          {through && (
-            <g transform={`translate(560,110) scale(${backPop(t - FB - 1.9)})`}>
-              <rect x={-150} y={-24} width={300} height={48} rx={10} fill="#14100c" stroke={GOLD} strokeWidth={4} />
-              <text x={0} y={9} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={26} fill={GOLD} letterSpacing={1}>PROMESSA CUMPRIDA ✓</text>
-            </g>
-          )}
-        </g>
-      )}
-    </g>
-  );
-};
-const C4 = (t: number): Cam => t < FB ? { cx: 560, cy: 310, z: kfT(t, [[0, 2.2], [FB, 2.5]]) } : { cx: kfT(t, [[FB, 440], [FB + 2.6, 600]]), cy: 290, z: 2.05 };
-
-// S5 o que você sentiu continua valendo: ele afasta o barulho e acha o brilho embaixo
-const S5 = (t: number) => {
-  const sweep = er(t, 0.5, 1.4);
-  const k = er(t, 1.4, 2.6);
-  const pose = mixPose(STAND_C, P(560, 342, 176, [70, 110], [100, 140], [-4, 0], [4, 0]), Math.sin(clamp01((t - 0.5) / 0.9) * Math.PI));
-  const heart = er(t, 1.0, 1.6);
-  return (
-    <g>
-      <Room id="a" dawn={er(t, 1.6, 3.6) * 0.6} lamp={1} drawer={0} shirtFold={-1} sneakers={false} alarm={0} t={t} clock="07:00" clockColor="#ffb84a" />
-      <rect x={-200} y={-200} width={1480} height={1000} fill="#0b0d1e" opacity={0.45 - k * 0.3} />
-      <Duo k={k} t={t} pose={pose} outfit={[HOME_GRAY, HOME_GOLD]} eyes={["down", "open"]} mouth={["flat", "smile"]} glow={1} />
-      {/* brilho no peito que estava embaixo das notificações */}
-      {heart > 0 && <circle cx={562} cy={300} r={16 + k * 30} fill={GOLD} opacity={heart * (0.7 - k * 0.3)} filter="url(#glowGold)" />}
-      {heart > 0 && <circle cx={562} cy={300} r={9} fill="#fff6d8" opacity={heart} />}
-      {N_POS.slice(0, 9).map((p, i) => {
-        const dx = (p[0] - 560) * 0.5, dy = (p[1] - 150) * 0.5;
-        const fly = sweep * (1 + i * 0.08);
-        return <Notif key={i} i={i} x={560 + dx + fly * (i % 2 ? 520 : -520)} y={300 + dy - fly * 120} rot={p[2] + fly * 40} p={1} s={0.9} />;
-      })}
-    </g>
-  );
-};
-const C5 = (t: number): Cam => ({ cx: 560, cy: 310, z: kfT(t, [[0, 2.25], [4.4, 2.4]]) });
-
-// S6 escolher o que importa: risca o resto, circula uma; o caminho dourado acende e ele anda
-const WALK = 3.0;
-const S6 = (t: number) => {
-  if (t < WALK) {
-    const pose = P(430, 342, 180, [55, 95], [40, 70], [-4, 0], [4, 0]);
+  if (t >= PG && t < KID) return <Page t={t} reveal={1.3} glow={er(t, PG, KID)} hand={false} gray={0.35 * (1 - er(t, PG, KID))} />;
+  if (t >= KID) {
+    // v6: corte para a mesa de estudo esperando por ele (luminária acende, livro brilha)
     return (
       <g>
-        <rect x={-200} y={-200} width={1480} height={1000} fill="#2c2f45" />
-        <rect x={-200} y={440} width={1480} height={400} fill="#22243a" />
-        <Body t={t} pose={pose} kind="gold" outfit={HOME_GOLD} dir={1} eyes="open" mouth="smile" glow={0.8} holdN={<line x1={0} y1={0} x2={8} y2={-14} stroke="#2a2836" strokeWidth={3} strokeLinecap="round" />} />
-        <Checklist x={600} y={240} scroll={0} done={0} t={t} gold={1} cross={er(t, 0.3, 1.6)} pick={t - 1.7} />
+        <Living t={t} drawer={0} night={1} shoes="none" sofa={false} />
+        <rect x={-200} y={-200} width={1480} height={1000} fill="#0b0d1e" opacity={0.3} />
+        <StudyChair />
+        <Desk t={t} lamp={er(t, KID + 0.3, KID + 0.6)} glow={er(t, KID + 0.5, KID + 1.2)} />
       </g>
     );
   }
-  const w = t - WALK;
+  const drawer = er(t, 0.15, 0.6);
+  const take = er(t, 0.7, 1.1);
+  const pose = mixPose(P(240, 342, 180, [-8, -4], [8, 4], [-4, 0], [4, 0]), P(240, 342, 162, [30, 20], [40, 30], [-4, 0], [4, 0]), Math.max(drawer, 0) * (1 - take * 0.6));
   return (
     <g>
-      <Dawn t={t} path={er(w, 0, 0.9)} scroll={w * 60} />
-      <Body t={t} pose={walkP(560, 342, w * 7)} kind="gold" outfit={DAY_GOLD} dir={1} eyes="open" mouth="smile" glow={0.9} />
+      <Living t={t} drawer={drawer} night={1} />
+      <rect x={-200} y={-200} width={1480} height={1000} fill="#0b0d1e" opacity={0.4} />
+      {take < 0.5 && <g transform={`translate(${105 + 45},${380})`}><NoteClosed /></g>}
+      <g transform={`translate(${240 * 2},0) scale(-1,1)`}>
+        <Body t={t} pose={pose} kind="gray" dir={1} eyes="down" mouth="flat" messy holdN={take >= 0.5 ? <NoteClosed rot={-20} /> : undefined} />
+      </g>
+      {take > 0.5 && <circle cx={200} cy={300} r={20 + take * 20} fill={GOLD} opacity={0.35 * take} filter="url(#glowGold)" />}
     </g>
   );
 };
-const C6 = (t: number): Cam => t < WALK ? { cx: 515, cy: 300, z: 2.25 } : { cx: 590, cy: 320, z: kfT(t, [[WALK, 2.0], [5.7, 2.1]]) };
+const C3 = (t: number): Cam => t >= PG && t < KID ? { cx: 540, cy: 630, z: 1, screen: true } : t >= KID ? { cx: 690, cy: 0, z: 2.2 } : { cx: 200, cy: 0, z: 2.3 };
 
-// S7 fecho: de pé no amanhecer, decidido; pergunta na tela
-const S7 = (t: number) => (
+// S4 (v6) volta a ficar dourado (o brilho nasce do caderno) e senta para estudar; amanhecer na janela
+const SIT_AT = 1.4;
+const S4 = (t: number) => {
+  const k = er(t, 0.2, 1.3);
+  if (t < SIT_AT) {
+    const ring = er(t, 0.1, 1.2);
+    return (
+      <g>
+        <Living t={t} drawer={0} night={1} shoes="none" sofa={false} />
+        <rect x={-200} y={-200} width={1480} height={1000} fill="#0b0d1e" opacity={0.35 - k * 0.2} />
+        <StudyChair />
+        <Desk t={t} lamp={1} glow={1} />
+        {ring > 0 && ring < 1 && <circle cx={575} cy={300} r={20 + ring * 260} fill="none" stroke={GOLD} strokeWidth={8 * (1 - ring)} opacity={1 - ring} />}
+        <Duo k={k} t={t} pose={P(470, 342, 180, [10, 60], [20, 70], [-4, 0], [4, 0])} eyes={["down", "open"]} mouth={["flat", "smile"]} glow={1} holdN={<NoteClosed rot={-30} />} />
+      </g>
+    );
+  }
+  const w = t - SIT_AT;
+  const flip = [1.2, 2.4].map((a) => ramp(w, a, a + 0.4)).reduce((acc, v) => acc + (v > 0 && v < 1 ? v : 0), 0);
+  const write = Math.sin(w * 14) * 3;
+  return (
+    <g>
+      <Living t={t} drawer={0} night={1 - er(w, 0.3, 2.5)} shoes="none" sofa={false} />
+      <rect x={-200} y={-200} width={1480} height={1000} fill="#ffd28a" opacity={er(w, 0.3, 2.5) * 0.08} />
+      <StudyChair />
+      <Body t={t} pose={{ ...STUDY, aN: [STUDY.aN[0] + write, STUDY.aN[1]] as [number, number] }} kind="gold" dir={1} eyes="down" mouth="smile" glow={0.9} holdN={<line x1={0} y1={0} x2={6} y2={-14} stroke="#2a2836" strokeWidth={3} strokeLinecap="round" />} />
+      <Desk t={t} lamp={1} flip={flip} glow={0.8} />
+      <g transform="translate(150,330)"><NoteClosed /></g>
+    </g>
+  );
+};
+const C4 = (t: number): Cam => t < SIT_AT ? { cx: 600, cy: 0, z: 2.1 } : { cx: kfT(t, [[SIT_AT, 640], [5, 650]]), cy: 0, z: kfT(t, [[SIT_AT, 2.2], [5, 2.4]]) };
+
+// S5 frase final grande no centro
+const S5 = (t: number) => (
   <g>
-    <Dawn t={t} path={1} scroll={0} />
-    <Body t={t} pose={STAND_C} kind="gold" outfit={DAY_GOLD} dir={1} eyes="open" mouth="smile" glow={0.9 + 0.1 * Math.sin(t * 3)} />
+    <Dawn t={t} scroll={140 + t * 40} />
+    <rect x={-200} y={-200} width={1480} height={1000} fill="#07080f" opacity={0.55} />
   </g>
 );
-const C7 = (t: number): Cam => ({ cx: 600, cy: kfT(t, [[0, 300], [7.2, 305]]), z: kfT(t, [[0, 1.7], [7.2, 1.8]]) });
+const C5 = (): Cam => ({ cx: 590, cy: 0, z: 2.0 });
 
-const SCENES: [(t: number) => React.ReactNode, (t: number) => Cam][] = [[S0, C0], [S1, C1], [S2, C2], [S3, C3], [S4, C4], [S5, C5], [S6, C6], [S7, C7]];
+const SCENES: [(t: number) => React.ReactNode, (t: number) => Cam][] = [[S0, C0], [S1, C1], [S2, C2], [S3, C3], [S4, C4], [S5, C5]];
 
-// keyframes simples
-function kfT(t: number, keys: [number, number][]) {
-  if (t <= keys[0][0]) return keys[0][1];
-  for (let i = 1; i < keys.length; i++) {
-    const [t1, v1] = keys[i];
-    if (t <= t1) { const [t0, v0] = keys[i - 1]; return lerp(v0, v1, ease((t - t0) / (t1 - t0))); }
-  }
-  return keys[keys.length - 1][1];
-}
+// ------------------------------------------------------------------ selo DIA X
+const dayAt = (s: number, lt: number) => {
+  if (s === 0) return 1;
+  if (s === 1) { const j = DAY_JUMPS.filter((a) => lt >= a).length; return [30, 90, 180, 247][Math.max(0, j - 1)]; }
+  if (s === 2 || s === 3) return 247;
+  return 248;
+};
+const DaySeal: React.FC<{ s: number; lt: number }> = ({ s, lt }) => {
+  if (s === 5) return null;
+  const d = dayAt(s, lt);
+  const color = d === 1 ? WHITE : d >= 248 ? GOLD : "#9a97a8";
+  const jump = s === 1 ? Math.max(0, ...DAY_JUMPS.map((a) => (lt >= a && lt < a + 0.25 ? 1 - (lt - a) / 0.25 : 0))) : 0;
+  return (
+    <div style={{ position: "absolute", top: 372, right: 210, transform: `scale(${1 + jump * 0.15})`, transformOrigin: "right center", padding: "6px 18px", borderRadius: 12, background: "#07080fcc", border: `4px solid ${color}`, fontFamily: BARLOW, fontWeight: 700, fontSize: 48, letterSpacing: 2, color }}>
+      DIA {d}
+    </div>
+  );
+};
 
 // ------------------------------------------------------------------ legenda palavra por palavra
 const Caption: React.FC<{ t: number }> = ({ t }) => {
   const s = sceneOf(t);
-  const [txt, id, st, dur] = LINES[s];
+  const ln = LINES[s];
+  if (!ln || !ln[4]) return null;
+  const [txt, id, st, dur] = ln;
   const t0 = ST[s] + st;
   const words = txt.split(" ");
   const total = txt.replace(/ /g, "").length;
@@ -853,10 +899,10 @@ const Caption: React.FC<{ t: number }> = ({ t }) => {
   const times = real && real.length === words.length ? real.map((v) => t0 + v) : words.map((w) => { const a = t0 + (acc / total) * dur; acc += w.length; return a; });
   const chunks: number[][] = [];
   let cur: number[] = [], len = 0;
-  words.forEach((w, i) => { if (len + w.length > 22 && cur.length) { chunks.push(cur); cur = []; len = 0; } cur.push(i); len += w.length + 1; if (/[.!?:,]$/.test(w) && len > 12) { chunks.push(cur); cur = []; len = 0; } });
+  words.forEach((w, i) => { if (len + w.length > 22 && cur.length) { chunks.push(cur); cur = []; len = 0; } cur.push(i); len += w.length + 1; if (/[.!?:,]$/.test(w) && len > 8) { chunks.push(cur); cur = []; len = 0; } });
   if (cur.length) chunks.push(cur);
   const idx = Math.max(0, chunks.findIndex((c, i) => t < (chunks[i + 1] ? times[chunks[i + 1][0]] : 1e9)));
-  if (t < t0 - 0.05) return null;
+  if (t < t0 - 0.05 || t > t0 + dur + 0.6) return null;
   return (
     <div style={{ position: "absolute", left: 120, right: 120, top: 1330, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, fontSize: 70, lineHeight: 1.05, letterSpacing: 1 }}>
       {chunks[idx].map((i) => {
@@ -882,42 +928,44 @@ export const PorQueComecou: React.FC = () => {
   const lt = t - ST[s];
   const [draw, cam] = SCENES[s];
   const c = cam(lt);
-  const Z = 1.25; // personagens maiores
-  const vw = VIEW_W / (c.z * Z), vh = VIEW_H / (c.z * Z);
-  const cy = 442 - 330 / (c.z * Z); // chão (pés) sempre acima da legenda
+  const Z = 1.25;
+  const vw = c.screen ? VIEW_W : VIEW_W / (c.z * Z), vh = c.screen ? VIEW_H : VIEW_H / (c.z * Z);
+  const cx = c.screen ? 540 : c.cx;
+  const cy = c.screen ? 630 : 442 - 330 / (c.z * Z); // chão sempre acima da legenda
   const flash = s > 0 ? Math.max(0, 1 - lt / 0.14) * 0.2 : 0;
+  const dayFlash = s === 1 ? Math.max(0, ...DAY_JUMPS.slice(1).map((a) => (lt >= a && lt < a + 0.12 ? 1 - (lt - a) / 0.12 : 0))) * 0.25 : 0;
   const LAST = SCENES.length - 1;
-  const q1 = s === LAST ? er(lt, 0.3, 0.7) : 0;
-  const q2 = s === LAST ? er(lt, 2.4, 2.8) : 0;
+  const f1 = s === LAST ? er(lt, 0.15, 0.55) : 0;
+  const hookOut = s === LAST ? er(lt, 0, 0.25) : 0;
   return (
     <AbsoluteFill style={{ background: "#07080f" }}>
-      {LINES.map((ln, i) => (
+      {LINES.map((ln, i) => ln && (
         <Sequence key={i} from={Math.round((ST[i] + ln[2]) * fps)}><Audio src={staticFile(`${VOICE_DIR}/n${ln[1]}.wav`)} /></Sequence>
       ))}
       <Audio src={staticFile("por_que_comecou/sfx.wav")} volume={0.4} />
       <div style={{ position: "absolute", left: 0, top: SCENE_Y, width: 1080, height: VIEW_H, overflow: "hidden" }}>
-        <svg width={1080} height={VIEW_H} viewBox={`${c.cx - vw / 2} ${cy - vh / 2} ${vw} ${vh}`}>
+        <svg width={1080} height={VIEW_H} viewBox={`${cx - vw / 2} ${cy - vh / 2} ${vw} ${vh}`}>
           <defs>
             <filter id="glowGold" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation={7} /></filter>
-            <filter id="memTint"><feColorMatrix type="matrix" values="0.9 0.25 0.05 0 0.04  0.2 0.75 0.05 0 0.02  0.1 0.15 0.45 0 0  0 0 0 1 0" /></filter>
           </defs>
           {draw(lt)}
         </svg>
-        <div style={{ position: "absolute", inset: 0, background: "#fff", opacity: flash }} />
+        <div style={{ position: "absolute", inset: 0, background: "#fff", opacity: flash + dayFlash }} />
         <div style={{ position: "absolute", inset: 0, boxShadow: "inset 0 0 140px rgba(0,0,0,.75)" }} />
         <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: 140, background: "linear-gradient(#07080f, rgba(7,8,15,0))" }} />
         <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 330, background: "linear-gradient(rgba(7,8,15,0), #07080f)" }} />
       </div>
-      {/* gancho fixo em cima */}
-      <div style={{ position: "absolute", top: 228, left: 120, right: 120, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, fontSize: 60, lineHeight: 1.0, letterSpacing: 2, textShadow: "0 3px 0 rgba(0,0,0,.6)" }}>
+      {/* frase fixa em cima */}
+      <div style={{ position: "absolute", top: 228, left: 120, right: 120, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, fontSize: 56, lineHeight: 1.02, letterSpacing: 2, textShadow: "0 3px 0 rgba(0,0,0,.6)", opacity: 1 - hookOut }}>
         <div style={{ color: WHITE }}>{HOOK[0]}</div>
         <div style={{ color: GOLD }}>{HOOK[1]}</div>
       </div>
+      <DaySeal s={s} lt={lt} />
+      {/* final: a frase de cima vira a frase grande no centro */}
       {s === LAST && (
-        <div style={{ position: "absolute", left: 120, right: 120, top: 470, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, letterSpacing: 2, lineHeight: 1.0 }}>
-          <div style={{ fontSize: 92, color: WHITE, opacity: q1, transform: `translateY(${(1 - q1) * 16}px)`, WebkitTextStroke: "10px #07080f", paintOrder: "stroke fill" }}>POR QUE VOCÊ</div>
-          <div style={{ fontSize: 92, color: GOLD, opacity: q1, transform: `translateY(${(1 - q1) * 16}px)`, WebkitTextStroke: "10px #07080f", paintOrder: "stroke fill" }}>COMEÇOU?</div>
-          <div style={{ marginTop: 22, fontSize: 54, color: WHITE, opacity: q2, transform: `translateY(${(1 - q2) * 16}px)`, WebkitTextStroke: "8px #07080f", paintOrder: "stroke fill" }}>COMENTA AQUI EMBAIXO</div>
+        <div style={{ position: "absolute", left: 120, right: 120, top: 760 - (1 - f1) * 420, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, letterSpacing: 2, lineHeight: 1.04, opacity: Math.max(f1, 0.001), transform: `scale(${lerp(0.62, 1, f1)})` }}>
+          <div style={{ fontSize: 88, color: WHITE, WebkitTextStroke: "10px #07080f", paintOrder: "stroke fill" }}>QUANDO DER<br />VONTADE DE PARAR,</div>
+          <div style={{ marginTop: 18, fontSize: 88, color: GOLD, WebkitTextStroke: "10px #07080f", paintOrder: "stroke fill" }}>LEMBRE POR QUE<br />COMEÇOU.</div>
         </div>
       )}
       <Caption t={t} />
