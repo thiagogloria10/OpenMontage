@@ -511,14 +511,14 @@ const DRINK = P(380, 342, 180, [20, 60], [60, -153], [-4, 0], [4, 0]);
 // "POR QUE VOCÊ COMEÇOU?" v5 — roteiro novo (uma ideia só): o caderno com o motivo (o filho)
 // ==================================================================
 const HOOK = ["QUANDO DER VONTADE DE PARAR,", "LEMBRE POR QUE COMEÇOU."];
-const DUR = [3.2, 5.4, 4.0, 5.0, 5.0, 3.4]; // narração PROVISÓRIA (Piper)
+const DUR = [3.2, 5.4, 4.4, 5.0, 5.0, 3.4]; // narração PROVISÓRIA (Piper)
 const ST: number[] = DUR.reduce<number[]>((a, d, i) => [...a, i === 0 ? 0 : a[i - 1] + DUR[i - 1]], []);
 export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
 // [texto, arquivo, início relativo à cena, duração da fala, mostra legenda]
 type LineT = [string, number, number, number, boolean] | null;
-const LINES: LineT[] = [["Dia um. Ele escreveu as metas dele.", 0, 0.2, 2.53, true], ["Os dias passaram. O cansaço chegou. E o caderno foi parar no fundo da gaveta.", 1, 0.3, 4.39, true], ["Até o dia em que ele pensou: pra quê?", 2, 1.0, 1.95, true], ["Aí ele abriu a gaveta. E lembrou.", 3, 0.2, 2.25, true], null, ["Quando der vontade de parar, lembre por que começou.", 4, 0.3, 2.45, false]];
+const LINES: LineT[] = [["Dia um. Ele escreveu as metas dele.", 0, 0.2, 2.53, true], ["Os dias passaram. O cansaço chegou. E o caderno foi parar no fundo da gaveta.", 1, 0.3, 4.39, true], ["Até o dia em que ele pensou: pra que vou fazer isso?", 2, 0.9, 2.58, true], ["Aí ele abriu a gaveta. E lembrou.", 3, 0.2, 2.25, true], null, ["Quando der vontade de parar, lembre por que começou.", 4, 0.3, 2.45, false]];
 const WORDT: Record<number, number[]> = {};
-const KEY = ["um", "metas", "cansaço", "caderno", "gaveta", "quê", "lembrou", "parar", "começou"];
+const KEY = ["isso", "um", "metas", "cansaço", "caderno", "gaveta", "quê", "lembrou", "parar", "começou"];
 const VOICE_DIR = "por_que_comecou/fala5";
 const MOTIVO = ["QUERO ESTUDAR", "TODOS OS DIAS."]; // v6 (antes: energia pro filho)
 const METAS = ["ESTUDAR TODOS OS DIAS", "2 HORAS DE ESTUDO POR DIA", "LER 1 LIVRO POR MÊS", "APRENDER INGLÊS", "PASSAR NA PROVA"]; // v7: bilhete de metas
@@ -769,7 +769,7 @@ const C1 = (t: number): Cam => ({ cx: kfT(t, [[0, 520], [3.2, 520], [3.8, 240], 
 // S2 DIA 247 à noite: afundado no sofá, celular, tênis no canto; "PRA QUÊ?"
 const SOFA = P(590, 376, 160, [25, 70], [10, 100], [95, 10], [85, 5]);
 const S2 = (t: number) => {
-  const q = backPop(t - 1.9);
+  const q = backPop(t - 2.2);
   return (
     <g>
       <Living t={t} drawer={0} night={1} />
@@ -778,11 +778,12 @@ const S2 = (t: number) => {
       <rect x={-200} y={-200} width={1480} height={1000} fill="url(#ph5)" style={{ mixBlendMode: "screen" }} />
       <Body t={t} pose={SOFA} kind="gray" eyes="droopy" red mouth="frown" messy holdN={<Phone scroll={t * 1.5} rot={-20} />} />
       {q > 0 && (
-        <g transform={`translate(612,196) scale(${q})`}>
+        <g transform={`translate(590,214) scale(${q * 0.92})`}>
           <circle cx={-46} cy={74} r={6} fill="#f4f1ea" stroke="#2a2836" strokeWidth={2} />
           <circle cx={-30} cy={52} r={10} fill="#f4f1ea" stroke="#2a2836" strokeWidth={2} />
-          <ellipse cx={0} cy={0} rx={80} ry={44} fill="#f4f1ea" stroke="#2a2836" strokeWidth={3} />
-          <text x={0} y={12} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={36} fill="#2a2836">PRA QUÊ?</text>
+          <ellipse cx={0} cy={-6} rx={112} ry={58} fill="#f4f1ea" stroke="#2a2836" strokeWidth={3} />
+          <text x={0} y={-14} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={32} fill="#2a2836">PRA QUE VOU</text>
+          <text x={0} y={22} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={32} fill="#2a2836">FAZER ISSO?</text>
         </g>
       )}
     </g>
