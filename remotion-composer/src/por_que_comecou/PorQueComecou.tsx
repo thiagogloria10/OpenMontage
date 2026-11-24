@@ -511,13 +511,16 @@ const DRINK = P(380, 342, 180, [20, 60], [60, -153], [-4, 0], [4, 0]);
 // "POR QUE VOCÊ COMEÇOU?" v5 — roteiro novo (uma ideia só): o caderno com o motivo (o filho)
 // ==================================================================
 const HOOK = ["QUANDO DER VONTADE DE PARAR,", "LEMBRE POR QUE COMEÇOU."];
-const DUR = [3.2, 5.4, 4.4, 5.0, 5.0, 4.0]; // v11: narração Fish Audio (voz clonada)
+const DUR = [2.9, 5.1, 4.2, 3.1, 1.8, 2.6]; // v12: cenas ajustadas à narração final (narracao_final.wav, 19,07 s)
+const S4_SPEED = 1.4; // v12: cena 4 (DIA 248) mais rápida, cabe em "quando der vontade de parar"
 const ST: number[] = DUR.reduce<number[]>((a, d, i) => [...a, i === 0 ? 0 : a[i - 1] + DUR[i - 1]], []);
 export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
 // [texto, arquivo, início relativo à cena, duração da fala, mostra legenda]
 type LineT = [string, number, number, number, boolean] | null;
 const LINES: LineT[] = [["Dia um. Ele escreveu as metas dele.", 0, 0.2, 2.32, true], ["Os dias passaram. O cansaço chegou. E o caderno foi parar no fundo da gaveta.", 1, 0.3, 4.69, true], ["Até o dia em que ele pensou: pra que vou fazer isso?", 2, 0.9, 3.11, true], ["Aí ele abriu a gaveta. E lembrou.", 3, 0.2, 2.32, true], null, ["Quando der vontade de parar, lembre por que começou.", 4, 0.3, 3.16, false]];
-const WORDT: Record<number, number[]> = { 0: [0.0, 0.24, 0.78, 0.86, 1.36, 1.46, 1.88], 1: [0.0, 0.14, 0.38, 1.14, 1.2, 1.74, 2.06, 2.4, 2.48, 2.98, 3.1, 3.42, 3.58, 3.86, 4.02], 2: [0.0, 0.34, 0.5, 0.72, 0.88, 0.96, 1.04, 1.78, 1.88, 2.06, 2.3, 2.6], 3: [0.0, 0.32, 0.5, 0.86, 0.92, 1.4, 1.72] }; // tempos reais (faster-whisper) das falas do Fish
+const WORDT: Record<number, number[]> = { 0: [0.18, 0.44, 0.96, 1.16, 1.66, 1.78, 2.18], 1: [3.02, 3.28, 3.5, 4.4, 4.44, 4.96, 5.26, 5.72, 5.82, 6.26, 6.42, 6.7, 6.9, 7.2, 7.36], 2: [8.42, 8.68, 8.84, 9.1, 9.28, 9.36, 9.46, 10.2, 10.32, 10.58, 10.72, 11.02], 3: [12.36, 12.64, 12.84, 13.18, 13.28, 13.74, 14.04] }; // v12: tempos ABSOLUTOS das palavras em narracao_final.wav (faster-whisper)
+const WEND = [2.46, 7.8, 11.42, 14.46, 18.04]; // fim da voz de cada fala
+const NARRACAO = "por_que_comecou/narracao_final.wav";
 const KEY = ["isso", "um", "metas", "cansaço", "caderno", "gaveta", "quê", "lembrou", "parar", "começou"];
 const VOICE_DIR = "por_que_comecou/fala_fish";
 const MOTIVO = ["QUERO ESTUDAR", "TODOS OS DIAS."]; // v6 (antes: energia pro filho)
@@ -769,7 +772,7 @@ const C1 = (t: number): Cam => ({ cx: kfT(t, [[0, 520], [3.2, 520], [3.8, 240], 
 // S2 DIA 247 à noite: afundado no sofá, celular, tênis no canto; "PRA QUÊ?"
 const SOFA = P(590, 376, 160, [25, 70], [10, 100], [95, 10], [85, 5]);
 const S2 = (t: number) => {
-  const q = backPop(t - 2.6); // v11: entra junto com "pra que" na voz do Fish
+  const q = backPop(t - 2.2); // v12: entra junto com "pra que" (10,2 s)
   return (
     <g>
       <Living t={t} drawer={0} night={1} />
@@ -891,13 +894,14 @@ const Caption: React.FC<{ t: number }> = ({ t }) => {
   const s = sceneOf(t);
   const ln = LINES[s];
   if (!ln || !ln[4]) return null;
-  const [txt, id, st, dur] = ln;
-  const t0 = ST[s] + st;
+  const [txt, id] = ln;
+  const t0 = WORDT[id] ? WORDT[id][0] : ST[s] + ln[2];
+  const dur = WORDT[id] ? WEND[id] - t0 : ln[3];
   const words = txt.split(" ");
   const total = txt.replace(/ /g, "").length;
   let acc = 0;
   const real = WORDT[id];
-  const times = real && real.length === words.length ? real.map((v) => t0 + v) : words.map((w) => { const a = t0 + (acc / total) * dur; acc += w.length; return a; });
+  const times = real && real.length === words.length ? real : words.map((w) => { const a = t0 + (acc / total) * dur; acc += w.length; return a; });
   const chunks: number[][] = [];
   let cur: number[] = [], len = 0;
   words.forEach((w, i) => { if (len + w.length > 22 && cur.length) { chunks.push(cur); cur = []; len = 0; } cur.push(i); len += w.length + 1; if (/[.!?:,]$/.test(w) && len > 8) { chunks.push(cur); cur = []; len = 0; } });
@@ -927,8 +931,9 @@ export const PorQueComecou: React.FC = () => {
   const { t, fps } = useT();
   const s = sceneOf(t);
   const lt = t - ST[s];
+  const ld = s === 4 ? lt * S4_SPEED : lt;
   const [draw, cam] = SCENES[s];
-  const c = cam(lt);
+  const c = cam(ld);
   const Z = 1.25;
   const vw = c.screen ? VIEW_W : VIEW_W / (c.z * Z), vh = c.screen ? VIEW_H : VIEW_H / (c.z * Z);
   const cx = c.screen ? 540 : c.cx;
@@ -940,16 +945,14 @@ export const PorQueComecou: React.FC = () => {
   const hookOut = s === LAST ? er(lt, 0, 0.25) : 0;
   return (
     <AbsoluteFill style={{ background: "#07080f" }}>
-      {LINES.map((ln, i) => ln && (
-        <Sequence key={i} from={Math.round((ST[i] + ln[2]) * fps)}><Audio src={staticFile(`${VOICE_DIR}/n${ln[1]}.wav`)} /></Sequence>
-      ))}
+      <Audio src={staticFile(NARRACAO)} />
       <Audio src={staticFile("por_que_comecou/sfx.wav")} volume={0.4} />
       <div style={{ position: "absolute", left: 0, top: SCENE_Y, width: 1080, height: VIEW_H, overflow: "hidden" }}>
         <svg width={1080} height={VIEW_H} viewBox={`${cx - vw / 2} ${cy - vh / 2} ${vw} ${vh}`}>
           <defs>
             <filter id="glowGold" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation={7} /></filter>
           </defs>
-          {draw(lt)}
+          {draw(ld)}
         </svg>
         <div style={{ position: "absolute", inset: 0, background: "#fff", opacity: flash + dayFlash }} />
         <div style={{ position: "absolute", inset: 0, boxShadow: "inset 0 0 140px rgba(0,0,0,.75)" }} />
