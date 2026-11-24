@@ -26,25 +26,25 @@ const MONO = "'JetBrains Mono', 'DejaVu Sans Mono', monospace";
 const SKIN = "#f3efe7", SKIN2 = "#d9d2c5";
 
 // ------------------------------------------------------------------ cenas (duração em s) e falas
-const DUR = [6.5, 3.4, 4.4, 4.4, 4.6, 4.2, 3.2, 3.8, 3.4, 6.6];  // narração PROVISÓRIA (Piper); com a voz da ElevenLabs vira as pausas reais
+const DUR = [7.31, 2.67, 3.63, 5.26, 3.25, 2.095, 2.595, 3.86, 2.97, 7.46];  // = pausas reais do áudio do Thiago (ElevenLabs, áudio inteiro, sem cortes)
 const ST: number[] = DUR.reduce<number[]>((a, d, i) => [...a, i === 0 ? 0 : a[i - 1] + DUR[i - 1]], []);
 export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
 // [texto, arquivo, início relativo à cena, duração da fala]
 type LineT = [string, number, number, number] | null;
 const LINES: LineT[] = [
-  ["Ontem, o Marcos achou uma vaga que paga quase três vezes mais. Mas, se faltar ao trabalho, pode ser demitido.", 0, 0.25, 5.65],
-  ["Hoje, ele decide: vai à entrevista.", 1, 0.25, 2.24],
-  ["Acorda disposto, coloca a melhor roupa e sai confiante.", 2, 0.25, 3.09],
-  ["Mas, na empresa, um susto. A sala está cheia de candidatos.", 3, 0.25, 3.39],
-  ["As horas passam. Um por um, todos são chamados.", 4, 0.25, 2.62],
-  ["Ele é o último. A conversa é curta.", 5, 0.25, 1.96],
-  ["E ele vai embora sem saber o resultado.", 6, 0.25, 1.99],
-  ["Quando chega no trabalho, as coisas dele estão numa caixa.", 7, 0.25, 2.80],
-  ["O seu Roberto foi claro: ele está demitido.", 8, 0.25, 2.18],
-  ["Sem emprego e sem resposta. Qual vai ser o próximo passo do Marcos agora? Segue pra ver a parte seis.", 9, 0.25, 5.03],
+  ["Ontem, o Marcos achou uma vaga que paga quase três vezes mais. Mas, se faltar ao trabalho... pode ser demitido.", 1, 0, 7.31],
+  ["Hoje, ele decide: vai à entrevista!", 2, 0, 2.67],
+  ["Acorda disposto, coloca a melhor roupa... e sai confiante.", 3, 0, 3.63],
+  ["Mas, na empresa, um susto. A sala está cheia de candidatos.", 4, 0, 5.26],
+  ["As horas passam. Um por um, todos são chamados.", 5, 0, 3.25],
+  ["Ele é o último. A conversa é curta.", 6, 0, 2.095],
+  ["E ele vai embora... sem saber o resultado.", 7, 0, 2.595],
+  ["Quando chega no trabalho, as coisas dele estão numa caixa.", 8, 0, 3.86],
+  ["O seu Roberto foi claro: ele está demitido.", 9, 0, 2.97],
+  ["Sem emprego, e sem resposta. Qual vai ser o próximo passo do Marcos agora? Segue pra ver a parte seis.", 10, 0, 6.66],
 ];
 // tempos reais de cada palavra (preencher com a voz da ElevenLabs via sincronizar_voz.py)
-const WORDT: Record<number, number[]> = {};
+const WORDT: Record<number, number[]> = {"1": [0.0, 1.0, 1.26, 1.54, 1.86, 2.14, 2.42, 2.7, 3.08, 3.46, 3.74, 4.02, 4.68, 5.02, 5.04, 5.44, 5.56, 6.18, 6.42, 6.68], "2": [0.13, 0.63, 0.89, 1.61, 1.77, 2.01], "3": [0.24, 0.56, 1.42, 1.66, 1.84, 2.02, 2.44, 2.64, 2.88], "4": [0.35, 0.89, 1.05, 1.93, 2.21, 3.43, 3.57, 3.81, 4.09, 4.35, 4.57], "5": [0.15, 0.39, 0.69, 1.43, 1.61, 1.83, 2.15, 2.43, 2.73], "6": [0.06, 0.26, 0.38, 0.54, 0.92, 1.18, 1.53, 1.62], "7": [0.005, 0.285, 0.525, 0.625, 1.105, 1.685, 1.925, 2.165], "8": [0.0, 0.73, 1.05, 1.23, 1.91, 2.01, 2.43, 2.67, 2.91, 3.17], "9": [0.73, 0.85, 0.97, 1.33, 1.57, 2.03, 2.23, 2.37], "10": [0.36, 0.48, 1.08, 1.32, 1.5, 2.54, 2.62, 2.8, 2.98, 3.16, 3.44, 3.72, 3.92, 4.24, 5.04, 5.32, 5.58, 5.78, 5.96, 6.16]};
 const VOICE_DIR = "marcos_dia5/fala";
 const KEY = ["vaga", "três", "demitido", "entrevista", "melhor", "confiante", "susto", "cheia", "candidatos", "horas", "último", "curta", "resultado", "caixa", "roberto", "emprego", "resposta", "passo", "seis", "marcos"];
 
@@ -1060,9 +1060,9 @@ const CAM15 = (t: number): Cam => ({ z: 1.8 + t * 0.02, fx: SEAT_X, fy: 450 });
 
 // --- R0 recapitulação do Dia 1 (cortes rápidos, levemente dessaturados, plaquinha ANTERIORMENTE)
 const RECAP: [(t: number) => React.ReactNode, (t: number) => Cam, number, number][] = [
-  [(t) => S4d4(t), (t) => CAM4d4(t), 2.4, 2.2],
-  [(t) => S6d4(t), (t) => CAM6d4(t), 3.0, 1.7],
-  [(t) => S8d4(t), (t) => CAM8d4(t), 1.35, 2.6],
+  [(t) => S4d4(t), (t) => CAM4d4(t), 2.4, 2.6],
+  [(t) => S6d4(t), (t) => CAM6d4(t), 2.6, 2.0],
+  [(t) => S8d4(t), (t) => CAM8d4(t), 0.0, 2.71],
 ];
 const RECAP_ST = RECAP.reduce<number[]>((a, r, i) => [...a, i === 0 ? 0 : a[i - 1] + RECAP[i - 1][3]], []);
 const R0 = (t: number) => {
@@ -2134,29 +2134,29 @@ const BoxC: React.FC<{ s?: number }> = ({ s = 1 }) => (
 const H_FEET = 942;
 const S2d5 = (t: number) => {
   const m = follow((x) => {
-    const tie = er(x, 0.1, 0.35) * (1 - er(x, 1.3, 1.55));
-    const wx = kf(x, [[1.9, 560], [3.9, 170]]);
-    const v = x < 1.9 ? 0 : x < 3.9 ? 1 - er(x, 3.6, 3.9) : 0;
+    const tie = er(x, 0.1, 0.3) * (1 - er(x, 1.0, 1.2));
+    const wx = kf(x, [[1.5, 560], [3.4, 170]]);
+    const v = x < 1.5 ? 0 : x < 3.4 ? 1 - er(x, 3.15, 3.4) : 0;
     const w = walkPose(560 - wx, v, -1);
-    const proud = er(x, 1.35, 1.7);
+    const proud = er(x, 1.0, 1.3);
     return base({
       x: wx, y: H_FEET - 296, k: 1, feet: w.feet, kneeDir: v > 0 ? -1 : undefined, sy: w.sy - proud * 6 * (1 - v), lean: w.lean,
       hands: v > 0.05 ? w.hands : [HANG[0], mixV(HANG[1], [14 + Math.sin(x * 16) * 5, -206 + Math.cos(x * 13) * 3], tie)],
       holdL: <Briefcase />,
       face: F({ lx: v > 0.05 ? -0.5 : lerp(0.0, 0.55, er(x, 0.6, 1.0)), px: v > 0.05 ? -0.6 : lerp(0, 0.7, er(x, 0.6, 1.0)), ly: lerp(0.2, 0, er(x, 0.4, 0.8)), curve: lerp(0.35, 0.8, proud), raise: 0.2 + proud * 0.2, open: 1 - blinkAt(x, 2.6, 0.4) * 0.8, worry: -0.25 * proud }),
-      hy: Math.sin(clamp01((x - 1.35) / 0.5) * Math.PI) * 6,
+      hy: Math.sin(clamp01((x - 1.0) / 0.45) * Math.PI) * 6,
     });
   }, t);
   const j = follow((x) => {
-    const wave = er(x, 0.7, 1.0) * (1 - er(x, 3.6, 4.0));
+    const wave = er(x, 0.5, 0.8) * (1 - er(x, 3.2, 3.6));
     return base({
       x: 770, y: H_FEET - 296 * 0.95, k: 0.95,
       hands: [[-70, -40], mixV(HANG[1], [118 + Math.sin(x * 12) * 22, -330], wave)],
-      face: F({ lx: lerp(-0.4, -0.75, er(x, 1.9, 3.0)), px: -0.8, curve: 0.8, raise: 0.25, open: 1 - blinkAt(x, 3.0, 0.8) * 0.8, mo: wave * 0.25 * (1 - er(x, 1.6, 1.9)) }),
+      face: F({ lx: lerp(-0.4, -0.75, er(x, 1.5, 2.6)), px: -0.8, curve: 0.8, raise: 0.25, open: 1 - blinkAt(x, 3.0, 0.8) * 0.8, mo: wave * 0.25 * (1 - er(x, 1.3, 1.6)) }),
     });
   }, t);
   const l = follow((x) => {
-    const wave = er(x, 0.9, 1.2) * (1 - er(x, 3.6, 4.0));
+    const wave = er(x, 0.6, 0.9) * (1 - er(x, 3.2, 3.6));
     const hop = Math.max(0, Math.sin(x * 9)) * wave;
     return base({
       x: 905, y: H_FEET - 296 * 0.68 - hop * 14, k: 0.68,
@@ -2164,8 +2164,8 @@ const S2d5 = (t: number) => {
       face: F({ lx: -0.7, px: -1, curve: 0.9, raise: 0.3, mo: 0.35 * wave, open: 1 - blinkAt(x, 2.4, 1.1) * 0.8 }),
     });
   }, t);
-  const door = er(t, 2.7, 3.1);
-  const spark = er(t, 1.4, 1.7) * (1 - er(t, 2.4, 2.8));
+  const door = er(t, 2.4, 2.8);
+  const spark = er(t, 1.0, 1.3) * (1 - er(t, 2.0, 2.4));
   return (
     <g>
       <House t={t} door={door} night={0} />
@@ -2173,14 +2173,14 @@ const S2d5 = (t: number) => {
       <Person c={l} look={LUCAS} t={t} />
       <Person c={m} look={MARCOS_SUIT} t={t} />
       {spark > 0 && [0, 1, 2, 3, 4, 5].map((i) => { const a = (i / 6) * Math.PI * 2 + 0.4; return <path key={i} d={`M${560 + Math.cos(a) * 170},${470 + Math.sin(a) * 200} l${Math.cos(a) * 36 * spark},${Math.sin(a) * 36 * spark}`} stroke={GOLD} strokeWidth={9} strokeLinecap="round" opacity={spark} />; })}
-      <Speech x={790} y={240} p={t - 0.75} w={280} h={96} tail={[770, 330]}>
+      <Speech x={790} y={240} p={t - 0.5} w={280} h={96} tail={[770, 330]}>
         <text x={790} y={256} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={50} fill="#2a2836">BOA SORTE!</text>
       </Speech>
       {lightRoom(0.6)}
     </g>
   );
 };
-const CAM2d5 = (t: number): Cam => ({ z: kf(t, [[0, 1.08], [1.6, 1.14], [4.4, 1.04]]), fx: kf(t, [[0, 640], [1.6, 640], [4.4, 520]]), fy: kf(t, [[0, 600], [4.4, 610]]) });
+const CAM2d5 = (t: number): Cam => ({ z: kf(t, [[0, 1.08], [1.3, 1.14], [3.63, 1.04]]), fx: kf(t, [[0, 640], [1.3, 640], [3.63, 520]]), fy: kf(t, [[0, 600], [3.63, 610]]) });
 
 // ------------------------------------------------------------------ sala de espera da empresa
 const W_FLOOR = 950, SEAT_K = 0.8, W_SEAT = 1010 - 160 * SEAT_K;
@@ -2236,15 +2236,15 @@ const Crowd: React.FC<{ t: number; gone?: (k: string) => number }> = ({ t, gone 
 // --- S3d5 chega à empresa: a sala está cheia de candidatos
 const S3d5 = (t: number) => {
   const m = follow((x) => {
-    const wx = kf(x, [[0, 1180], [1.5, 850]]);
-    const v = x < 1.5 ? 1 - er(x, 1.25, 1.5) : 0;
+    const wx = kf(x, [[0, 1180], [1.9, 850]]);
+    const v = x < 1.9 ? 1 - er(x, 1.65, 1.9) : 0;
     const w = walkPose((1180 - wx) / 0.9, v, -1);
-    const shock = er(x, 1.4, 1.75);
-    const gulp = er(x, 2.6, 2.8) * (1 - er(x, 3.0, 3.2));
+    const shock = er(x, 2.1, 2.4);
+    const gulp = er(x, 3.5, 3.7) * (1 - er(x, 3.9, 4.1));
     return base({
       x: wx, y: 1010 - 296 * 0.9, k: 0.9, feet: w.feet, kneeDir: -1, sy: w.sy + gulp * 6, lean: w.lean, hands: v > 0.05 ? w.hands : HANG, holdL: <Briefcase />,
-      face: F({ lx: lerp(-0.2, -0.85, shock), px: -1, eyeS: 1 + shock * 0.35, pupil: 1 - shock * 0.2, raise: shock * 0.9, worry: shock * 0.5, curve: lerp(0.5, -0.3, shock), mo: shock * 0.3 * (1 - er(x, 2.4, 2.6)), open: 1 - blinkAt(x, 3.0, 0.2) }),
-      sweat: er(x, 2.2, 2.6), hy: -gulp * 4,
+      face: F({ lx: lerp(-0.2, -0.85, shock), px: -1, eyeS: 1 + shock * 0.35, pupil: 1 - shock * 0.2, raise: shock * 0.9, worry: shock * 0.5, curve: lerp(0.5, -0.3, shock), mo: shock * 0.3 * (1 - er(x, 3.2, 3.4)), open: 1 - blinkAt(x, 3.0, 0.2) }),
+      sweat: er(x, 3.0, 3.4), hy: -gulp * 4,
     });
   }, t);
   return (
@@ -2252,21 +2252,21 @@ const S3d5 = (t: number) => {
       <WaitRoom t={t} min={10 * 60 - 12 + t * 2} />
       <Crowd t={t} />
       <Person c={m} look={MARCOS_SUIT} t={t} />
-      {t > 1.6 && t < 2.6 && <text x={940} y={340} fontFamily={BARLOW} fontWeight={700} fontSize={120} fill={RED} stroke={INK} strokeWidth={5} opacity={1 - ramp(t, 2.3, 2.6)}>!</text>}
+      {t > 2.2 && t < 3.2 && <text x={940} y={340} fontFamily={BARLOW} fontWeight={700} fontSize={120} fill={RED} stroke={INK} strokeWidth={5} opacity={1 - ramp(t, 2.9, 3.2)}>!</text>}
       {lightRoom(0.35)}
     </g>
   );
 };
-const CAM3d5 = (t: number): Cam => ({ z: kf(t, [[0, 1.0], [1.6, 1.0], [2.4, 1.12], [4.4, 1.16]]), fx: kf(t, [[0, 540], [1.6, 540], [2.4, 560]]), fy: kf(t, [[0, 600], [4.4, 620]]) });
+const CAM3d5 = (t: number): Cam => ({ z: kf(t, [[0, 1.0], [2.2, 1.0], [3.0, 1.12], [5.26, 1.16]]), fx: kf(t, [[0, 540], [2.2, 540], [3.0, 560]]), fy: kf(t, [[0, 600], [5.26, 620]]) });
 
 // --- S4d5 as horas passam: o relógio gira, um por um os candidatos são chamados; ele sobra por último
-const GONE_AT: Record<string, number> = { k0: 0.5, s0: 0.85, k1: 1.2, s1: 1.55, k2: 1.9, s2: 2.25, k3: 2.6, k4: 3.0 };
+const GONE_AT: Record<string, number> = { k0: 0.35, s0: 0.6, k1: 0.85, s1: 1.1, k2: 1.35, s2: 1.6, k3: 1.85, k4: 2.1 };
 const S4d5 = (t: number) => {
-  const min = kf(t, [[0.1, 10 * 60 + 5], [3.6, 16 * 60 + 40]]);
+  const min = kf(t, [[0.1, 10 * 60 + 5], [2.5, 16 * 60 + 40]]);
   const m = follow((x) => {
-    const tired = er(x, 1.0, 3.0);
-    const yawn = er(x, 2.3, 2.5) * (1 - er(x, 2.9, 3.1));
-    const callUp = er(x, 3.75, 4.0);
+    const tired = er(x, 0.7, 2.1);
+    const yawn = er(x, 1.6, 1.75) * (1 - er(x, 2.0, 2.15));
+    const callUp = er(x, 2.6, 2.85);
     const c = seated(SEATS[5], 9, x, {});
     c.hands = [mixV([-56, -30], [-30, -60], yawn), mixV([56, -30], [10, -250], yawn)];
     c.sy = tired * 14 * (1 - callUp) - callUp * 6;
@@ -2278,48 +2278,48 @@ const S4d5 = (t: number) => {
   const sp = (min - (10 * 60 + 5)) / (6 * 60 + 35);
   return (
     <g>
-      <WaitRoom t={t} min={min} next={er(t, 3.7, 3.9)} />
+      <WaitRoom t={t} min={min} next={er(t, 2.55, 2.75)} />
       <Crowd t={t} gone={gone} />
       {Object.entries(GONE_AT).map(([k, a]) => { const p = (t - a) / 0.35; if (p <= 0 || p >= 1) return null; const isSeat = k.startsWith("k"); const x = isSeat ? SEATS[Number(k[1])] : STANDERS[Number(k[1])][0]; const y = isSeat ? 650 : 560; return <circle key={k} cx={x} cy={y} r={40 + p * 70} fill="none" stroke="#fdfbf4" strokeWidth={8 * (1 - p)} opacity={1 - p} />; })}
       <ChairF x={SEATS[5]} seat={W_SEAT} floor={1010} s={SEAT_K} />
       <Person c={m} look={MARCOS_SUIT} t={t} />
       <g transform={`translate(${SEATS[5] - 92},${W_SEAT + 60}) rotate(4) scale(0.8)`}><Briefcase /></g>
       {/* linhas de tempo girando em volta do relógio */}
-      {t < 3.7 && [0, 1, 2].map((i) => { const a = t * 6 + (i * Math.PI * 2) / 3; return <path key={i} d={`M${880 + Math.cos(a) * 80},${250 + Math.sin(a) * 80} A80,80 0 0,1 ${880 + Math.cos(a + 0.7) * 80},${250 + Math.sin(a + 0.7) * 80}`} stroke={GOLD} strokeWidth={6} fill="none" strokeLinecap="round" opacity={0.7} />; })}
+      {t < 2.6 && [0, 1, 2].map((i) => { const a = t * 6 + (i * Math.PI * 2) / 3; return <path key={i} d={`M${880 + Math.cos(a) * 80},${250 + Math.sin(a) * 80} A80,80 0 0,1 ${880 + Math.cos(a + 0.7) * 80},${250 + Math.sin(a + 0.7) * 80}`} stroke={GOLD} strokeWidth={6} fill="none" strokeLinecap="round" opacity={0.7} />; })}
       {void sp}
-      {lightRoom(lerp(0.35, 0.15, er(t, 0.5, 3.5)))}
-      <rect x={-400} y={-400} width={1880} height={2400} fill="#3a2a10" opacity={er(t, 1.5, 3.6) * 0.12} />
+      {lightRoom(lerp(0.35, 0.15, er(t, 0.4, 2.5)))}
+      <rect x={-400} y={-400} width={1880} height={2400} fill="#3a2a10" opacity={er(t, 1.0, 2.5) * 0.12} />
     </g>
   );
 };
-const CAM4d5 = (t: number): Cam => ({ z: kf(t, [[0, 1.0], [3.6, 1.04], [4.6, 1.3]]), fx: kf(t, [[0, 560], [3.6, 600], [4.6, 760]]), fy: kf(t, [[0, 600], [3.6, 600], [4.6, 600]]) });
+const CAM4d5 = (t: number): Cam => ({ z: kf(t, [[0, 1.0], [2.5, 1.04], [3.25, 1.3]]), fx: kf(t, [[0, 560], [2.5, 600], [3.25, 760]]), fy: 600 });
 
 // --- S5d5 a entrevista: ele é o último, conversa curta com a entrevistadora
 const IV_X = 720, IV_TOP = 812, IV_SEAT = 852, IV_FLOOR = 1012;  // igual à mesa da casa (Dias 3–4): sentada, pernas sob a mesa
 const S5d5 = (t: number) => {
   const iv = follow((x) => {
-    const write = er(x, 0.3, 0.5) * (1 - er(x, 2.4, 2.6));
+    const write = er(x, 0.1, 0.25) * (1 - er(x, 1.0, 1.15));
     return base({
       x: IV_X, y: IV_SEAT - 12, k: 1, sit: 1,
       hands: [[-70, -30], [40 + Math.sin(x * 20) * 8 * write, -34 + Math.cos(x * 17) * 4 * write]],
       holdR: <path d="M0,0 L-12,-30" stroke="#2a2836" strokeWidth={6} strokeLinecap="round" />,
-      face: F({ lx: lerp(-0.6, -0.2, write), px: lerp(-0.9, -0.2, write), ly: write * 0.45, py: write * 0.9, curve: lerp(0.2, 0.45, er(x, 2.6, 2.9)), raise: 0.1, open: 1 - blinkAt(x, 2.9, 0.6) * 0.8, mo: x > 2.75 && x < 3.6 ? 0.22 * Math.max(0, Math.sin(x * 12)) : 0 }),
-      hy: Math.sin(clamp01((x - 2.6) / 0.5) * Math.PI * 2) * 4,
+      face: F({ lx: lerp(-0.6, -0.2, write), px: lerp(-0.9, -0.2, write), ly: write * 0.45, py: write * 0.9, curve: lerp(0.2, 0.45, er(x, 1.2, 1.4)), raise: 0.1, open: 1 - blinkAt(x, 2.9, 0.6) * 0.8, mo: x > 1.45 && x < 2.05 ? 0.22 * Math.max(0, Math.sin(x * 12)) : 0 }),
+      hy: Math.sin(clamp01((x - 1.2) / 0.45) * Math.PI * 2) * 4,
     });
   }, t);
   const m = follow((x) => {
-    const talk = x > 0.3 && x < 2.5 ? 1 : 0;
-    const hope = er(x, 3.2, 3.6);
+    const talk = x > 0.05 && x < 1.2 ? 1 : 0;
+    const hope = er(x, 1.5, 1.8);
     return base({
       x: 300, y: 860 - 12, k: 1, sit: 1,
       hands: [[-56, -30], [60 + talk * Math.sin(x * 5) * 18, -30 - talk * (50 + Math.sin(x * 7) * 20)]],
       face: F({ lx: 0.7, px: 1, curve: lerp(0.3, 0.75, hope), raise: 0.2 + hope * 0.2, worry: -0.1, open: 1 - blinkAt(x, 2.5, 0.3) * 0.8, mo: talk * 0.3 * Math.max(0, Math.sin(x * 13)) }),
-      hy: Math.sin(clamp01((x - 3.3) / 0.6) * Math.PI * 2) * 5,
+      hy: Math.sin(clamp01((x - 1.5) / 0.5) * Math.PI * 2) * 5,
     });
   }, t);
   const hd = headLocal(iv);
   const ex = iv.x + (hd[0] + iv.face.lx * 24), ey = iv.y + hd[1] + iv.face.ly * 18 - 6;
-  const chip = backPop(t - 0.25);
+  const chip = backPop(t - 0.05);
   return (
     <g>
       <Wall a="#3e4a5c" b="#556073" floor={950} fa="#5a4a3a" fb="#2a2018" />
@@ -2346,7 +2346,7 @@ const S5d5 = (t: number) => {
           <text x={22} y={16} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={46} fill={WHITE}>5 MIN</text>
         </g>
       )}
-      <Speech x={760} y={300} p={t - 2.75} w={360} h={130} tail={[730, 420]}>
+      <Speech x={760} y={300} p={t - 1.4} w={360} h={130} tail={[730, 420]}>
         <text x={760} y={290} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={42} fill="#2a2836">OBRIGADA.</text>
         <text x={760} y={336} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={42} fill="#2a2836">A GENTE LIGA.</text>
       </Speech>
@@ -2354,23 +2354,23 @@ const S5d5 = (t: number) => {
     </g>
   );
 };
-const CAM5d5 = (t: number): Cam => ({ z: kf(t, [[0, 1.08], [4.2, 1.16]]), fx: kf(t, [[0, 540], [4.2, 530]]), fy: kf(t, [[0, 600], [4.2, 590]]) });
+const CAM5d5 = (t: number): Cam => ({ z: kf(t, [[0, 1.08], [2.1, 1.14]]), fx: kf(t, [[0, 540], [2.1, 530]]), fy: kf(t, [[0, 600], [2.1, 590]]) });
 
 // --- S6d5 vai embora pela rua, sem saber o resultado
 const S6d5 = (t: number) => {
   const m = follow((x) => {
-    const wx = kf(x, [[0, 980], [2.7, 470]]);
-    const v = x < 2.7 ? 0.85 - er(x, 2.4, 2.7) * 0.85 : 0;
+    const wx = kf(x, [[0, 980], [2.4, 470]]);
+    const v = x < 2.4 ? 0.85 - er(x, 2.1, 2.4) * 0.85 : 0;
     const w = walkPose(980 - wx, v, -1);
-    const back = er(x, 1.4, 1.8) * (1 - er(x, 2.5, 2.9));
+    const back = er(x, 1.0, 1.4) * (1 - er(x, 2.1, 2.5));
     return base({
       x: wx, y: 690, k: 1, feet: w.feet, kneeDir: -1, sy: w.sy, lean: w.lean, hands: v > 0.05 ? w.hands : HANG, holdL: <Briefcase />,
-      face: F({ lx: lerp(-0.4, 0.75, back), px: lerp(-0.5, 1, back), ly: 0.15, curve: lerp(0.1, -0.15, er(x, 1.8, 2.6)), worry: 0.35, raise: 0.25, open: 1 - blinkAt(x, 2.6, 0.5) * 0.8 }),
+      face: F({ lx: lerp(-0.4, 0.75, back), px: lerp(-0.5, 1, back), ly: 0.15, curve: lerp(0.1, -0.15, er(x, 1.5, 2.3)), worry: 0.35, raise: 0.25, open: 1 - blinkAt(x, 2.6, 0.5) * 0.8 }),
       tilt: back * 6,
     });
   }, t);
   const hd = headLocal(m);
-  const q = er(t, 1.9, 2.2);
+  const q = er(t, 1.5, 1.8);
   return (
     <g>
       <Street t={t} picked={false} planter={false} />
@@ -2384,7 +2384,7 @@ const S6d5 = (t: number) => {
     </g>
   );
 };
-const CAM6d5 = (t: number): Cam => ({ z: kf(t, [[0, 1.06], [3.2, 1.14]]), fx: kf(t, [[0, 700], [3.2, 560]]), fy: kf(t, [[0, 580], [3.2, 560]]) });
+const CAM6d5 = (t: number): Cam => ({ z: kf(t, [[0, 1.06], [2.6, 1.14]]), fx: kf(t, [[0, 700], [2.6, 560]]), fy: kf(t, [[0, 580], [2.6, 560]]) });
 
 // --- S7d5 chega ao trabalho: as coisas dele estão numa caixa em cima da mesa
 const BOX_X = 430, MW_X = 250;
@@ -2423,13 +2423,13 @@ const S8d5 = (t: number) => {
   }, t);
   const m = follow((x) => {
     const c = marcosWalkIn(x + 3);
-    const hit = er(x, 1.45, 1.65);
+    const hit = er(x, 2.3, 2.5);
     const look = er(x, 0.3, 0.7);
     c.face = F({ lx: lerp(0.8, 0.9, look), px: 1, ly: lerp(0.35, -0.05, look) + hit * 0.3, py: lerp(0.7, 0, look) + hit * 0.7, eyeS: 1.2 - hit * 0.1, raise: 0.6 - hit * 0.2, worry: 0.7 + hit * 0.3, curve: -0.55, mo: 0.15 + hit * 0.15, open: 1 - blinkAt(x, 2.8, 0.3) });
     c.tremble = hit * 0.4; c.sweat = 1; c.sy = hit * 12; c.tilt = hit * -6;
     return c;
   }, t);
-  const stamp = t - 1.5;
+  const stamp = t - 2.3;
   return (
     <g>
       <Office t={t} hm={[17, 21]} />
@@ -2448,7 +2448,7 @@ const S8d5 = (t: number) => {
     </g>
   );
 };
-const CAM8d5 = (t: number): Cam => ({ z: kf(t, [[0, 1.0], [3.4, 1.06]]) + (t > 1.5 && t < 1.8 ? Math.sin(t * 60) * 0.006 : 0), fx: kf(t, [[0, 560], [3.4, 560]]), fy: kf(t, [[0, 620], [3.4, 610]]) });
+const CAM8d5 = (t: number): Cam => ({ z: kf(t, [[0, 1.0], [3.4, 1.06]]) + (t > 2.3 && t < 2.6 ? Math.sin(t * 60) * 0.006 : 0), fx: kf(t, [[0, 560], [3.4, 560]]), fy: kf(t, [[0, 620], [3.4, 610]]) });
 
 // --- S9d5 final: na rua à noite, segurando a caixa
 const S9d5 = (t: number) => {
@@ -2531,18 +2531,16 @@ export const MarcosDia5: React.FC = () => {
   const flash = s > 0 ? Math.max(0, 1 - lt / 0.14) * 0.18 : 0;
   const LAST = SCENES.length - 1;
   const endP = s === LAST ? er(lt, 0.3, 0.8) : 0;
-  const endOut = s === LAST ? er(lt, 1.95, 2.15) : 0;
-  const endP2 = s === LAST ? er(lt, 2.15, 2.45) : 0;
-  const endP3 = s === LAST ? er(lt, 4.15, 4.5) : 0;
+  const endOut = s === LAST ? er(lt, 2.2, 2.4) : 0;
+  const endP2 = s === LAST ? er(lt, 2.4, 2.7) : 0;
+  const endP3 = s === LAST ? er(lt, 4.95, 5.3) : 0;
   const morning = s === 1 ? er(lt, 0.0, 0.25) * (1 - er(lt, 1.8, 2.1)) : 0;
-  const recap = s === 0 ? er(lt, 0, 0.2) * (1 - er(lt, 6.2, 6.5)) : 0;
+  const recap = s === 0 ? er(lt, 0, 0.2) * (1 - er(lt, 7.0, 7.31)) : 0;
   const stroke = (w: number) => ({ WebkitTextStroke: `${w}px #0a0605`, paintOrder: "stroke fill" as const });
   return (
     <AbsoluteFill style={{ background: "#0a0605" }}>
-      {/* narração provisória frase a frase (Piper); trocar pelo áudio inteiro da ElevenLabs */}
-      {LINES.map((ln, i) => ln && (
-        <Sequence key={i} from={Math.round((ST[i] + ln[2]) * fps)}><Audio src={staticFile(`${VOICE_DIR}/n${ln[1]}.wav`)} /></Sequence>
-      ))}
+      {/* áudio do narrador inteiro, do jeito que o Thiago gravou (as cenas seguem as pausas dele) */}
+      <Audio src={staticFile("marcos_dia5/narrador.wav")} />
       <Audio src={staticFile("marcos_dia5/sfx.wav")} volume={0.45} />
       <div style={{ position: "absolute", left: 0, top: SCENE_Y, width: 1080, height: SCENE_H, overflow: "hidden" }}>
         <svg width={1080} height={SCENE_H} viewBox={`0 0 1080 ${SCENE_H}`}>
