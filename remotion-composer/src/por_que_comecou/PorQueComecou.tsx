@@ -95,13 +95,17 @@ const shade = (c: string, k = 0.82) => {
 const LIM = { ua: 40, fa: 38, th: 50, sh: 50, torso: 74, head: 30 };
 const NO_CLOTHES = true; // v2: personagem sem roupa (pedido do Thiago)
 const THIN = 0.62; // v2: corpo mais fino (espessura do tronco e dos membros)
+const NECK = 14; // v3: pescoço entre o tronco e a cabeça
+// v3: membro como UMA curva que passa pela articulação (cotovelo/joelho fluidos, sem quina)
+const curve = (q: V[]) => { if (q.length < 3) return `M${q[0][0]},${q[0][1]} L${q[1][0]},${q[1][1]}`; const c: V = [2 * q[1][0] - (q[0][0] + q[2][0]) / 2, 2 * q[1][1] - (q[0][1] + q[2][1]) / 2]; return `M${q[0][0]},${q[0][1]} Q${c[0]},${c[1]} ${q[2][0]},${q[2][1]}`; };
 
 const Body: React.FC<BodyProps> = ({ pose, kind, dir = 1, eyes = "open", mouth = "flat", glow = 0, messy, stink = 0, parts = "full", red, t, holdN, holdF, outfit }) => {
   const hip: V = [pose.x, pose.y];
   const sh = add(hip, pose.tr, 60);
   const neck = add(hip, pose.tr, LIM.torso);
   // nb = dobra do pescoço (deitado: corpo reto no colchão, só a cabeça sobe no travesseiro)
-  const head = pose.nb ? add(neck, pose.tr + pose.nb, LIM.head + 4) : add(hip, pose.tr, LIM.torso + LIM.head + 2);
+  const head = pose.nb ? add(neck, pose.tr + pose.nb, LIM.head + 4 + NECK * 0.7) : add(hip, pose.tr, LIM.torso + NECK + LIM.head + 2);
+  const neckTop = pose.nb ? add(neck, pose.tr + pose.nb, NECK * 0.7 + 6) : add(hip, pose.tr, LIM.torso + NECK + 6);
   const arm = (a: [number, number], k = 1): V[] => {
     const e = add(sh, a[0], LIM.ua * k);
     return [sh, e, add(e, a[1], LIM.fa * k)];
@@ -151,13 +155,14 @@ const Body: React.FC<BodyProps> = ({ pose, kind, dir = 1, eyes = "open", mouth =
     <>
       {showFar && (
         <>
-          <polyline points={pts(armF)} stroke={farColor} strokeWidth={13 * THIN + extra} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          <polyline points={pts(legF)} stroke={farColor} strokeWidth={15 * THIN + extra} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          <path d={curve(armF)} stroke={farColor} strokeWidth={13 * THIN + extra} fill="none" strokeLinecap="round" />
+          <path d={curve(legF)} stroke={farColor} strokeWidth={15 * THIN + extra} fill="none" strokeLinecap="round" />
           <line x1={hip[0]} y1={hip[1]} x2={neck[0]} y2={neck[1]} stroke={color} strokeWidth={30 * THIN + extra} strokeLinecap="round" />
-          <polyline points={pts(legN)} stroke={color} strokeWidth={15 * THIN + extra} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          {showHead && <line x1={neck[0]} y1={neck[1]} x2={neckTop[0]} y2={neckTop[1]} stroke={color} strokeWidth={9 + extra} strokeLinecap="round" />}
+          <path d={curve(legN)} stroke={color} strokeWidth={15 * THIN + extra} fill="none" strokeLinecap="round" />
         </>
       )}
-      {showNear && <polyline points={pts(armN)} stroke={color} strokeWidth={13 * THIN + extra} fill="none" strokeLinecap="round" strokeLinejoin="round" />}
+      {showNear && <path d={curve(armN)} stroke={color} strokeWidth={13 * THIN + extra} fill="none" strokeLinecap="round" />}
       {showHead && <circle cx={head[0]} cy={head[1]} r={LIM.head + extra / 2} fill={color} />}
     </>
   );
