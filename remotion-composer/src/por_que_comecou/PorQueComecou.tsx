@@ -92,7 +92,7 @@ const shade = (c: string, k = 0.82) => {
   const v = [1, 3, 5].map((i) => Math.round(parseInt(c.slice(i, i + 2), 16) * k));
   return `rgb(${v.join(",")})`;
 };
-const LIM = { ua: 40, fa: 38, th: 50, sh: 50, torso: 74, head: 30 };
+const LIM = { ua: 40, fa: 38, th: 50, sh: 50, torso: 74, head: 25 }; // v4: cabeça um pouco menor (era 30)
 const NO_CLOTHES = true; // v2: personagem sem roupa (pedido do Thiago)
 const THIN = 0.62; // v2: corpo mais fino (espessura do tronco e dos membros)
 const NECK = 14; // v3: pescoço entre o tronco e a cabeça
@@ -167,7 +167,7 @@ const Body: React.FC<BodyProps> = ({ pose, kind, dir = 1, eyes = "open", mouth =
     </>
   );
   // rosto
-  const ex = head[0] + dir * 9, ey = head[1] - 2;
+  const ex = head[0] + dir * 8, ey = head[1] - 2;
   const eyeL: V = [ex - 7, ey], eyeR: V = [ex + 8, ey];
   const eyeEl = (p: V, i: number) => {
     if (eyes === "closed") return <path key={i} d={`M${p[0] - 5} ${p[1]} q5 4 10 0`} stroke="#2a2836" strokeWidth={2.6} fill="none" strokeLinecap="round" />;
@@ -188,7 +188,7 @@ const Body: React.FC<BodyProps> = ({ pose, kind, dir = 1, eyes = "open", mouth =
     if (eyes === "down") return <ellipse key={i} cx={p[0]} cy={p[1] + 2} rx={3.4} ry={3} fill="#2a2836" />;
     return <ellipse key={i} cx={p[0]} cy={p[1]} rx={3.4} ry={4.8} fill="#2a2836" />;
   };
-  const mx = head[0] + dir * 11, my = head[1] + 13;
+  const mx = head[0] + dir * 9, my = head[1] + 11;
   const mouthEl =
     mouth === "smile" ? <path d={`M${mx - 7} ${my - 2} q7 6 14 0`} stroke="#2a2836" strokeWidth={2.6} fill="none" strokeLinecap="round" />
     : mouth === "o" ? <ellipse cx={mx} cy={my} rx={3.5} ry={4} fill="#2a2836" />
@@ -210,7 +210,7 @@ const Body: React.FC<BodyProps> = ({ pose, kind, dir = 1, eyes = "open", mouth =
       {showHead && <circle cx={head[0]} cy={head[1]} r={LIM.head} fill={fill} />}
       {showHead && messy &&
         [-16, -6, 4, 14].map((o, i) => (
-          <path key={i} d={`M${head[0] + o} ${head[1] - 27} q${4 - i * 2} -14 ${-3 + i * 3} -22`} stroke="#55525f" strokeWidth={3} fill="none" strokeLinecap="round" />
+          <path key={i} d={`M${head[0] + o} ${head[1] - 23} q${4 - i * 2} -14 ${-3 + i * 3} -22`} stroke="#55525f" strokeWidth={3} fill="none" strokeLinecap="round" />
         ))}
       {showHead && eyeEl(eyeL, 0)}
       {showHead && eyeEl(eyeR, 1)}
