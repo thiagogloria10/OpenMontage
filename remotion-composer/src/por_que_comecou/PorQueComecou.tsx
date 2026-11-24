@@ -511,15 +511,15 @@ const DRINK = P(380, 342, 180, [20, 60], [60, -153], [-4, 0], [4, 0]);
 // "POR QUE VOCÊ COMEÇOU?" v5 — roteiro novo (uma ideia só): o caderno com o motivo (o filho)
 // ==================================================================
 const HOOK = ["QUANDO DER VONTADE DE PARAR,", "LEMBRE POR QUE COMEÇOU."];
-const DUR = [3.2, 5.4, 4.4, 5.0, 5.0, 3.4]; // narração PROVISÓRIA (Piper)
+const DUR = [3.2, 5.4, 4.4, 5.0, 5.0, 4.0]; // v11: narração Fish Audio (voz clonada)
 const ST: number[] = DUR.reduce<number[]>((a, d, i) => [...a, i === 0 ? 0 : a[i - 1] + DUR[i - 1]], []);
 export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
 // [texto, arquivo, início relativo à cena, duração da fala, mostra legenda]
 type LineT = [string, number, number, number, boolean] | null;
-const LINES: LineT[] = [["Dia um. Ele escreveu as metas dele.", 0, 0.2, 2.53, true], ["Os dias passaram. O cansaço chegou. E o caderno foi parar no fundo da gaveta.", 1, 0.3, 4.39, true], ["Até o dia em que ele pensou: pra que vou fazer isso?", 2, 0.9, 2.58, true], ["Aí ele abriu a gaveta. E lembrou.", 3, 0.2, 2.25, true], null, ["Quando der vontade de parar, lembre por que começou.", 4, 0.3, 2.45, false]];
-const WORDT: Record<number, number[]> = {};
+const LINES: LineT[] = [["Dia um. Ele escreveu as metas dele.", 0, 0.2, 2.32, true], ["Os dias passaram. O cansaço chegou. E o caderno foi parar no fundo da gaveta.", 1, 0.3, 4.69, true], ["Até o dia em que ele pensou: pra que vou fazer isso?", 2, 0.9, 3.11, true], ["Aí ele abriu a gaveta. E lembrou.", 3, 0.2, 2.32, true], null, ["Quando der vontade de parar, lembre por que começou.", 4, 0.3, 3.16, false]];
+const WORDT: Record<number, number[]> = { 0: [0.0, 0.24, 0.78, 0.86, 1.36, 1.46, 1.88], 1: [0.0, 0.14, 0.38, 1.14, 1.2, 1.74, 2.06, 2.4, 2.48, 2.98, 3.1, 3.42, 3.58, 3.86, 4.02], 2: [0.0, 0.34, 0.5, 0.72, 0.88, 0.96, 1.04, 1.78, 1.88, 2.06, 2.3, 2.6], 3: [0.0, 0.32, 0.5, 0.86, 0.92, 1.4, 1.72] }; // tempos reais (faster-whisper) das falas do Fish
 const KEY = ["isso", "um", "metas", "cansaço", "caderno", "gaveta", "quê", "lembrou", "parar", "começou"];
-const VOICE_DIR = "por_que_comecou/fala5";
+const VOICE_DIR = "por_que_comecou/fala_fish";
 const MOTIVO = ["QUERO ESTUDAR", "TODOS OS DIAS."]; // v6 (antes: energia pro filho)
 const METAS = ["ESTUDAR TODOS OS DIAS", "2 HORAS DE ESTUDO POR DIA", "LER 1 LIVRO POR MÊS", "APRENDER INGLÊS", "PASSAR NA PROVA"]; // v7: bilhete de metas
 const sceneOf = (t: number) => { let s = 0; for (let i = 0; i < ST.length; i++) if (t >= ST[i]) s = i; return s; };
@@ -769,7 +769,7 @@ const C1 = (t: number): Cam => ({ cx: kfT(t, [[0, 520], [3.2, 520], [3.8, 240], 
 // S2 DIA 247 à noite: afundado no sofá, celular, tênis no canto; "PRA QUÊ?"
 const SOFA = P(590, 376, 160, [25, 70], [10, 100], [95, 10], [85, 5]);
 const S2 = (t: number) => {
-  const q = backPop(t - 2.2);
+  const q = backPop(t - 2.6); // v11: entra junto com "pra que" na voz do Fish
   return (
     <g>
       <Living t={t} drawer={0} night={1} />
