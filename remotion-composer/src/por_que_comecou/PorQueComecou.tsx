@@ -93,6 +93,8 @@ const shade = (c: string, k = 0.82) => {
   return `rgb(${v.join(",")})`;
 };
 const LIM = { ua: 40, fa: 38, th: 50, sh: 50, torso: 74, head: 30 };
+const NO_CLOTHES = true; // v2: personagem sem roupa (pedido do Thiago)
+const THIN = 0.62; // v2: corpo mais fino (espessura do tronco e dos membros)
 
 const Body: React.FC<BodyProps> = ({ pose, kind, dir = 1, eyes = "open", mouth = "flat", glow = 0, messy, stink = 0, parts = "full", red, t, holdN, holdF, outfit }) => {
   const hip: V = [pose.x, pose.y];
@@ -123,7 +125,7 @@ const Body: React.FC<BodyProps> = ({ pose, kind, dir = 1, eyes = "open", mouth =
     return [a, b, [b[0] + (c[0] - b[0]) * k2, b[1] + (c[1] - b[1]) * k2]];
   };
   const clothes = () => {
-    if (!outfit) return null;
+    if (!outfit || NO_CLOTHES) return null;
     const sl = (p: V[]) => part(p, 1, outfit.shortSleeve ? 0.08 : 0.82);
     const pl = (p: V[]) => (outfit.shorts ? part(p, 0.78, 0) : part(p, 1, 0.86));
     const shoe = (p: V[]) => outfit.shoes === "none" ? null : <circle cx={p[2][0]} cy={p[2][1]} r={9} fill={outfit.shoes ?? "#2a2a33"} />;
@@ -149,13 +151,13 @@ const Body: React.FC<BodyProps> = ({ pose, kind, dir = 1, eyes = "open", mouth =
     <>
       {showFar && (
         <>
-          <polyline points={pts(armF)} stroke={farColor} strokeWidth={13 + extra} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          <polyline points={pts(legF)} stroke={farColor} strokeWidth={15 + extra} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          <line x1={hip[0]} y1={hip[1]} x2={neck[0]} y2={neck[1]} stroke={color} strokeWidth={30 + extra} strokeLinecap="round" />
-          <polyline points={pts(legN)} stroke={color} strokeWidth={15 + extra} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          <polyline points={pts(armF)} stroke={farColor} strokeWidth={13 * THIN + extra} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          <polyline points={pts(legF)} stroke={farColor} strokeWidth={15 * THIN + extra} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          <line x1={hip[0]} y1={hip[1]} x2={neck[0]} y2={neck[1]} stroke={color} strokeWidth={30 * THIN + extra} strokeLinecap="round" />
+          <polyline points={pts(legN)} stroke={color} strokeWidth={15 * THIN + extra} fill="none" strokeLinecap="round" strokeLinejoin="round" />
         </>
       )}
-      {showNear && <polyline points={pts(armN)} stroke={color} strokeWidth={13 + extra} fill="none" strokeLinecap="round" strokeLinejoin="round" />}
+      {showNear && <polyline points={pts(armN)} stroke={color} strokeWidth={13 * THIN + extra} fill="none" strokeLinecap="round" strokeLinejoin="round" />}
       {showHead && <circle cx={head[0]} cy={head[1]} r={LIM.head + extra / 2} fill={color} />}
     </>
   );
