@@ -771,6 +771,7 @@ const C1 = (t: number): Cam => ({ cx: kfT(t, [[0, 520], [3.2, 520], [3.8, 240], 
 
 // S2 DIA 247 à noite: afundado no sofá, celular, tênis no canto; "PRA QUÊ?"
 const SOFA = P(590, 376, 160, [25, 70], [10, 100], [95, 10], [85, 5]);
+const BAL_X = 545, BAL_Y = 200, BAL_S = 0.78, BAL_T = [80, 62, 66, 40]; // v14: balão à esquerda/acima da cabeça (sem cobrir o selo DIA), bolinhas descendo até ela
 const S2 = (t: number) => {
   const q = backPop(t - 2.2); // v12: entra junto com "pra que" (10,2 s)
   return (
@@ -781,9 +782,9 @@ const S2 = (t: number) => {
       <rect x={-200} y={-200} width={1480} height={1000} fill="url(#ph5)" style={{ mixBlendMode: "screen" }} />
       <Body t={t} pose={SOFA} kind="gray" eyes="droopy" red mouth="frown" messy holdN={<Phone scroll={t * 1.5} rot={-20} />} />
       {q > 0 && (
-        <g transform={`translate(590,214) scale(${q * 0.92})`}>
-          <circle cx={-46} cy={74} r={6} fill="#f4f1ea" stroke="#2a2836" strokeWidth={2} />
-          <circle cx={-30} cy={52} r={10} fill="#f4f1ea" stroke="#2a2836" strokeWidth={2} />
+        <g transform={`translate(${BAL_X},${BAL_Y}) scale(${q * BAL_S})`}>
+          <circle cx={BAL_T[0]} cy={BAL_T[1]} r={6} fill="#f4f1ea" stroke="#2a2836" strokeWidth={2} />
+          <circle cx={BAL_T[2]} cy={BAL_T[3]} r={10} fill="#f4f1ea" stroke="#2a2836" strokeWidth={2} />
           <ellipse cx={0} cy={-6} rx={112} ry={58} fill="#f4f1ea" stroke="#2a2836" strokeWidth={3} />
           <text x={0} y={-14} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={32} fill="#2a2836">PRA QUE VOU</text>
           <text x={0} y={22} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={32} fill="#2a2836">FAZER ISSO?</text>
@@ -816,7 +817,7 @@ const S3 = (t: number) => {
     <g>
       <Living t={t} drawer={drawer} night={1} />
       <rect x={-200} y={-200} width={1480} height={1000} fill="#0b0d1e" opacity={0.4} />
-      {take < 0.5 && <g transform={`translate(${105 + 45},${380})`}><NoteClosed /></g>}
+      {drawer > 0.55 && take < 0.5 && <g transform={`translate(${150 + drawer * 50},${360})`}><NoteClosed /></g>} {/* v14: caderno só aparece com a gaveta aberta, em cima dela */}
       <g transform={`translate(${240 * 2},0) scale(-1,1)`}>
         <Body t={t} pose={pose} kind="gray" dir={1} eyes="down" mouth="flat" messy holdN={take >= 0.5 ? <NoteClosed rot={-20} /> : undefined} />
       </g>
