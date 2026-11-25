@@ -32,26 +32,26 @@ const MONO = "'JetBrains Mono', 'DejaVu Sans Mono', monospace";
 const SKIN = "#f3efe7", SKIN2 = "#d9d2c5";
 
 // ------------------------------------------------------------------ cenas (duração em s) e falas
-const DUR = [6.06, 4.66, 4.86, 4.85, 2.13, 5.79, 4.19, 4.52, 3.85, 4.38, 7.96]; // v3: cada cena começa 0,15 s antes da sua fala em narrador.wav (Fish Audio, áudio inteiro)
+const DUR = [6.38, 4.75, 4.69, 4.85, 2.15, 5.89, 4.22, 4.42, 3.66, 4.49, 7.52]; // v4: narração nova, tom natural (Fish Audio, áudio inteiro); cenas 0,15 s antes de cada fala
 const ST: number[] = DUR.reduce<number[]>((a, d, i) => [...a, i === 0 ? 0 : a[i - 1] + DUR[i - 1]], []);
 export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
 // [texto, arquivo, início relativo à cena, duração da fala]
 type LineT = [string, number, number, number] | null;
 const LINES: LineT[] = [
-  ["Ontem, o Marcos conseguiu o emprego novo. Mas, quando chegou em casa... não tinha ninguém.", 0, 0.18, 5.02],
-  ["Ele continua procurando. Até que vê uma luz embaixo da porta da cozinha.", 1, 0.15, 3.95],
-  ["Surpresa! A Juliana e o Lucas prepararam uma festa para o emprego novo.", 2, 0.15, 4.15],
+  ["Ontem, o Marcos conseguiu o emprego novo. Mas, quando chegou em casa... não tinha ninguém.", 0, 0.18, 5.34],
+  ["Ele continua procurando. Até que vê uma luz embaixo da porta da cozinha.", 1, 0.15, 4.04],
+  ["Surpresa! A Juliana e o Lucas prepararam uma festa para o emprego novo.", 2, 0.15, 3.98],
   ["E o olhar da Juliana mudou. Agora é de alegria... e de esperança.", 3, 0.15, 3.84],
-  ["Dois anos depois...", 4, 0.15, 1.12],
-  ["A família mora numa casa melhor. E, no lugar do ônibus, o Marcos agora tem carro.", 5, 0.15, 5.08],
-  ["A Juliana e o Lucas acabaram de voltar de uma viagem para a Europa.", 6, 0.15, 3.48],
-  ["O Marcos tinha tudo pra desistir. Mas nunca se conformou com pouco.", 7, 0.15, 3.81],
-  ["Ele se arriscou. Não se omitiu, nem se vitimizou.", 8, 0.15, 3.14],
-  ["E, depois de muito esforço e dedicação, a recompensa veio.", 9, 0.15, 3.67],
-  ["E você? Vai se conformar com pouco... ou vai sair da sua zona de conforto e buscar por mais?", 10, 0.15, 5.73],
+  ["Dois anos depois...", 4, 0.15, 1.14],
+  ["A família mora numa casa melhor. E, no lugar do ônibus, o Marcos agora tem carro.", 5, 0.15, 5.18],
+  ["A Juliana e o Lucas acabaram de voltar de uma viagem para a Europa.", 6, 0.15, 3.51],
+  ["O Marcos tinha tudo pra desistir. Mas nunca se conformou com pouco.", 7, 0.15, 3.71],
+  ["Ele se arriscou. Não se omitiu, nem se vitimizou.", 8, 0.15, 2.95],
+  ["E, depois de muito esforço e dedicação, a recompensa veio.", 9, 0.15, 3.78],
+  ["E você? Vai se conformar com pouco... ou vai sair da sua zona de conforto e buscar por mais?", 10, 0.15, 5.29],
 ];
 // tempos reais de cada palavra (preencher com a voz da ElevenLabs via sincronizar_voz.py)
-const WORDT: Record<number, number[]> = { 0: [0, 0.54, 0.64, 0.96, 1.48, 1.58, 1.86, 2.4, 2.86, 3.06, 3.4, 3.54, 4.16, 4.28, 4.54], 1: [0, 0.15, 0.67, 1.49, 1.75, 1.93, 2.07, 2.21, 2.45, 2.83, 3.05, 3.31, 3.47], 2: [0.05, 0.99, 1.11, 1.49, 1.65, 1.75, 2.01, 2.63, 2.83, 3.17, 3.37, 3.41, 3.75], 3: [0, 0.09, 0.19, 0.41, 0.57, 0.99, 1.71, 2.03, 2.23, 2.31, 2.79, 3.11, 3.23], 4: [0, 0.36, 0.5], 5: [0.0, 0.07, 0.41, 0.79, 0.93, 1.25, 2.11, 2.55, 2.63, 2.91, 3.11, 3.75, 3.85, 4.17, 4.41, 4.69], 6: [0, 0.06, 0.48, 0.66, 0.74, 1.08, 1.72, 1.86, 2.12, 2.36, 2.46, 2.86, 3.02, 3.08], 7: [0, 0.07, 0.41, 0.69, 1.01, 1.21, 2.05, 2.21, 2.55, 2.75, 3.27, 3.41], 8: [0, 0.19, 0.39, 1.17, 1.31, 1.49, 2.21, 2.35, 2.53], 9: [0, 0.62, 0.76, 0.92, 1.18, 1.7, 1.78, 2.68, 2.72, 3.3], 10: [0, 0.06, 0.76, 1.04, 1.18, 1.74, 1.86, 2.6, 2.68, 2.82, 3.12, 3.28, 3.48, 3.8, 3.94, 4.64, 4.76, 5.08, 5.3] }; // tempos reais (faster-whisper), relativos ao início de cada fala
+const WORDT: Record<number, number[]> = { 0: [0, 0.64, 0.76, 1.1, 1.62, 1.72, 2.06, 2.62, 3.18, 3.42, 3.74, 3.88, 4.54, 4.66, 4.92], 1: [0, 0.15, 0.63, 1.51, 1.79, 1.95, 2.11, 2.25, 2.51, 2.91, 3.11, 3.39, 3.57], 2: [0.02, 1.04, 1.16, 1.5, 1.68, 1.76, 2.02, 2.6, 2.78, 3.08, 3.28, 3.32, 3.64], 3: [0, 0.07, 0.13, 0.35, 0.53, 0.95, 1.67, 2.01, 2.21, 2.31, 2.81, 3.11, 3.23], 4: [0, 0.36, 0.5], 5: [0, 0.07, 0.45, 0.87, 1.03, 1.37, 2.09, 2.47, 2.57, 2.85, 3.05, 3.67, 3.79, 4.11, 4.39, 4.69], 6: [0, 0.06, 0.52, 0.7, 0.76, 1.08, 1.76, 1.9, 2.14, 2.38, 2.5, 2.9, 3.06, 3.12], 7: [0, 0.06, 0.44, 0.68, 1.02, 1.2, 2.0, 2.2, 2.5, 2.7, 3.18, 3.3], 8: [0, 0.14, 0.32, 1.02, 1.18, 1.32, 2.06, 2.18, 2.34], 9: [0, 0.54, 0.68, 0.84, 1.12, 1.7, 1.84, 2.82, 2.86, 3.38], 10: [0, 0.07, 0.35, 0.83, 0.97, 1.49, 1.63, 2.01, 2.35, 2.51, 2.77, 2.93, 3.15, 3.47, 3.61, 4.27, 4.39, 4.67, 4.87] }; // tempos reais (faster-whisper), relativos ao início de cada fala
 const VOICE_DIR = "marcos_dia7/fala";
 const KEY = ["emprego", "ninguém", "luz", "cozinha", "surpresa", "festa", "juliana", "alegria", "esperança", "anos", "melhor", "carro", "europa", "desistir", "pouco", "arriscou", "omitiu", "vitimizou", "esforço", "dedicação", "recompensa", "você", "conforto", "mais"];
 
@@ -3167,8 +3167,8 @@ const S3d7 = (t: number) => {
     face: F({ lx: -0.3, px: -0.4, ly: -0.15, py: -0.2, curve: 0.95, raise: 0.35, mo: 0.12, open: 1 - blinkAt(x, 3.1, 0.6) * 0.8 }),
     tilt: -4,
   }), t);
-  const before = er(t, 0.3, 0.6) * (1 - er(t, 1.75, 2.1));
-  const glow = er(t, 1.86, 2.4); // no "Agora"
+  const before = er(t, 0.3, 0.6) * (1 - er(t, 1.7, 2.05));
+  const glow = er(t, 1.82, 2.35); // no "Agora"
   const hd = headLocal(j);
   const hx = j.x + hd[0] * j.k, hy = j.y + hd[1] * j.k;
   return (
@@ -3195,7 +3195,7 @@ const S3d7 = (t: number) => {
         </g>
       )}
       {glow > 0 && (
-        <g transform={`translate(${hx - 190},${hy + 30}) scale(${backPop(t - 1.86)})`}>
+        <g transform={`translate(${hx - 190},${hy + 30}) scale(${backPop(t - 1.82)})`}>
           <rect x={-66} y={-22} width={132} height={44} rx={8} fill="#14100c" stroke={GOLD} strokeWidth={4} />
           <text x={0} y={10} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={30} fill={GOLD} letterSpacing={2}>AGORA</text>
         </g>
@@ -3453,10 +3453,10 @@ export const MarcosDia7: React.FC = () => {
   const c = cam(lt);
   const flash = s > 0 ? Math.max(0, 1 - lt / 0.14) * 0.18 : 0;
   const LAST = SCENES.length - 1;
-  const endP = s === LAST ? er(lt, 0.91, 1.25) : 0; // "vai se conformar"
-  const endOut = s === LAST ? er(lt, 2.6, 2.8) : 0;
-  const endP2 = s === LAST ? er(lt, 2.75, 3.05) : 0;
-  const endP3 = s === LAST ? er(lt, 6.0, 6.4) : 0; const endP0 = s === LAST ? er(lt, 0.15, 0.4) : 0;
+  const endP = s === LAST ? er(lt, 0.5, 0.85) : 0; // "vai se conformar"
+  const endOut = s === LAST ? er(lt, 2.0, 2.2) : 0;
+  const endP2 = s === LAST ? er(lt, 2.16, 2.46) : 0; // no "ou"
+  const endP3 = s === LAST ? er(lt, 5.6, 6.0) : 0; const endP0 = s === LAST ? er(lt, 0.15, 0.4) : 0;
   const morning = s === 4 ? er(lt, 0.0, 0.25) * (1 - er(lt, 1.95, 2.2)) : 0; // "2 ANOS DEPOIS…"
   const nextDay = 0;
   const recap = s === 0 ? er(lt, 0, 0.2) * (1 - er(lt, DUR[0] - 0.3, DUR[0])) : 0;
