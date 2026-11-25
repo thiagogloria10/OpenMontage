@@ -29,7 +29,7 @@ const MONO = "'JetBrains Mono', 'DejaVu Sans Mono', monospace";
 const SKIN = "#f3efe7", SKIN2 = "#d9d2c5";
 
 // ------------------------------------------------------------------ cenas (duração em s) e falas
-const DUR = [5.57, 5.8, 3.02, 3.7, 3.69, 4.28, 4.41, 2.71, 4.18, 4.03, 2.87, 4.22, 5.39]; // v2: cada cena começa 0,15 s antes da fala dela em narrador.wav (Fish Audio, áudio inteiro)
+const DUR = [5.57, 5.8, 3.02, 3.7, 3.72, 4.28, 4.41, 2.71, 4.18, 4.03, 2.87, 4.22, 5.62]; // v2: cada cena começa 0,15 s antes da fala dela em narrador.wav (Fish Audio, áudio inteiro)
 const ST: number[] = DUR.reduce<number[]>((a, d, i) => [...a, i === 0 ? 0 : a[i - 1] + DUR[i - 1]], []);
 export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
 // [texto, arquivo, início relativo à cena, duração da fala]
@@ -39,7 +39,7 @@ const LINES: LineT[] = [
   ["Já faz três dias. Sem emprego, o Marcos tenta se ocupar consertando as coisas da casa.", 1, 0.15, 5.09],
   ["Mas a esperança... está acabando.", 2, 0.15, 2.01],
   ["Até que o celular toca. É da empresa da entrevista.", 3, 0.15, 2.99],
-  ["Ele foi aprovado! Vai ganhar cinco vezes mais.", 4, 0.15, 2.98],
+  ["Ele foi aprovado! Vai ganhar cinco vezes mais.", 4, 0.15, 3.01],
   ["E, pela primeira vez em muito tempo, ele sorri de verdade.", 5, 0.15, 3.57],
   ["No dia seguinte, ele chega no emprego novo. Um prédio enorme.", 6, 0.15, 3.7],
   ["E esse é o Carlos. O chefe novo.", 7, 0.15, 2.0],
@@ -47,10 +47,10 @@ const LINES: LineT[] = [
   ["O dia é ótimo. Tão bom que ele sai mais tarde que o normal.", 9, 0.15, 3.32],
   ["Quando chega em casa, está tudo escuro.", 10, 0.15, 2.16],
   ["Ele procura na sala, nos quartos... ninguém.", 11, 0.15, 3.21],
-  ["O que aconteceu com a família do Marcos? Segue pra ver a última parte.", 12, 0.15, 3.76],
+  ["O que aconteceu com a família do Marcos? Segue pra ver a última parte.", 12, 0.15, 3.99],
 ];
 // tempos reais de cada palavra (preencher com a voz da ElevenLabs via sincronizar_voz.py)
-const WORDT: Record<number, number[]> = { 0: [0, 0.66, 0.72, 1.06, 1.28, 1.4, 1.94, 2.22, 2.58, 2.76, 3.48, 3.72, 4.0, 4.22], 1: [0, 0.18, 0.42, 0.64, 1.28, 1.48, 2.2, 2.26, 2.6, 2.96, 3.08, 3.48, 4.14, 4.28, 4.52, 4.72], 2: [0, 0.22, 0.32, 0.9, 1.4], 3: [0, 0.24, 0.42, 0.52, 0.84, 1.6, 1.76, 1.82, 2.18, 2.36], 4: [0, 0.12, 0.32, 1.18, 1.32, 1.64, 2.12, 2.48], 5: [0, 0.47, 0.57, 0.89, 1.25, 1.43, 1.69, 2.47, 2.57, 2.93, 3.05], 6: [0, 0.09, 0.33, 1.07, 1.19, 1.45, 1.63, 1.99, 2.63, 2.81, 3.23], 7: [0, 0.1, 0.34, 0.44, 0.5, 1.22, 1.26, 1.62], 8: [0.03, 0.91, 1.75, 1.83, 2.25, 2.43, 2.61], 9: [0, 0.09, 0.29, 0.45, 1.05, 1.23, 1.51, 1.73, 1.83, 2.09, 2.33, 2.67, 2.85, 2.93], 10: [0, 0.14, 0.48, 0.62, 1.22, 1.4, 1.66], 11: [0, 0.13, 0.57, 0.73, 1.41, 1.65, 2.47], 12: [0, 0.11, 0.21, 0.71, 0.95, 1.07, 1.39, 1.55, 2.37, 2.59, 2.77, 2.97, 3.05, 3.25] }; // tempos reais (faster-whisper), relativos ao início de cada fala
+const WORDT: Record<number, number[]> = { 0: [0, 0.66, 0.72, 1.06, 1.28, 1.4, 1.94, 2.22, 2.58, 2.76, 3.48, 3.72, 4.0, 4.22], 1: [0, 0.18, 0.4, 0.64, 1.28, 1.48, 2.18, 2.26, 2.6, 2.96, 3.08, 3.48, 4.14, 4.28, 4.52, 4.72], 2: [0, 0.22, 0.32, 0.9, 1.4], 3: [0, 0.22, 0.42, 0.52, 0.84, 1.6, 1.76, 1.82, 2.18, 2.36], 4: [0, 0.16, 0.38, 1.22, 1.44, 1.76, 2.18, 2.52], 5: [0, 0.48, 0.58, 0.88, 1.26, 1.44, 1.7, 2.46, 2.56, 2.92, 3.04], 6: [0, 0.08, 0.32, 1.08, 1.18, 1.46, 1.64, 1.98, 2.62, 2.84, 3.24], 7: [0, 0.11, 0.33, 0.43, 0.49, 1.25, 1.27, 1.61], 8: [0, 0.9, 1.76, 1.82, 2.24, 2.42, 2.62], 9: [0, 0.08, 0.3, 0.46, 1.08, 1.24, 1.5, 1.72, 1.84, 2.08, 2.34, 2.66, 2.84, 2.92], 10: [0, 0.15, 0.47, 0.63, 1.25, 1.39, 1.67], 11: [0, 0.14, 0.58, 0.72, 1.4, 1.64, 2.5], 12: [0, 0.1, 0.18, 0.66, 0.92, 1.02, 1.34, 1.52, 2.28, 2.52, 2.72, 2.96, 3.2, 3.44] }; // tempos reais (faster-whisper), relativos ao início de cada fala
 const VOICE_DIR = "marcos_dia6/fala";
 const KEY = ["demitido", "resposta", "três", "emprego", "consertando", "esperança", "celular", "entrevista", "aprovado", "cinco", "sorri", "verdade", "novo", "enorme", "carlos", "chefe", "oposto", "roberto", "ótimo", "tarde", "escuro", "ninguém", "família", "marcos", "última"];
 
@@ -2640,7 +2640,7 @@ const CAM3d6 = (t: number): Cam => ({ z: kf(t, [[0, 1.35], [3.4, 1.3]]), fx: 590
 
 // --- S4d6 o celular em tela cheia: APROVADO, R$ 11.500, 5× MAIS
 const S4d6 = (t: number) => {
-  const a = backPop(t - 0.3), b = backPop(t - 1.1), c5 = t - 1.75;
+  const a = backPop(t - 0.3), b = backPop(t - 1.1), c5 = t - 1.9; // "5× MAIS" no "cinco"
   return (
     <g>
       <rect x={-400} y={-400} width={1880} height={2400} fill="#0e1410" />
@@ -3017,7 +3017,7 @@ export const MarcosDia6: React.FC = () => {
   const endP = s === LAST ? er(lt, 0.3, 0.8) : 0;
   const endOut = s === LAST ? er(lt, 2.2, 2.4) * 0 : 0;
   const endP2 = 0;
-  const endP3 = s === LAST ? er(lt, 2.5, 2.85) : 0; // no "Segue"
+  const endP3 = s === LAST ? er(lt, 2.43, 2.78) : 0; // no "Segue"
   const morning = s === 1 ? er(lt, 0.0, 0.25) * (1 - er(lt, 1.9, 2.2)) : 0;
   const nextDay = s === 6 ? er(lt, 0.0, 0.25) * (1 - er(lt, 1.6, 1.9)) : 0;
   const recap = s === 0 ? er(lt, 0, 0.2) * (1 - er(lt, DUR[0] - 0.3, DUR[0])) : 0;
