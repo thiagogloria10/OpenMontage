@@ -58,8 +58,7 @@ const SUBS: [number, number, string][] = [
   [12.32, 14.15, "Por que não somos como os loucos?"],
   [14.3, 15.32, "Eu quero que as pessoas olhem para mim"],
   [15.34, 16.85, "e digam: “esse cara é maluco.”"],
-  [16.98, 17.85, "Ótimo."],
-  [17.9, 19.27, "Eu só tenho uma chance nessa vida."],
+  [16.98, 19.27, "Ótimo! Eu só tenho uma chance nessa vida."],
   [19.3, 20.94, "Prefiro que me chamem de louco"],
   [20.96, 23.25, "e sonhador do que de acomodado."],
   [23.32, 24.94, "Você não nasceu para ficar na fila."],
@@ -146,23 +145,25 @@ const Intro: React.FC<{ t: number }> = ({ t }) => {
 
 // ------------------------------------------------------------------ legenda (cada palavra surge no ritmo da frase)
 const Subtitle: React.FC<{ t: number }> = ({ t }) => {
-  const s = SUBS.find(([a, b]) => t >= a - 0.05 && t < b + 0.05);
-  if (!s) return null;
-  const [a, b, txt] = s;
+  // v8: mais calma — a frase fica até a próxima começar; palavras entram ao longo de toda a fala, com fade mais suave
+  const k = SUBS.findIndex(([a], i) => t >= a - 0.05 && (i === SUBS.length - 1 || t < SUBS[i + 1][0] - 0.05));
+  if (k < 0) return null;
+  const [a, b, txt] = SUBS[k];
+  const next = k < SUBS.length - 1 ? SUBS[k + 1][0] : TOTAL + 1;
   const words = txt.split(" ");
   const total = words.reduce((n, w) => n + w.length, 0);
-  const span = Math.min(b - a, Math.max(0.6, (b - a) * 0.8));
+  const span = Math.max(0.5, (b - a) * 0.92);
   let acc = 0;
-  const out = Math.min(1, er(t, b - 0.08, b + 0.05) + 0);
+  const out = er(t, next - 0.18, next - 0.04);
   return (
-    <div style={{ position: "absolute", left: 120, right: 120, top: 960, transform: "translateY(-50%)", textAlign: "center", fontFamily: BARLOW, fontWeight: 700, fontSize: 66, lineHeight: 1.08, letterSpacing: 1, opacity: 1 - (b < TOTAL ? out : 0) }}>
+    <div style={{ position: "absolute", left: 120, right: 120, top: 960, transform: "translateY(-50%)", textAlign: "center", fontFamily: BARLOW, fontWeight: 700, fontSize: 66, lineHeight: 1.08, letterSpacing: 1, opacity: 1 - out }}>
       {words.map((w, i) => {
         const at = a + (acc / total) * span;
         acc += w.length;
-        const p = clamp01((t - at) / 0.12);
+        const p = ease((t - at) / 0.28);
         const clean = w.toLowerCase().replace(/[^a-zà-ú]/g, "");
         return (
-          <span key={i} style={{ display: "inline-block", margin: "0 8px", color: KEY.includes(clean) ? GOLD : WHITE, opacity: p, transform: `translateY(${(1 - p) * 12}px)`, WebkitTextStroke: "9px #0a0605", paintOrder: "stroke fill", textShadow: "0 4px 14px rgba(0,0,0,.7)" }}>{w.toUpperCase()}</span>
+          <span key={i} style={{ display: "inline-block", margin: "0 8px", color: KEY.includes(clean) ? GOLD : WHITE, opacity: p, transform: `translateY(${(1 - p) * 8}px)`, WebkitTextStroke: "9px #0a0605", paintOrder: "stroke fill", textShadow: "0 4px 14px rgba(0,0,0,.7)" }}>{w.toUpperCase()}</span>
         );
       })}
     </div>
