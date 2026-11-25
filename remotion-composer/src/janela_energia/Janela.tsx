@@ -11,30 +11,30 @@ export const FPS = 30;
 const BG1 = "#0d1117", BG2 = "#161d29";
 const GOLD = "#e8b04b", GOLD2 = "#ffd27a", TEAL = "#4fb3bf", TEAL2 = "#2b6f78", RED = "#ef5a5a", WHITE = "#f4f1ea", MUTED = "#8a93a6";
 const BARLOW = "'Barlow Condensed', sans-serif";
-const HOOK = ["SUA ENERGIA", "TEM HORÁRIO."];
+const HOOK = ["VOCÊ NÃO É PREGUIÇOSO.", "ESTÁ NO HORÁRIO ERRADO."]; // v2 (análise)
 
 // ------------------------------------------------------------------ falas e cenas
-const DUR = [3.7, 3.2, 3.4, 3.3, 4.0, 2.2, 4.8, 2.5, 6.3, 5.0, 3.2, 5.1, 5.6];
+const DUR = [3.5, 3.15, 3.15, 3.2, 3.8, 1.95, 4.45, 2.35, 4.3, 4.95, 2.75, 3.7, 3.6]; // v2: ~45 s (era 52)
 const ST = DUR.reduce<number[]>((a, d, i) => [...a, i === 0 ? 0 : a[i - 1] + DUR[i - 1]], []);
 export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
 // [texto, arquivo, início na cena, duração da fala]
 const LINES: [string, number, number, number][] = [
-  ["Você passa a tarde inteira travado e só destrava às dez da noite?", 0, 0.15, 3.17],
-  ["Sabe aquela tarefa que pesa quando você começa o dia...", 1, 0.15, 2.69],
-  ["e some de repente em meia hora, lá pelo fim da tarde?", 2, 0.15, 2.91],
-  ["Isso tem a ver com o horário em que a sua energia aparece.", 3, 0.15, 2.75],
-  ["Tem gente que pensa melhor cedo. Tem gente que só engata de noite.", 4, 0.15, 3.49],
-  ["Cada corpo tem a sua janela.", 5, 0.15, 1.53],
-  ["O erro comum é encaixar a tarefa mais difícil na hora em que você já está esgotado,", 6, 0.15, 4.25],
-  ["e depois concluir que falta disciplina.", 7, 0.15, 1.88],
-  ["Então faz um teste simples nesta semana: anote de hora em hora, de 1 a 5, o quanto você está rendendo.", 8, 0.15, 5.78],
-  ["No fim dos dias, olha onde ficaram as notas mais altas. Essa é a sua janela.", 9, 0.15, 4.48],
-  ["Coloca ali a decisão que mais pesa no seu negócio.", 10, 0.15, 2.61],
-  ["O resto, tipo responder mensagem e organizar planilha, vai para as horas baixas.", 11, 0.15, 4.6],
-  ["Comenta aqui a hora em que você mais rende, e salva este vídeo para fazer o teste na segunda.", 12, 0.15, 4.48],
+  ["Você passa a tarde inteira travado e só destrava às dez da noite?", 0, 0.15, 3.13],
+  ["Sabe aquela tarefa que pesa quando você começa o dia...", 1, 0.15, 2.77],
+  ["e some de repente em meia hora, lá pelo fim da tarde?", 2, 0.15, 2.76],
+  ["Isso tem a ver com o horário em que a sua energia aparece.", 3, 0.15, 2.86],
+  ["Tem gente que pensa melhor cedo. Tem gente que só engata de noite.", 4, 0.15, 3.46],
+  ["Cada corpo tem a sua janela.", 5, 0.15, 1.56],
+  ["O erro é colocar a tarefa mais difícil na hora em que você já está esgotado,", 6, 0.15, 4.1],
+  ["e depois concluir que falta disciplina.", 7, 0.15, 1.96],
+  ["Faz um teste: anote de hora em hora, de 1 a 5, o quanto você rende.", 8, 0.15, 3.95],
+  ["No fim da semana, olha onde ficaram as notas mais altas. Essa é a sua janela.", 9, 0.15, 4.62],
+  ["Coloca ali a tarefa que mais pesa no seu dia.", 10, 0.15, 2.37],
+  ["O resto, tipo mensagem e planilha, vai para as horas baixas.", 11, 0.15, 3.33],
+  ["Comenta aqui a hora em que você mais rende.", 12, 0.15, 2.1],
 ];
 const WORDT: Record<number, number[]> = {}; // tempos reais por palavra (preencher com a voz final)
-const KEY = ["travado", "dez", "pesa", "meia", "energia", "cedo", "noite", "janela", "difícil", "esgotado", "disciplina", "teste", "5", "altas", "decisão", "negócio", "baixas", "comenta", "salva", "segunda"];
+const KEY = ["travado", "dez", "pesa", "meia", "energia", "cedo", "noite", "janela", "difícil", "esgotado", "disciplina", "teste", "5", "altas", "tarefa", "dia", "baixas", "comenta", "rende"];
 
 // ------------------------------------------------------------------ utilidades
 type V = [number, number];
@@ -197,7 +197,7 @@ const energy = (h: number, peak: number) => {
   const d = Math.min(Math.abs(h - peak), 24 - Math.abs(h - peak));
   return 0.12 + 0.82 * Math.exp(-(d * d) / 9) + 0.08 * Math.exp(-((Math.abs(h - peak) - 7) ** 2) / 6);
 };
-const EnergyChart: React.FC<{ y: number; h: number; peak: number; draw: number; win?: number; label?: string; color?: string; low?: number; t: number; p?: number }> = ({ y, h, peak, draw, win = 0, label, color = GOLD, low = 0, t, p = 1 }) => {
+const EnergyChart: React.FC<{ y: number; h: number; peak: number; draw: number; win?: number; label?: string; color?: string; low?: number; t: number; p?: number; axis?: boolean }> = ({ y, h, peak, draw, win = 0, label, color = GOLD, low = 0, t, p = 1, axis = true }) => {
   const pts: V[] = [];
   for (let i = 0; i <= 96; i++) { const hh = (i / 96) * 24; if (hh / 24 > draw) break; pts.push([hx(hh), y + h - energy(hh, peak) * h]); }
   const path = pts.map((q, i) => `${i ? "L" : "M"}${q[0].toFixed(1)},${q[1].toFixed(1)}`).join(" ");
@@ -205,7 +205,7 @@ const EnergyChart: React.FC<{ y: number; h: number; peak: number; draw: number; 
   const head = pts[pts.length - 1];
   return (
     <g opacity={p}>
-      {[0, 6, 12, 18, 24].map((hh) => <g key={hh}><line x1={hx(hh)} y1={y} x2={hx(hh)} y2={y + h} stroke="#ffffff" strokeOpacity={0.07} strokeWidth={2} /><text x={hx(hh)} y={y + h + 44} textAnchor="middle" fontFamily={BARLOW} fontWeight={600} fontSize={30} fill={MUTED}>{hh}h</text></g>)}
+      {[0, 6, 12, 18, 24].map((hh) => <g key={hh}><line x1={hx(hh)} y1={y} x2={hx(hh)} y2={y + h} stroke="#ffffff" strokeOpacity={0.07} strokeWidth={2} />{axis && <text x={hx(hh)} y={y + h + 44} textAnchor="middle" fontFamily={BARLOW} fontWeight={600} fontSize={40} fill={MUTED}>{hh}h</text>}</g>)}
       <line x1={CX0} y1={y + h} x2={CX1} y2={y + h} stroke="#ffffff" strokeOpacity={0.2} strokeWidth={2} />
       {win > 0 && (
         <g opacity={win}>
@@ -218,7 +218,7 @@ const EnergyChart: React.FC<{ y: number; h: number; peak: number; draw: number; 
       {path && <path d={path} stroke={color} strokeWidth={8} fill="none" strokeLinecap="round" strokeLinejoin="round" />}
       {head && draw < 1 && <circle cx={head[0]} cy={head[1]} r={12} fill={color} />}
       {draw >= 1 && <g><circle cx={hx(peak)} cy={y + h - energy(peak, peak) * h} r={30 + Math.sin(t * 4) * 4} fill={color} opacity={0.3} filter="url(#glow)" /><circle cx={hx(peak)} cy={y + h - energy(peak, peak) * h} r={12} fill={color} /></g>}
-      {label && <text x={CX0} y={y - 26} fontFamily={BARLOW} fontWeight={700} fontSize={40} fill={WHITE} letterSpacing={3}>{label}</text>}
+      {label && <text x={CX0} y={y - 30} fontFamily={BARLOW} fontWeight={700} fontSize={46} fill={WHITE} letterSpacing={3}>{label}</text>}
     </g>
   );
 };
@@ -230,13 +230,13 @@ const S0 = (t: number) => {
   const night = er(t, 0.6, 2.3);
   return (
     <g>
-      <Glass x={110} y={420} w={860} h={820}>
+      <Glass x={120} y={420} w={840} h={820}>
         {/* janela com o céu escurecendo */}
         <rect x={640} y={470} width={260} height={220} rx={20} fill={night > 0.5 ? "#0b1530" : "#f2a65a"} opacity={0.9} />
         <circle cx={lerp(700, 860, night)} cy={lerp(560, 520, night)} r={30} fill={night > 0.5 ? "#e8ecf5" : "#ffe08a"} />
         <ClockPill x={330} y={540} min={min} hot={on} />
-        <Desk x={540} y={1080} glow={on ? 1 : 0.1} t={t} />
-        <Buddy x={540} y={1180} s={0.9} sit mood={on ? 0.9 : -0.5} drain={on ? 0 : 0.6} typing={on ? 1 : 0} t={t} />
+        <g transform="translate(540,1100) scale(1.15) translate(-540,-1100)"><Desk x={540} y={1080} glow={on ? 1 : 0.1} t={t} /></g>
+        <Buddy x={540} y={1190} s={1.08} sit mood={on ? 0.9 : -0.5} drain={on ? 0 : 0.6} typing={on ? 1 : 0} t={t} />
         <Battery x={760} y={800} lvl={on ? 0.95 : 0.15} t={t} p={spring(t, 0.2)} />
         <Bulb x={540} y={760} p={spring(t, 2.35, 0.45)} />
       </Glass>
@@ -247,11 +247,11 @@ const S1 = (t: number) => { // boneco empurrando o cartão pesado
   const push = Math.sin(t * 7) * er(t, 0.9, 1.2);
   return (
     <g>
-      <Glass x={110} y={420} w={860} h={820}>
+      <Glass x={120} y={420} w={840} h={820}>
         <rect x={640} y={470} width={260} height={220} rx={20} fill="#9fd0f0" opacity={0.85} />
         <circle cx={700} cy={540} r={30} fill="#ffe08a" />
         <ClockPill x={330} y={540} min={8 * 60} p={spring(t, 0)} />
-        <Buddy x={330} y={1180} s={0.95} mood={-0.4} lean={12 * er(t, 0.8, 1.1)} armL={[110, -150]} armR={[130, -120]} t={t} />
+        <Buddy x={320} y={1200} s={1.12} mood={-0.4} lean={12 * er(t, 0.8, 1.1)} armL={[110, -150]} armR={[130, -120]} t={t} />
         <TaskCard x={680} y={1060} label="TAREFA DIFÍCIL" p={spring(t, 0.25)} wobble={push * 3} />
         {t > 1.1 && [0, 1, 2].map((i) => <path key={i} d={`M${430 + i * 6},${960 + i * 30} l-26,-8`} stroke={WHITE} strokeOpacity={0.5} strokeWidth={5} strokeLinecap="round" />)}
       </Glass>
@@ -264,12 +264,12 @@ const S2 = (t: number) => {
   const done = er(t, 2.1, 2.5);
   return (
     <g>
-      <Glass x={110} y={420} w={860} h={820}>
+      <Glass x={120} y={420} w={840} h={820}>
         <rect x={640} y={470} width={260} height={220} rx={20} fill="#f2a65a" opacity={0.9} />
         <circle cx={790} cy={600} r={30} fill="#ffcf7a" />
         <ClockPill x={330} y={540} min={min} hot={t > 0.4} p={1} />
         {t > 0.35 && t < 0.5 && <rect x={200} y={480} width={260} height={120} rx={50} fill={GOLD} opacity={0.4} />}
-        <Buddy x={330} y={1180} s={0.95} mood={lerp(0.2, 1, done)} armL={[110, -150]} armR={[130, -120]} hop={done > 0.5 ? Math.max(0, Math.sin((t - 2.4) * 10)) * 0.4 : 0} t={t} />
+        <Buddy x={320} y={1200} s={1.12} mood={lerp(0.2, 1, done)} armL={[110, -150]} armR={[130, -120]} hop={done > 0.5 ? Math.max(0, Math.sin((t - 2.4) * 10)) * 0.4 : 0} t={t} />
         <TaskCard x={680} y={1060} label="TAREFA DIFÍCIL" p={1} done={done} />
         <g transform="translate(640,850)" opacity={1 - done}>
           <circle r={64} fill="none" stroke="#ffffff" strokeOpacity={0.15} strokeWidth={12} />
@@ -282,8 +282,8 @@ const S2 = (t: number) => {
 };
 const S3 = (t: number) => (
   <g>
-    <Glass x={90} y={480} w={900} h={700} p={spring(t, 0, 0.45)}>
-      <EnergyChart y={640} h={380} peak={17.5} draw={er(t, 0.3, 2.3)} label="SUA ENERGIA AO LONGO DO DIA" t={t} />
+    <Glass x={120} y={470} w={840} h={720} p={spring(t, 0, 0.45)}>
+      <EnergyChart y={640} h={380} peak={17.5} draw={er(t, 0.1, 1.3)} label="SUA ENERGIA AO LONGO DO DIA" t={t} />
     </Glass>
   </g>
 );
@@ -292,15 +292,15 @@ const MiniSun: React.FC<{ x: number; y: number; moon?: boolean }> = ({ x, y, moo
   : <g transform={`translate(${x},${y})`}><circle r={22} fill={GOLD2} />{Array.from({ length: 8 }).map((_, i) => <line key={i} x1={Math.cos(i * 0.785) * 30} y1={Math.sin(i * 0.785) * 30} x2={Math.cos(i * 0.785) * 40} y2={Math.sin(i * 0.785) * 40} stroke={GOLD2} strokeWidth={5} strokeLinecap="round" />)}</g>;
 const Split = (t: number, win: number) => (
   <g>
-    <Glass x={90} y={430} w={900} h={390} p={spring(t, 0)} hl={win}>
+    <Glass x={120} y={430} w={840} h={390} p={spring(t, 0)} hl={win}>
       <MiniSun x={170} y={500} />
-      <text x={220} y={514} fontFamily={BARLOW} fontWeight={700} fontSize={40} fill={WHITE} letterSpacing={3}>CEDO</text>
-      <g transform="translate(0,-170) scale(1,0.62)" ><EnergyChart y={1000} h={300} peak={9} draw={er(t, 0.2, 1.4)} win={win} t={t} /></g>
+      <text x={220} y={516} fontFamily={BARLOW} fontWeight={700} fontSize={48} fill={WHITE} letterSpacing={3}>CEDO</text>
+      <g transform="translate(0,-170) scale(1,0.62)" ><EnergyChart y={1000} h={300} peak={9} draw={er(t, 0.2, 1.4)} win={win} t={t} axis={false} /></g>
     </Glass>
-    <Glass x={90} y={850} w={900} h={390} p={spring(t, 0.9)} hl={win}>
+    <Glass x={120} y={850} w={840} h={390} p={spring(t, 0.9)} hl={win}>
       <MiniSun x={170} y={920} moon />
-      <text x={220} y={934} fontFamily={BARLOW} fontWeight={700} fontSize={40} fill={WHITE} letterSpacing={3}>DE NOITE</text>
-      <g transform="translate(0,252) scale(1,0.62)"><EnergyChart y={1000} h={300} peak={21} draw={er(t, 1.1, 2.4)} win={win} color={TEAL} t={t} /></g>
+      <text x={220} y={936} fontFamily={BARLOW} fontWeight={700} fontSize={48} fill={WHITE} letterSpacing={3}>DE NOITE</text>
+      <g transform="translate(0,252) scale(1,0.62)"><EnergyChart y={1000} h={300} peak={21} draw={er(t, 1.1, 2.4)} win={win} color={TEAL} t={t} axis={false} /></g>
     </Glass>
   </g>
 );
@@ -321,13 +321,13 @@ const S6 = (t: number) => {
   const drained = er(t, 2.2, 3.2);
   return (
     <g>
-      <Glass x={90} y={430} w={900} h={810} p={spring(t, 0, 0.4)}>
+      <Glass x={120} y={430} w={840} h={810} p={spring(t, 0, 0.4)}>
         <EnergyChart y={620} h={380} peak={PEAK} draw={1} low={er(t, 0.3, 0.8)} t={t} />
-        <text x={hx(PEAK + 7.5)} y={1080} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={30} fill={TEAL} opacity={er(t, 0.3, 0.8)}>ESGOTADO</text>
+        <text x={hx(PEAK + 7.5)} y={1080} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={42} fill={TEAL} opacity={er(t, 0.3, 0.8)}>ESGOTADO</text>
         <TaskCard x={b.x} y={b.y} label="DIFÍCIL" p={spring(t, 0.1)} s={0.62} wobble={Math.sin(t * 5) * 4 * (1 - drained)} />
         {/* cursor arrastando */}
         {t > 0.5 && t < 2.6 && <path transform={`translate(${b.x + 40},${b.y + 30})`} d="M0,0 L0,46 L12,34 L22,56 L32,52 L22,30 L38,30 Z" fill={WHITE} stroke="#1c1720" strokeWidth={3} />}
-        <Buddy x={230} y={1210} s={0.55} mood={lerp(0, -0.8, drained)} drain={drained} lean={-drained * 6} t={t} />
+        <Buddy x={240} y={1215} s={0.72} mood={lerp(0, -0.8, drained)} drain={drained} lean={-drained * 6} t={t} />
         <Battery x={330} y={1060} lvl={lerp(0.6, 0.1, drained)} t={t} p={spring(t, 1.8)} />
       </Glass>
     </g>
@@ -338,7 +338,7 @@ const S7 = (t: number) => {
   const cross = er(t, 1.2, 1.5);
   return (
     <g>
-      <Glass x={90} y={430} w={900} h={810}>
+      <Glass x={120} y={430} w={840} h={810}>
         <EnergyChart y={620} h={380} peak={PEAK} draw={1} low={1} t={t} p={0.35} />
         {st > 0 && (
           <g transform={`translate(540,700) rotate(-6) scale(${lerp(1.6, 1, Math.min(1, st))})`} opacity={clamp01(st * 2)}>
@@ -356,20 +356,20 @@ const HOURS = [8, 10, 12, 14, 16, 18, 20, 22];
 const RATE = (h: number, day = 0) => Math.max(1, Math.min(5, Math.round(1 + energy(h, PEAK) * 4.4 + ((day * 7 + h * 3) % 3) * 0.3 - 0.4)));
 const S8 = (t: number) => (
   <g>
-    <Glass x={140} y={430} w={800} h={820} p={spring(t, 0, 0.45)}>
-      <text x={200} y={510} fontFamily={BARLOW} fontWeight={700} fontSize={44} fill={WHITE} letterSpacing={3}>TESTE DA SEMANA</text>
-      <text x={880} y={510} textAnchor="end" fontFamily={BARLOW} fontWeight={600} fontSize={34} fill={MUTED}>DE 1 A 5</text>
+    <Glass x={120} y={430} w={840} h={820} p={spring(t, 0, 0.45)}>
+      <text x={170} y={512} fontFamily={BARLOW} fontWeight={700} fontSize={50} fill={WHITE} letterSpacing={3}>TESTE DA SEMANA</text>
+      <text x={910} y={512} textAnchor="end" fontFamily={BARLOW} fontWeight={700} fontSize={44} fill={GOLD}>DE 1 A 5</text>
       {HOURS.map((h, r) => {
         const y = 590 + r * 82;
-        const appear = er(t, 0.7 + r * 0.55, 1.0 + r * 0.55);
+        const appear = er(t, 0.3 + r * 0.42, 0.55 + r * 0.42);
         const n = RATE(h);
         return (
           <g key={h} opacity={lerp(0.35, 1, appear)}>
-            <text x={210} y={y + 14} fontFamily={BARLOW} fontWeight={700} fontSize={40} fill={WHITE}>{String(h).padStart(2, "0")}h</text>
+            <text x={170} y={y + 16} fontFamily={BARLOW} fontWeight={700} fontSize={46} fill={WHITE}>{String(h).padStart(2, "0")}h</text>
             {[1, 2, 3, 4, 5].map((k) => {
               const on = appear > 0.5 && k <= n;
-              const pop = on ? spring(t, 0.85 + r * 0.55 + k * 0.05, 0.35) : 0;
-              return <circle key={k} cx={380 + k * 92} cy={y} r={lerp(20, 26, pop)} fill={on ? (n >= 4 ? GOLD : TEAL) : "none"} stroke={on ? "none" : "#ffffff"} strokeOpacity={0.25} strokeWidth={3} />;
+              const pop = on ? spring(t, 0.4 + r * 0.42 + k * 0.05, 0.35) : 0;
+              return <circle key={k} cx={330 + k * 108} cy={y} r={lerp(24, 31, pop)} fill={on ? (n >= 4 ? GOLD : TEAL) : "none"} stroke={on ? "none" : "#ffffff"} strokeOpacity={0.25} strokeWidth={3} />;
             })}
           </g>
         );
@@ -384,11 +384,11 @@ const S9 = (t: number) => {
   const best = HOURS.indexOf(PEAK);
   return (
     <g>
-      <Glass x={110} y={430} w={860} h={820} p={1}>
-        {DAYS.map((d, c) => <text key={d} x={300 + c * 92} y={520} textAnchor="middle" fontFamily={BARLOW} fontWeight={600} fontSize={30} fill={MUTED}>{d}</text>)}
+      <Glass x={120} y={430} w={840} h={820} p={1}>
+        {DAYS.map((d, c) => <text key={d} x={300 + c * 92} y={522} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={40} fill={MUTED}>{d}</text>)}
         {HOURS.map((h, r) => (
           <g key={h}>
-            <text x={200} y={584 + r * 82} fontFamily={BARLOW} fontWeight={700} fontSize={36} fill={WHITE}>{String(h).padStart(2, "0")}h</text>
+            <text x={150} y={586 + r * 82} fontFamily={BARLOW} fontWeight={700} fontSize={42} fill={WHITE}>{String(h).padStart(2, "0")}h</text>
             {DAYS.map((d, c) => {
               const v = RATE(h, c);
               const on = fill * (HOURS.length + DAYS.length) > r + c;
@@ -398,7 +398,7 @@ const S9 = (t: number) => {
           </g>
         ))}
         {hl > 0 && <rect x={250} y={535 + best * 82} width={652} height={86} rx={20} fill="none" stroke={GOLD2} strokeWidth={6} opacity={hl} />}
-        <Pill x={576} y={1218} txt="SUA JANELA ↑" color="#1c1720" size={40} p={spring(t, 2.8, 0.4)} bg={GOLD} />
+        <Pill x={576} y={1218} txt="SUA JANELA ↑" color={GOLD} size={40} p={spring(t, 2.8, 0.4)} bg={GOLD} />
       </Glass>
     </g>
   );
@@ -408,11 +408,11 @@ const S10 = (t: number) => {
   const burst = er(t, 0.75, 1.3);
   return (
     <g>
-      <Glass x={90} y={430} w={900} h={810}>
+      <Glass x={120} y={430} w={840} h={810}>
         <EnergyChart y={620} h={380} peak={PEAK} draw={1} win={1} t={t} />
-        <TaskCard x={hx(PEAK)} y={lerp(360, 760, fall)} label="DECISÃO" p={1} s={0.66} heavy={false} />
+        <TaskCard x={hx(PEAK)} y={lerp(360, 760, fall)} label="TAREFA Nº 1" p={1} s={0.92} heavy={false} />
         {burst > 0 && burst < 1 && Array.from({ length: 10 }).map((_, i) => { const a = (i / 10) * Math.PI * 2; return <line key={i} x1={hx(PEAK) + Math.cos(a) * 110 * burst} y1={760 + Math.sin(a) * 80 * burst} x2={hx(PEAK) + Math.cos(a) * 150 * burst} y2={760 + Math.sin(a) * 110 * burst} stroke={GOLD2} strokeWidth={7} strokeLinecap="round" opacity={1 - burst} />; })}
-        <text x={hx(PEAK)} y={1130} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={36} fill={GOLD} opacity={er(t, 0.9, 1.3)}>O QUE MAIS PESA NO NEGÓCIO</text>
+        <text x={hx(PEAK)} y={1130} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={44} fill={GOLD} opacity={er(t, 0.9, 1.3)}>O QUE MAIS PESA NO SEU DIA</text>
       </Glass>
     </g>
   );
@@ -422,41 +422,39 @@ const Chip: React.FC<{ x: number; y: number; label: string; icon: "msg" | "sheet
     <rect x={-130} y={-40} width={260} height={80} rx={40} fill="#1c2436" stroke={TEAL} strokeWidth={3} />
     {icon === "msg" ? <path d="M-104,-16 h48 a10,10 0 0 1 10,10 v22 a10,10 0 0 1 -10,10 h-28 l-14,12 v-12 h-6 a10,10 0 0 1 -10,-10 v-22 a10,10 0 0 1 10,-10 z" fill={TEAL} />
       : <g fill="none" stroke={TEAL} strokeWidth={5}><rect x={-108} y={-20} width={56} height={44} rx={6} /><line x1={-108} y1={-4} x2={-52} y2={-4} /><line x1={-80} y1={-20} x2={-80} y2={24} /></g>}
-    <text x={26} y={13} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={34} fill={WHITE} letterSpacing={1}>{label}</text>
+    <text x={26} y={14} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={40} fill={WHITE} letterSpacing={1}>{label}</text>
   </g>
 );
 const S11 = (t: number) => {
   const a = spring(t, 0.5, 0.6), b = spring(t, 1.6, 0.6);
   return (
     <g>
-      <Glass x={90} y={430} w={900} h={810}>
+      <Glass x={120} y={430} w={840} h={810}>
         <EnergyChart y={620} h={380} peak={PEAK} draw={1} win={1} low={1} t={t} />
-        <TaskCard x={hx(PEAK)} y={760} label="DECISÃO" p={1} s={0.66} heavy={false} />
+        <TaskCard x={hx(PEAK)} y={760} label="TAREFA Nº 1" p={1} s={0.92} heavy={false} />
         <Chip x={lerp(540, hx(PEAK + 8), a)} y={lerp(560, 905, a)} label="MENSAGENS" icon="msg" p={a} />
         <Chip x={lerp(540, hx(PEAK + 8.5), b)} y={lerp(560, 1000, b)} label="PLANILHA" icon="sheet" p={b} />
-        <text x={hx(PEAK + 8)} y={1130} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={32} fill={TEAL} opacity={er(t, 2.4, 2.8)}>HORAS BAIXAS</text>
+        <text x={hx(PEAK + 8)} y={1130} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={42} fill={TEAL} opacity={er(t, 2.0, 2.4)}>HORAS BAIXAS</text>
       </Glass>
     </g>
   );
 };
 const S12 = (t: number) => {
+  // v2: um pedido só — comentar a hora (o "salva" vai para a legenda do post)
   const typed = "10h";
-  const n = Math.floor(clamp01((t - 1.2) / 0.6) * typed.length);
-  const save = spring(t, 2.6, 0.5);
+  const n = Math.floor(clamp01((t - 1.0) / 0.6) * typed.length);
+  const send = spring(t, 2.0, 0.45);
   return (
     <g>
-      <Glass x={110} y={450} w={860} h={330} p={spring(t, 0.1, 0.45)}>
-        <circle cx={200} cy={540} r={36} fill="#33405e" />
-        <text x={262} y={532} fontFamily={BARLOW} fontWeight={700} fontSize={36} fill={WHITE}>Que horas você mais rende?</text>
-        <rect x={180} y={620} width={720} height={100} rx={50} fill="#ffffff" fillOpacity={0.07} stroke={GOLD} strokeOpacity={0.6} strokeWidth={3} />
-        <text x={230} y={688} fontFamily={BARLOW} fontWeight={700} fontSize={56} fill={GOLD}>{typed.slice(0, n)}{Math.floor(t * 2) % 2 === 0 && n < 3 ? "|" : ""}</text>
+      <Glass x={120} y={440} w={840} h={400} p={spring(t, 0.05, 0.45)} hl={send}>
+        <circle cx={200} cy={540} r={40} fill="#33405e" />
+        <text x={262} y={556} fontFamily={BARLOW} fontWeight={700} fontSize={46} fill={WHITE}>Que horas você mais rende?</text>
+        <rect x={170} y={640} width={740} height={130} rx={65} fill="#ffffff" fillOpacity={0.07} stroke={GOLD} strokeOpacity={0.7} strokeWidth={4} />
+        <text x={230} y={728} fontFamily={BARLOW} fontWeight={700} fontSize={76} fill={GOLD}>{typed.slice(0, n)}{Math.floor(t * 2) % 2 === 0 && n < 3 ? "|" : ""}</text>
+        <g transform={`translate(840,705) scale(${lerp(0.7, 1.15, send)})`}><circle r={44} fill={GOLD} /><path d="M-16,-18 L22,0 L-16,18 L-8,0 Z" fill="#1c1720" /></g>
       </Glass>
-      <Buddy x={330} y={1210} s={0.85} mood={0.95} armR={[90, -300 + Math.sin(t * 10) * 20]} t={t} hop={Math.max(0, Math.sin(t * 4)) * 0.15} />
-      <g transform={`translate(760,1010) scale(${lerp(0.5, 1, Math.min(1, save))})`} opacity={clamp01(save * 2)}>
-        <circle r={120} fill={GOLD} opacity={0.25} filter="url(#glow)" />
-        <path d="M-56,-80 h112 v170 l-56,-46 l-56,46 z" fill="url(#goldG)" />
-        <text y={150} textAnchor="middle" fontFamily={BARLOW} fontWeight={700} fontSize={44} fill={WHITE} letterSpacing={3}>SALVA</text>
-      </g>
+      <Buddy x={540} y={1215} s={1.05} mood={0.95} armR={[90, -300 + Math.sin(t * 10) * 20]} t={t} hop={Math.max(0, Math.sin(t * 4)) * 0.15} />
+      {send > 0 && [0, 1, 2].map((i) => { const q = ((t * 0.7 + i / 3) % 1); return <path key={i} transform={`translate(${640 + i * 40},${930 - q * 120}) scale(${1.2 + q * 0.6})`} d="M0,14 C-16,2 -12,-10 -4,-10 C-1,-10 0,-7 0,-5 C0,-7 1,-10 4,-10 C12,-10 16,2 0,14 Z" fill={GOLD} opacity={Math.sin(q * Math.PI) * send} />; })}
     </g>
   );
 };
