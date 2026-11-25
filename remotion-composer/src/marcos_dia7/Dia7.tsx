@@ -3234,15 +3234,16 @@ const S4d7 = (t: number) => {
 const CAM4d7 = (t: number): Cam => ({ z: kf(t, [[0, 0.95], [2.2, 1.0]]), fx: 540, fy: 620 });
 
 // --- casa nova (dia, dois andares, jardim, garagem)
-const NH_F = 960;
+const NH_F = 960, HS = 1.9, CS = 1.7, KA = 0.62, KJ = 0.59, KL = 0.42, PF = NH_F + 40; // v2: proporção real — porta mais alta que a pessoa, carro na altura do peito
 const NewHouse: React.FC<{ t: number; sunset?: number }> = ({ t, sunset = 0 }) => (
   <g>
     <defs>
       <linearGradient id="skyN" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={sunset ? "#e8905a" : "#7ab8ec"} /><stop offset="1" stopColor={sunset ? "#f8d08a" : "#d8ecf8"} /></linearGradient>
     </defs>
-    <rect x={-400} y={-400} width={1880} height={2400} fill="url(#skyN)" />
+    <rect x={-1400} y={-1600} width={4400} height={4000} fill="url(#skyN)" />
     <circle cx={sunset ? 900 : 920} cy={sunset ? 520 : 130} r={60} fill={sunset ? "#ffb060" : "#fff2a0"} opacity={0.95} />
     {[[120, 120], [700, 80]].map(([x, y], i) => <g key={i} transform={`translate(${x + Math.sin(t * 0.3 + i) * 20},${y})`}><ellipse cx={0} cy={0} rx={70} ry={26} fill="#fff" opacity={0.8} /><ellipse cx={40} cy={-14} rx={46} ry={24} fill="#fff" opacity={0.8} /></g>)}
+    <g transform={`translate(470,${NH_F}) scale(${HS}) translate(-470,${-NH_F})`}>
     {/* casa */}
     <path d="M120,420 L470,220 L820,420 Z" fill="#9a4a3a" stroke={INK} strokeWidth={6} strokeLinejoin="round" />
     <rect x={150} y={420} width={640} height={540} fill="#f0e2c8" stroke={INK} strokeWidth={6} />
@@ -3254,15 +3255,16 @@ const NewHouse: React.FC<{ t: number; sunset?: number }> = ({ t, sunset = 0 }) =
     <rect x={790} y={560} width={360} height={400} fill="#e4d4b8" stroke={INK} strokeWidth={6} />
     <path d="M770,560 L970,470 L1170,560 Z" fill="#9a4a3a" stroke={INK} strokeWidth={6} strokeLinejoin="round" />
     <rect x={820} y={640} width={300} height={320} fill="#3a3530" stroke={INK} strokeWidth={5} />
+    </g>
     {/* jardim e calçada */}
-    <rect x={-400} y={NH_F} width={1880} height={400} fill="#6aa84a" stroke={INK} strokeWidth={5} />
-    <rect x={-400} y={NH_F + 70} width={1880} height={300} fill="#a8a49a" stroke={INK} strokeWidth={5} />
-    {[60, 150, 620, 700].map((x, i) => <g key={i} transform={`translate(${x},${NH_F})`}><circle cx={0} cy={-26} r={30} fill="#4a9a3a" stroke={INK} strokeWidth={4} /><circle cx={-12} cy={-34} r={7} fill={["#e05a7a", GOLD][i % 2]} /><circle cx={14} cy={-20} r={7} fill={["#e05a7a", GOLD][(i + 1) % 2]} /></g>)}
+    <rect x={-1400} y={NH_F} width={4400} height={1400} fill="#6aa84a" stroke={INK} strokeWidth={5} />
+    <rect x={-1400} y={NH_F + 70} width={4400} height={1300} fill="#a8a49a" stroke={INK} strokeWidth={5} />
+    {[-60, 100, 760, 900].map((x, i) => <g key={i} transform={`translate(${x},${NH_F}) scale(1.3)`}><circle cx={0} cy={-26} r={30} fill="#4a9a3a" stroke={INK} strokeWidth={4} /><circle cx={-12} cy={-34} r={7} fill={["#e05a7a", GOLD][i % 2]} /><circle cx={14} cy={-20} r={7} fill={["#e05a7a", GOLD][(i + 1) % 2]} /></g>)}
   </g>
 );
 // carro (de lado, virado para a direita); x = centro, y = chão
 const Car: React.FC<{ x: number; y: number; t: number; driver?: boolean; door?: number }> = ({ x, y, t, driver = true, door = 0 }) => (
-  <g transform={`translate(${x},${y})`}>
+  <g transform={`translate(${x},${y}) scale(${CS})`}>
     <path d="M-230,-40 L-230,-110 Q-220,-130 -190,-132 L-130,-136 L-70,-210 Q-60,-220 -40,-220 L90,-220 Q110,-220 124,-206 L190,-136 L220,-130 Q240,-124 240,-100 L240,-40 Z" fill="#c8453a" stroke={INK} strokeWidth={6} strokeLinejoin="round" />
     <path d="M-110,-138 L-56,-200 L20,-200 L20,-138 Z" fill="#9ac8f0" stroke={INK} strokeWidth={5} strokeLinejoin="round" />
     <path d="M36,-138 L36,-200 L96,-200 L156,-138 Z" fill="#9ac8f0" stroke={INK} strokeWidth={5} strokeLinejoin="round" />
@@ -3288,13 +3290,13 @@ const Car: React.FC<{ x: number; y: number; t: number; driver?: boolean; door?: 
 );
 
 // --- S5d7 dois anos depois: casa melhor; ele chega de carro e desce sorrindo
-const CAR_STOP = 640;
+const CAR_STOP = 1380;
 const S5d7 = (t: number) => {
-  const cx = kf(t, [[0, -300], [2.0, CAR_STOP]]);
+  const cx = kf(t, [[0, -600], [2.0, CAR_STOP]]);
   const out = t > 2.5;
   const door = er(t, 2.2, 2.5);
   const m = follow((x) => base({
-    x: CAR_STOP + 290, y: NH_F - 296, k: 1, hands: [HANG[0], mixV(HANG[1], [120, -260], er(x, 3.0, 3.3))], holdL: <Briefcase />,
+    x: CAR_STOP - 500, y: PF - 296 * KA, k: KA, hands: [HANG[0], mixV(HANG[1], [120, -260], er(x, 3.0, 3.3))], holdL: <Briefcase />,
     face: F({ lx: -0.3, px: -0.4, curve: 0.9, raise: 0.3, mo: 0.1, open: 1 - blinkAt(x, 2.7, 0.3) * 0.8 }),
   }), t);
   return (
@@ -3305,7 +3307,7 @@ const S5d7 = (t: number) => {
     </g>
   );
 };
-const CAM5d7 = (t: number): Cam => ({ z: kf(t, [[0, 0.82], [2.6, 0.9], [4.9, 0.98]]), fx: kf(t, [[0, 560], [2.6, 640], [4.9, 700]]), fy: kf(t, [[0, 620], [4.9, 660]]) });
+const CAM5d7 = (t: number): Cam => ({ z: kf(t, [[0, 0.52], [2.0, 0.56], [4.9, 0.78]]), fx: kf(t, [[0, 640], [2.0, 760], [4.9, 1020]]), fy: kf(t, [[0, 360], [2.0, 420], [4.9, 700]]) });
 
 // --- mala de viagem com adesivos
 const Suitcase: React.FC<{ c?: string }> = ({ c = "#3a6ab0" }) => (
@@ -3331,21 +3333,21 @@ const Eiffel: React.FC = () => (
 // --- S6d7 Juliana e Lucas voltando da Europa (malas, adesivos, torre Eiffel); abraço
 const S6d7 = (t: number) => {
   const j = follow((x) => {
-    const wx = kf(x, [[0, 1250], [1.8, 560]]);
+    const wx = kf(x, [[0, -150], [1.8, 560]]);
     const v = x < 1.8 ? 1 - er(x, 1.55, 1.8) : 0;
-    const w = walkPose((1250 - wx) / 0.95, v, -1);
-    return base({ x: wx, y: NH_F - 296 * 0.95, k: 0.95, feet: w.feet, kneeDir: v > 0 ? -1 : undefined, sy: w.sy, lean: w.lean, hands: [v > 0.05 ? w.hands[0] : mixV(HANG[0], [-120, -180], er(x, 2.0, 2.4)), [120, 30]], holdR: <Suitcase />, face: F({ lx: -0.6, px: -0.8, curve: 0.95, raise: 0.35, mo: 0.15, open: 1 - blinkAt(x, 3.0, 0.2) * 0.8 }) });
+    const w = walkPose((wx + 150) / KJ, v, 1);
+    return base({ x: wx, y: PF - 296 * KJ, k: KJ, feet: w.feet, kneeDir: v > 0 ? 1 : undefined, sy: w.sy, lean: w.lean, hands: [[-120, 30], v > 0.05 ? w.hands[1] : mixV(HANG[1], [120, -180], er(x, 2.0, 2.4))], holdL: <Suitcase />, face: F({ lx: 0.6, px: 0.8, curve: 0.95, raise: 0.35, mo: 0.15, open: 1 - blinkAt(x, 3.0, 0.2) * 0.8 }) });
   }, t);
   const l = follow((x) => {
-    const wx = kf(x, [[0.2, 1400], [2.0, 420]]);
+    const wx = kf(x, [[0.2, -250], [2.0, 690]]);
     const v = x > 0.2 && x < 2.0 ? 1 - er(x, 1.8, 2.0) : 0;
-    const w = walkPose((1400 - wx) / 0.68, v, -1);
+    const w = walkPose((wx + 250) / KL, v, 1);
     const hop = x > 2.0 ? Math.max(0, Math.sin(x * 9)) : 0;
-    return base({ x: wx, y: NH_F - 296 * 0.68 - hop * 16, k: 0.68, feet: w.feet, kneeDir: v > 0 ? -1 : undefined, sy: w.sy, lean: w.lean, hands: [v > 0.05 ? w.hands[0] : [-130, -330], v > 0.05 ? w.hands[1] : HANG[1]], holdL: <g transform="scale(1.3)"><Eiffel /></g>, face: F({ lx: -0.6, px: -0.9, curve: 1, raise: 0.4, mo: 0.35, open: 1 - blinkAt(x, 2.3, 0.4) * 0.8 }) });
+    return base({ x: wx, y: PF - 296 * KL - hop * 10, k: KL, feet: w.feet, kneeDir: v > 0 ? 1 : undefined, sy: w.sy, lean: w.lean, hands: [v > 0.05 ? w.hands[0] : HANG[0], v > 0.05 ? w.hands[1] : [130, -330]], holdR: <g transform="scale(1.3)"><Eiffel /></g>, face: F({ lx: 0.6, px: 0.9, curve: 1, raise: 0.4, mo: 0.35, open: 1 - blinkAt(x, 2.3, 0.4) * 0.8 }) });
   }, t);
   const m = follow((x) => base({
-    x: 250, y: NH_F - 296, k: 1, hands: [HANG[0], mixV(HANG[1], [140, -200], er(x, 1.6, 2.0))], holdL: <Briefcase />,
-    face: F({ lx: 0.6, px: 0.8, curve: 0.95, raise: 0.35, mo: 0.15, open: 1 - blinkAt(x, 2.7, 0.3) * 0.8 }),
+    x: 880, y: PF - 296 * KA, k: KA, hands: [mixV(HANG[0], [-140, -200], er(x, 1.6, 2.0)), HANG[1]], holdR: <Briefcase />,
+    face: F({ lx: -0.6, px: -0.8, curve: 0.95, raise: 0.35, mo: 0.15, open: 1 - blinkAt(x, 2.7, 0.3) * 0.8 }),
   }), t);
   return (
     <g>
@@ -3354,11 +3356,11 @@ const S6d7 = (t: number) => {
       <Person c={m} look={MARCOS_SUIT} t={t} />
       <Person c={j} look={JULIANA} t={t} />
       <Person c={l} look={LUCAS} t={t} />
-      <Tag x={760} y={250} txt="DE VOLTA DA EUROPA" p={t - 1.2} s={0.8} />
+      <Tag x={640} y={420} txt="DE VOLTA DA EUROPA" p={t - 1.2} s={1.05} />
     </g>
   );
 };
-const CAM6d7 = (t: number): Cam => ({ z: kf(t, [[0, 0.95], [4.2, 1.02]]), fx: kf(t, [[0, 600], [4.2, 520]]), fy: kf(t, [[0, 620], [4.2, 630]]) });
+const CAM6d7 = (t: number): Cam => ({ z: kf(t, [[0, 0.98], [4.2, 1.08]]), fx: kf(t, [[0, 760], [4.2, 730]]), fy: kf(t, [[0, 700], [4.2, 720]]) });
 
 // --- lição: montagem de "fotos" da série (dificuldades em cinza → conquistas em cor)
 const L7A: Clip[] = [
@@ -3381,13 +3383,13 @@ const CAML = (_t: number): Cam => ({ z: 1, fx: 540, fy: 630 });
 
 // --- S10d7 final: a família na frente da casa nova, pôr do sol
 const S10d7 = (t: number) => {
-  const m = follow((x) => base({ x: 470, y: NH_F - 296, k: 1, hands: [HANG[0], [96, -40]], face: F({ lx: 0, px: 0, curve: 0.75, raise: 0.25, open: 1 - blinkAt(x, 3.2, 0.3) * 0.8 }) }), t);
-  const j = follow((x) => base({ x: 640, y: NH_F - 296 * 0.95, k: 0.95, hands: [[-80, -20], HANG[1]], face: F({ lx: -0.25, px: -0.3, curve: 0.9, raise: 0.3, open: 1 - blinkAt(x, 3.6, 0.9) * 0.8 }), tilt: -4 }), t);
-  const l = follow((x) => base({ x: 330, y: NH_F - 296 * 0.68, k: 0.68, hands: [HANG[0], [90, -150]], face: F({ lx: 0.4, px: 0.5, curve: 1, raise: 0.4, mo: 0.2, open: 1 - blinkAt(x, 2.6, 0.2) * 0.8 }) }), t);
+  const m = follow((x) => base({ x: 470, y: PF - 296 * KA, k: KA, hands: [HANG[0], [96, -40]], face: F({ lx: 0, px: 0, curve: 0.75, raise: 0.25, open: 1 - blinkAt(x, 3.2, 0.3) * 0.8 }) }), t);
+  const j = follow((x) => base({ x: 575, y: PF - 296 * KJ, k: KJ, hands: [[-80, -20], HANG[1]], face: F({ lx: -0.25, px: -0.3, curve: 0.9, raise: 0.3, open: 1 - blinkAt(x, 3.6, 0.9) * 0.8 }), tilt: -4 }), t);
+  const l = follow((x) => base({ x: 375, y: PF - 296 * KL, k: KL, hands: [HANG[0], [90, -150]], face: F({ lx: 0.4, px: 0.5, curve: 1, raise: 0.4, mo: 0.2, open: 1 - blinkAt(x, 2.6, 0.2) * 0.8 }) }), t);
   return (
     <g>
       <NewHouse t={t} sunset={1} />
-      <Car x={CAR_STOP + 260} y={NH_F + 120} t={0} driver={false} />
+      <Car x={CAR_STOP} y={NH_F + 120} t={0} driver={false} />
       <Person c={l} look={LUCAS} t={t} />
       <Person c={m} look={MARCOS_SUIT} t={t} />
       <Person c={j} look={JULIANA} t={t} />
@@ -3395,7 +3397,7 @@ const S10d7 = (t: number) => {
     </g>
   );
 };
-const CAM10d7 = (t: number): Cam => ({ z: kf(t, [[0, 1.25], [7, 1.0]]), fx: kf(t, [[0, 500], [7, 560]]), fy: kf(t, [[0, 520], [7, 600]]) });
+const CAM10d7 = (t: number): Cam => ({ z: kf(t, [[0, 1.3], [7, 1.0]]), fx: kf(t, [[0, 480], [7, 520]]), fy: kf(t, [[0, 740], [7, 690]]) });
 
 
 const SCENES: [(t: number) => React.ReactNode, (t: number) => Cam][] = [
