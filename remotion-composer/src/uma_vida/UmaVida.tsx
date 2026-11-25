@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { AbsoluteFill, Audio, Img, OffthreadVideo, Sequence, continueRender, delayRender, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { Intro3D, T_A, T_B } from "./Intro3D";
 
 // ==================================================================
 // "UMA VIDA" — áudio do reel DZtkSrmAHQl (fala de Dean Graziosi) + 6 vídeos do Pinterest.
@@ -92,60 +93,24 @@ const Clip: React.FC<{ c: number; from: number; zoom?: number }> = ({ c, from, z
   return <OffthreadVideo src={src} startFrom={start} muted style={{ width: 1080, height: 1920, objectFit: "cover", transform: `scale(${zoom})` }} />;
 };
 
-// ------------------------------------------------------------------ abertura
+// ------------------------------------------------------------------ abertura (v2: 3D, ver Intro3D.tsx)
 const Intro: React.FC<{ t: number }> = ({ t }) => {
-  const titleIn = er(t, 4.2, 4.55);
-  // cortes rápidos (antes do título)
-  const flips = FLIPS.map(([a, d], i) => {
-    if (t < a - 0.02 || t > a + d + 0.02) return null;
-    const k = clamp01((t - a) / d);
-    const slide = (1 - ease(Math.min(1, k * 3))) * 120; // cada quadro entra deslizando de baixo, como página virando
-    return (
-      <Sequence key={i} from={Math.round(a * FPS)} durationInFrames={Math.max(1, Math.round(d * FPS) + 1)} layout="none">
-        <AbsoluteFill style={{ transform: `translateY(${slide}px) scale(${1.08 + k * 0.06})` }}>
-          <Clip c={flipClip(i)} from={flipFrom(i)} />
-        </AbsoluteFill>
-      </Sequence>
-    );
-  });
-  const cutIdx = FLIPS.findIndex(([a, d]) => t >= a && t < a + d);
-  const sinceCut = cutIdx >= 0 ? t - FLIPS[cutIdx][0] : 1;
-  const flash = Math.max(0, 1 - sinceCut / 0.06) * 0.5 * (1 - titleIn);
-  // título: os clipes continuam passando dentro das letras
-  const tc = Math.floor(t * 9) % 6;
+  // flashes nas viradas (túnel → letras → recuo) e piscadas rápidas durante o túnel
+  const flashAt = [0.0, T_A, T_B];
+  const flash = Math.max(0, ...flashAt.map((a) => (t >= a && t < a + 0.12 ? 1 - (t - a) / 0.12 : 0))) * 0.6;
+  const tunnelBlink = t < T_A ? (Math.floor(t * 12) % 3 === 0 ? 0.08 : 0) : 0;
   return (
-    <AbsoluteFill style={{ background: "#120404" }}>
-      <AbsoluteFill style={{ opacity: 1 - titleIn }}>{flips}</AbsoluteFill>
-      {/* tom vermelho de abertura */}
-      <AbsoluteFill style={{ background: "#c8141a", mixBlendMode: "multiply", opacity: 0.55 * (1 - titleIn) }} />
-      <AbsoluteFill style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0) 40%, rgba(0,0,0,.8) 100%)" }} />
-      <AbsoluteFill style={{ background: "#fff", opacity: flash }} />
+    <AbsoluteFill style={{ background: "#0b0605" }}>
+      <Intro3D />
+      {/* luz quente nas bordas, como na referência */}
+      <AbsoluteFill style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(0,0,0,.75) 100%)" }} />
+      <AbsoluteFill style={{ background: "#ffb070", mixBlendMode: "soft-light", opacity: 0.35 }} />
+      <AbsoluteFill style={{ background: "#fff", opacity: flash + tunnelBlink }} />
       {/* "One life." no começo */}
       {t < 1.0 && (
         <div style={{ position: "absolute", left: 120, right: 120, top: 1300, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, fontSize: 84, color: WHITE, letterSpacing: 4, opacity: er(t, 0, 0.12) * (1 - er(t, 0.8, 1.0)), WebkitTextStroke: "10px #0a0605", paintOrder: "stroke fill" }}>UMA VIDA.</div>
       )}
-      {titleIn > 0 && (
-        <AbsoluteFill>
-          <svg width={0} height={0} style={{ position: "absolute" }}>
-            <defs>
-              <clipPath id="titleClip" clipPathUnits="userSpaceOnUse">
-                <text x={540} y={990} textAnchor="middle" fontFamily="Barlow Condensed" fontWeight={700} fontSize={210} letterSpacing={4}>UMA VIDA.</text>
-              </clipPath>
-            </defs>
-          </svg>
-          <AbsoluteFill style={{ transform: `scale(${1.25 - 0.25 * titleIn})`, opacity: titleIn }}>
-            {/* contorno dourado do título */}
-            <svg width={1080} height={1920} style={{ position: "absolute" }}>
-              <text x={540} y={990} textAnchor="middle" fontFamily="Barlow Condensed" fontWeight={700} fontSize={210} letterSpacing={4} fill="none" stroke={GOLD} strokeWidth={10}>UMA VIDA.</text>
-            </svg>
-            <AbsoluteFill style={{ clipPath: "url(#titleClip)" }}>
-              <Sequence from={Math.round(4.2 * FPS)} layout="none"><Clip c={[1, 4, 2, 6, 5, 3][tc]} from={1 + tc * 0.5} /></Sequence>
-              <AbsoluteFill style={{ background: GOLD, mixBlendMode: "multiply", opacity: 0.35 }} />
-            </AbsoluteFill>
-          </AbsoluteFill>
-          <div style={{ position: "absolute", left: 120, right: 120, top: 1080, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, fontSize: 64, letterSpacing: 10, color: WHITE, opacity: er(t, 4.75, 5.05), transform: `translateY(${(1 - er(t, 4.75, 5.05)) * 16}px)` }}>APENAS UMA CHANCE.</div>
-        </AbsoluteFill>
-      )}
+      <div style={{ position: "absolute", left: 120, right: 120, top: 1400, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, fontSize: 64, letterSpacing: 10, color: WHITE, opacity: er(t, 5.0, 5.3), transform: `translateY(${(1 - er(t, 5.0, 5.3)) * 16}px)`, textShadow: "0 4px 16px rgba(0,0,0,.8)" }}>APENAS UMA CHANCE.</div>
       <AbsoluteFill style={{ background: "#000", opacity: er(t, INTRO - 0.12, INTRO) }} />
     </AbsoluteFill>
   );
