@@ -14,26 +14,26 @@ const BARLOW = "'Barlow Condensed', sans-serif";
 const HOOK = ["VOCÊ NÃO É PREGUIÇOSO.", "ESTÁ NO HORÁRIO ERRADO."]; // v2 (análise)
 
 // ------------------------------------------------------------------ falas e cenas
-const DUR = [3.5, 3.15, 3.15, 3.2, 3.8, 1.95, 4.45, 2.35, 4.3, 4.95, 2.75, 3.7, 3.6]; // v2: ~45 s (era 52)
+const DUR = [4.76, 4.01, 3.78, 3.63, 4.25, 2.28, 5.46, 2.76, 5.17, 5.29, 3.12, 4.2, 4.13]; // v3: cenas 0,15 s antes de cada fala em narrador.wav (voz do narrador do Marcos, áudio inteiro)
 const ST = DUR.reduce<number[]>((a, d, i) => [...a, i === 0 ? 0 : a[i - 1] + DUR[i - 1]], []);
 export const TOTAL = ST[ST.length - 1] + DUR[DUR.length - 1];
 // [texto, arquivo, início na cena, duração da fala]
 const LINES: [string, number, number, number][] = [
-  ["Você passa a tarde inteira travado e só destrava às dez da noite?", 0, 0.15, 3.13],
-  ["Sabe aquela tarefa que pesa quando você começa o dia...", 1, 0.15, 2.77],
-  ["e some de repente em meia hora, lá pelo fim da tarde?", 2, 0.15, 2.76],
-  ["Isso tem a ver com o horário em que a sua energia aparece.", 3, 0.15, 2.86],
-  ["Tem gente que pensa melhor cedo. Tem gente que só engata de noite.", 4, 0.15, 3.46],
-  ["Cada corpo tem a sua janela.", 5, 0.15, 1.56],
-  ["O erro é colocar a tarefa mais difícil na hora em que você já está esgotado,", 6, 0.15, 4.1],
-  ["e depois concluir que falta disciplina.", 7, 0.15, 1.96],
-  ["Faz um teste: anote de hora em hora, de 1 a 5, o quanto você rende.", 8, 0.15, 3.95],
-  ["No fim da semana, olha onde ficaram as notas mais altas. Essa é a sua janela.", 9, 0.15, 4.62],
-  ["Coloca ali a tarefa que mais pesa no seu dia.", 10, 0.15, 2.37],
-  ["O resto, tipo mensagem e planilha, vai para as horas baixas.", 11, 0.15, 3.33],
-  ["Comenta aqui a hora em que você mais rende.", 12, 0.15, 2.1],
+  ["Você passa a tarde inteira travado e só destrava às dez da noite?", 0, 0.18, 4.12],
+  ["Sabe aquela tarefa que pesa quando você começa o dia...", 1, 0.15, 3.1],
+  ["e some de repente em meia hora, lá pelo fim da tarde?", 2, 0.15, 3.17],
+  ["Isso tem a ver com o horário em que a sua energia aparece.", 3, 0.15, 3.02],
+  ["Tem gente que pensa melhor cedo. Tem gente que só engata de noite.", 4, 0.15, 3.64],
+  ["Cada corpo tem a sua janela.", 5, 0.15, 1.67],
+  ["O erro é colocar a tarefa mais difícil na hora em que você já está esgotado,", 6, 0.15, 4.85],
+  ["e depois concluir que falta disciplina.", 7, 0.15, 2.15],
+  ["Faz um teste: anote de hora em hora, de 1 a 5, o quanto você rende.", 8, 0.15, 4.56],
+  ["No fim da semana, olha onde ficaram as notas mais altas. Essa é a sua janela.", 9, 0.15, 4.68],
+  ["Coloca ali a tarefa que mais pesa no seu dia.", 10, 0.15, 2.51],
+  ["O resto, tipo mensagem e planilha, vai para as horas baixas.", 11, 0.15, 3.59],
+  ["Comenta aqui a hora em que você mais rende.", 12, 0.15, 2.5],
 ];
-const WORDT: Record<number, number[]> = {}; // tempos reais por palavra (preencher com a voz final)
+const WORDT: Record<number, number[]> = { 0: [0, 0.26, 0.64, 0.86, 1.08, 1.48, 2.04, 2.42, 2.62, 3.14, 3.34, 3.72, 3.72], 1: [0.23, 0.49, 0.97, 1.15, 1.55, 1.79, 2.15, 2.55, 2.75, 3.59], 2: [0.0, 0.04, 0.36, 0.54, 0.94, 1.18, 1.46, 1.94, 2.22, 2.4, 2.6, 2.74], 3: [0.08, 0.28, 0.5, 0.6, 0.78, 0.94, 1.08, 1.4, 1.56, 1.68, 1.8, 1.96, 2.4], 4: [0, 0.07, 0.39, 0.57, 0.87, 1.13, 1.87, 2.01, 2.31, 2.49, 2.67, 3.05, 3.23], 5: [0, 0.18, 0.62, 0.88, 0.96, 1.14], 6: [0, 0.12, 0.32, 0.58, 0.84, 1.12, 1.52, 1.78, 2.14, 2.46, 2.74, 3.04, 3.12, 3.42, 3.66, 3.92], 7: [0, 0.04, 0.32, 0.94, 1.12, 1.42], 8: [0, 0.2, 0.36, 1.08, 1.46, 1.66, 1.84, 1.96, 2.42, 2.62, 2.74, 2.82, 3.18, 3.52, 3.8, 4.14], 9: [0, 0.17, 0.39, 0.53, 1.29, 1.55, 1.71, 2.19, 2.29, 2.63, 2.81, 3.59, 3.83, 3.95, 4.03, 4.17], 10: [0, 0.4, 0.58, 0.68, 1.08, 1.24, 1.5, 1.88, 1.98, 2.14], 11: [0, 0.1, 0.68, 0.9, 1.5, 1.64, 2.38, 2.5, 2.66, 2.84, 2.98], 12: [0, 0.42, 0.66, 0.86, 1.1, 1.38, 1.48, 1.76, 2.1] }; // tempos reais (faster-whisper)
 const KEY = ["travado", "dez", "pesa", "meia", "energia", "cedo", "noite", "janela", "difícil", "esgotado", "disciplina", "teste", "5", "altas", "tarefa", "dia", "baixas", "comenta", "rende"];
 
 // ------------------------------------------------------------------ utilidades
@@ -334,8 +334,8 @@ const S6 = (t: number) => {
   );
 };
 const S7 = (t: number) => {
-  const st = spring(t, 0.15, 0.35);
-  const cross = er(t, 1.2, 1.5);
+  const st = spring(t, 0.3, 0.35); // v3: carimbo no "e depois concluir"
+  const cross = er(t, 1.62, 1.9); // risca no "disciplina"
   return (
     <g>
       <Glass x={120} y={430} w={840} h={810}>
@@ -347,7 +347,7 @@ const S7 = (t: number) => {
             <line x1={-300} y1={0} x2={lerp(-300, 300, cross)} y2={0} stroke={WHITE} strokeWidth={10} strokeLinecap="round" opacity={cross > 0 ? 1 : 0} />
           </g>
         )}
-        <Pill x={540} y={950} txt="HORÁRIO ERRADO." color={GOLD} size={62} p={spring(t, 1.55, 0.45)} bg={GOLD} />
+        <Pill x={540} y={950} txt="HORÁRIO ERRADO." color={GOLD} size={62} p={spring(t, 1.95, 0.4)} bg={GOLD} />
       </Glass>
     </g>
   );
@@ -500,7 +500,7 @@ export const Janela: React.FC = () => {
   const fade = Math.max(0, 1 - lt / 0.18);
   return (
     <AbsoluteFill style={{ background: `radial-gradient(ellipse at 50% 35%, ${BG2} 0%, ${BG1} 70%)` }}>
-      {LINES.map(([, id, st], i) => <Sequence key={i} from={Math.round((ST[i] + st) * fps)}><Audio src={staticFile(`${D}/fala/n${id}.wav`)} /></Sequence>)}
+      <Audio src={staticFile(`${D}/narrador.wav`)} />
       <Audio src={staticFile(`${D}/sfx.wav`)} volume={0.4} />
       {/* brilhos de fundo que se movem devagar */}
       <AbsoluteFill style={{ background: `radial-gradient(circle at ${30 + Math.sin(t * 0.3) * 10}% ${40 + Math.cos(t * 0.25) * 8}%, rgba(232,176,75,.10) 0%, rgba(0,0,0,0) 35%), radial-gradient(circle at ${72 + Math.cos(t * 0.27) * 8}% ${70 + Math.sin(t * 0.33) * 8}%, rgba(79,179,191,.10) 0%, rgba(0,0,0,0) 35%)` }} />
