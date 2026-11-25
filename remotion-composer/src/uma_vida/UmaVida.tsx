@@ -153,7 +153,7 @@ const Subtitle: React.FC<{ t: number }> = ({ t }) => {
   let acc = 0;
   const out = Math.min(1, er(t, b - 0.08, b + 0.05) + 0);
   return (
-    <div style={{ position: "absolute", left: 120, right: 120, top: 1290, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, fontSize: 66, lineHeight: 1.08, letterSpacing: 1, opacity: 1 - (b < TOTAL ? out : 0) }}>
+    <div style={{ position: "absolute", left: 120, right: 120, top: 960, transform: "translateY(-50%)", textAlign: "center", fontFamily: BARLOW, fontWeight: 700, fontSize: 66, lineHeight: 1.08, letterSpacing: 1, opacity: 1 - (b < TOTAL ? out : 0) }}>
       {words.map((w, i) => {
         const at = a + (acc / total) * span;
         acc += w.length;
@@ -189,14 +189,9 @@ export const UmaVida: React.FC = () => {
       {t >= INTRO && (
         <AbsoluteFill>
           {/* degradês para os textos lerem sobre qualquer imagem */}
-          <AbsoluteFill style={{ background: "linear-gradient(rgba(10,6,5,.75) 0%, rgba(10,6,5,0) 22%, rgba(10,6,5,0) 58%, rgba(10,6,5,.85) 100%)" }} />
+          <AbsoluteFill style={{ background: "linear-gradient(rgba(10,6,5,.35) 0%, rgba(10,6,5,0) 18%, rgba(10,6,5,.28) 42%, rgba(10,6,5,.28) 58%, rgba(10,6,5,0) 72%, rgba(10,6,5,.75) 100%)" }} />
           <AbsoluteFill style={{ background: "#fff", opacity: Math.max(0, 1 - sinceShot / 0.08) * 0.25 }} />
           <AbsoluteFill style={{ background: "#000", opacity: 1 - er(t, INTRO, INTRO + 0.15) }} />
-          {/* frase fixa em cima */}
-          <div style={{ position: "absolute", top: 228, left: 120, right: 120, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, fontSize: 62, lineHeight: 1.0, letterSpacing: 2, opacity: hook, textShadow: "0 3px 0 rgba(0,0,0,.7), 0 0 18px rgba(0,0,0,.6)" }}>
-            <div style={{ color: WHITE }}>VOCÊ SÓ TEM</div>
-            <div style={{ color: GOLD }}>UMA CHANCE.</div>
-          </div>
           <Subtitle t={t} />
         </AbsoluteFill>
       )}
