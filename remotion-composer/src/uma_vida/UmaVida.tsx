@@ -40,7 +40,7 @@ const SHOTS: [number, number, number, number][] = [
   [8.35, 10.6, 4, 0.5],      // "towards our wildest dreams"
   [10.6, 11.45, 2, 1.0],     // "We got one shot"
   [11.45, 12.3, 5, 0.5],     // "at this"
-  [12.3, 14.2, 7, 7.0],      // "like the crazy ones" — close do carro na fumaça, fogos vermelhos (v6)
+  [12.3, 14.2, 3, 3.0],      // "like the crazy ones" — pessoas correndo e pulando na praia (v7: tirado o close da F1, recorte ruim)
   [14.2, 16.9, 6, 0.0],      // "That guy is nuts"
   [16.9, 19.25, 8, 2.4],     // "Good! I got one shot at this life" — piloto comemorando em cima do carro (v6)
   [19.25, 21.0, 1, 6.0],     // "call me crazy"
