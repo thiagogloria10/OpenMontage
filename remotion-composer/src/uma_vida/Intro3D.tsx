@@ -22,7 +22,7 @@ const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 const lerpV = (a: THREE.Vector3, b: THREE.Vector3, k: number) => a.clone().lerp(b, k);
 
-export const T_A = 3.0, T_B = 4.5; // v3: antes de T_A as imagens aparecem normais (2D, em UmaVida.tsx)
+export const T_A = 0, T_B = 4.8; // v4: abertura toda em 3D, começa já na palavra; T_B = câmera volta para a frente
 
 // painéis do túnel (posição, rotação, quadro inicial)
 const PANELS = Array.from({ length: 22 }).map((_, i) => {
@@ -79,10 +79,11 @@ const Scene: React.FC<{ t: number; a: Assets }> = ({ t, a }) => {
   const ft = useMemo(() => faceTex.clone(), [faceTex]);
   const imgA = 405 / 720, wordA = word.w / word.h;
   // perto das letras a imagem se repete (cada letra mostra uma imagem inteira); no recuo volta a cobrir a palavra toda
-  const rf = t < T_B ? 2.6 : lerp(2.6, 1, easeIO((t - T_B) / 1.1));
+  const close = easeIO((t - 1.05) / 0.7) * (1 - easeIO((t - 3.9) / 0.8));
+  const rf = lerp(1, 2.6, close);
   ft.wrapS = ft.wrapT = THREE.RepeatWrapping;
   ft.repeat.set(rf, rf * (imgA / wordA > 1 ? 1 : imgA / wordA)); // retrato no quadrado: corta em cima/embaixo
-  ft.offset.set((1 - ft.repeat.x) / 2, (1 - ft.repeat.y) / 2);
+  ft.offset.set((1 - ft.repeat.x) / 2 + Math.sin(t * 0.9) * 0.04, (1 - ft.repeat.y) / 2 + t * 0.025); // imagem se mexendo dentro das letras
   ft.needsUpdate = true;
   const gold = useMemo(() => new THREE.MeshStandardMaterial({ color: "#d39a35", metalness: 0.85, roughness: 0.32 }), []);
   const face = useMemo(() => new THREE.MeshBasicMaterial({ map: ft, color: new THREE.Color(1.0, 0.9, 0.82) }), [ft]);
@@ -91,24 +92,22 @@ const Scene: React.FC<{ t: number; a: Assets }> = ({ t, a }) => {
   const persp = camera as THREE.PerspectiveCamera;
   persp.fov = 50; persp.near = 0.05; persp.far = 200;
   const fitDist = (word.w / 0.68) / (2 * Math.tan((50 / 2) * Math.PI / 180) * (1080 / 1920));
-  let pos: THREE.Vector3, look: THREE.Vector3, roll = 0;
-  if (t < T_A) {
-    const k = Math.pow(t / T_A, 1.6);
-    pos = V(Math.sin(t * 1.3) * 0.3, Math.cos(t * 1.1) * 0.2, lerp(6, -48, k));
-    look = pos.clone().add(V(0, 0, -5));
-    roll = Math.sin(t * 2) * 0.08;
-  } else if (t < T_B) {
-    const k = easeIO((t - T_A) / (T_B - T_A));
-    // passa rente às letras, da esquerda (U) para a direita (A.), meio de lado
-    pos = lerpV(V(-4.2, 2.6, 2.2), V(3.6, -3.2, 3.0), k);
-    look = lerpV(V(-1.2, 1.4, -0.4), V(2.2, -1.6, -0.4), k);
-    roll = lerp(-0.35, 0.22, k);
-  } else {
-    const k = easeIO((t - T_B) / (5.9 - T_B - 0.35));
-    pos = lerpV(V(3.6, -3.2, 3.0), V(0, -1.6, fitDist), k);
-    look = lerpV(V(2.2, -1.6, -0.4), V(0, -1.6, 0), k); // palavra um pouco acima do centro (espaço para o subtítulo)
-    roll = lerp(0.22, 0, k);
-  }
+  const F0 = fitDist;
+  const KT = [0.0, 1.0, 1.9, 2.9, 3.8, 4.8, 5.9];
+  const KP = [V(2.2, 0.4, F0 * 2.3), V(0, -1.6, F0), V(-4.5, 2.4, 3.0), V(0.4, 0.1, 2.5), V(4.0, -3.4, 3.0), V(0, -1.6, F0), V(0, -1.6, F0 * 0.9)];
+  const KL = [V(0, -1.6, 0), V(0, -1.6, 0), V(-1.5, 1.2, -0.3), V(0.8, -0.6, -0.3), V(2.2, -1.8, -0.4), V(0, -1.6, 0), V(0, -1.6, 0)];
+  const KR = [0.45, 0.0, -0.35, 0.12, 0.25, 0.0, 0.0];
+  const curP = useMemo(() => new THREE.CatmullRomCurve3(KP, false, "centripetal"), [F0]);
+  const curL = useMemo(() => new THREE.CatmullRomCurve3(KL, false, "centripetal"), []);
+  // tempo → parâmetro da curva (cada trecho com a mesma fatia), com aceleração suave no começo e no fim de cada trecho
+  let seg = 0;
+  for (let i = 0; i < KT.length - 1; i++) if (t >= KT[i]) seg = i;
+  const lt = clamp01((t - KT[seg]) / (KT[seg + 1] - KT[seg]));
+  const sm = lt * lt * (3 - 2 * lt) * 0.35 + lt * 0.65; // não para nos pontos (velocidade nunca zera)
+  const u = (seg + sm) / (KT.length - 1);
+  const pos = curP.getPoint(Math.min(1, u));
+  const look = curL.getPoint(Math.min(1, u));
+  const roll = lerp(KR[seg], KR[seg + 1], lt * lt * (3 - 2 * lt));
   persp.position.copy(pos);
   persp.up.set(Math.sin(roll), Math.cos(roll), 0);
   persp.lookAt(look);
@@ -121,13 +120,14 @@ const Scene: React.FC<{ t: number; a: Assets }> = ({ t, a }) => {
       <directionalLight position={[5, 8, 10]} intensity={2.2} color="#fff1d6" />
       <directionalLight position={[-8, -4, 6]} intensity={1.2} color="#ff9a5a" />
       <pointLight position={[0, 0, 6]} intensity={30} color="#ffd29a" />
+      <pointLight position={[Math.sin(t * 1.4) * 7, -1.6 + Math.cos(t * 1.1) * 4, 4]} intensity={60} color="#fff0c8" />
       {false && PANELS.map((p, i) => (
         <mesh key={i} position={p.p} rotation={[0, p.ry, p.rz]}>
           <planeGeometry args={[1.8, 3.2]} />
           <meshBasicMaterial map={frame(p.f, 12)} side={THREE.DoubleSide} />
         </mesh>
       ))}
-      {t >= T_A - 0.05 && (
+      {(
         <group>
           <mesh geometry={word.g1} material={[face, gold]} />
           <mesh geometry={word.g2} material={[face, gold]} />

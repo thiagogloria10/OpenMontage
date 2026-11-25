@@ -125,21 +125,18 @@ const Opening: React.FC<{ t: number }> = ({ t }) => {
 
 const Intro: React.FC<{ t: number }> = ({ t }) => {
   // flashes nas viradas (túnel → letras → recuo) e piscadas rápidas durante o túnel
-  const flashAt = [T_A, T_B];
+  const flashAt: number[] = [];
   const flash = Math.max(0, ...flashAt.map((a) => (t >= a && t < a + 0.12 ? 1 - (t - a) / 0.12 : 0))) * 0.6;
   const tunnelBlink = 0;
   return (
     <AbsoluteFill style={{ background: "#0b0605" }}>
-      {t >= T_A - 0.04 ? <Intro3D /> : <Opening t={t} />}
+      <Intro3D />
       {/* luz quente nas bordas, como na referência */}
       <AbsoluteFill style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(0,0,0,.75) 100%)" }} />
-      {t >= T_A && <AbsoluteFill style={{ background: "#ffb070", mixBlendMode: "soft-light", opacity: 0.35 }} />}
+      <AbsoluteFill style={{ background: "#ffb070", mixBlendMode: "soft-light", opacity: 0.35 }} />
+      <AbsoluteFill style={{ background: "#000", opacity: 1 - er(t, 0, 0.25) }} />
       <AbsoluteFill style={{ background: "#fff", opacity: flash + tunnelBlink }} />
-      {/* "One life." no começo */}
-      {t < 1.0 && (
-        <div style={{ position: "absolute", left: 120, right: 120, top: 1300, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, fontSize: 84, color: WHITE, letterSpacing: 4, opacity: er(t, 0, 0.12) * (1 - er(t, 0.8, 1.0)), WebkitTextStroke: "10px #0a0605", paintOrder: "stroke fill" }}>UMA VIDA.</div>
-      )}
-      <div style={{ position: "absolute", left: 120, right: 120, top: 1400, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, fontSize: 64, letterSpacing: 10, color: WHITE, opacity: er(t, 5.0, 5.3), transform: `translateY(${(1 - er(t, 5.0, 5.3)) * 16}px)`, textShadow: "0 4px 16px rgba(0,0,0,.8)" }}>APENAS UMA CHANCE.</div>
+      <div style={{ position: "absolute", left: 120, right: 120, top: 1400, textAlign: "center", fontFamily: BARLOW, fontWeight: 700, fontSize: 64, letterSpacing: 10, color: WHITE, opacity: er(t, 4.75, 5.1), transform: `translateY(${(1 - er(t, 4.75, 5.1)) * 16}px)`, textShadow: "0 4px 16px rgba(0,0,0,.8)" }}>APENAS UMA CHANCE.</div>
       <AbsoluteFill style={{ background: "#000", opacity: er(t, INTRO - 0.12, INTRO) }} />
     </AbsoluteFill>
   );
