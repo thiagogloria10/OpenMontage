@@ -22,7 +22,7 @@ const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 const lerpV = (a: THREE.Vector3, b: THREE.Vector3, k: number) => a.clone().lerp(b, k);
 
-export const T_A = 2.1, T_B = 4.3;
+export const T_A = 3.0, T_B = 4.5; // v3: antes de T_A as imagens aparecem normais (2D, em UmaVida.tsx)
 
 // painéis do túnel (posição, rotação, quadro inicial)
 const PANELS = Array.from({ length: 22 }).map((_, i) => {
@@ -121,7 +121,7 @@ const Scene: React.FC<{ t: number; a: Assets }> = ({ t, a }) => {
       <directionalLight position={[5, 8, 10]} intensity={2.2} color="#fff1d6" />
       <directionalLight position={[-8, -4, 6]} intensity={1.2} color="#ff9a5a" />
       <pointLight position={[0, 0, 6]} intensity={30} color="#ffd29a" />
-      {t < T_A + 0.1 && PANELS.map((p, i) => (
+      {false && PANELS.map((p, i) => (
         <mesh key={i} position={p.p} rotation={[0, p.ry, p.rz]}>
           <planeGeometry args={[1.8, 3.2]} />
           <meshBasicMaterial map={frame(p.f, 12)} side={THREE.DoubleSide} />

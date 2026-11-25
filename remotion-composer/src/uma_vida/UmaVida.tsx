@@ -94,17 +94,46 @@ const Clip: React.FC<{ c: number; from: number; zoom?: number }> = ({ c, from, z
 };
 
 // ------------------------------------------------------------------ abertura (v2: 3D, ver Intro3D.tsx)
+// v3: começo com as imagens normais na tela — escuro → clareia e a imagem "abre" do centro → cortes acelerando
+const OPEN_CUTS: [number, number, number, number][] = [ // início, fim, clipe, ponto do clipe
+  [0, 1.05, 5, 0.3], [1.05, 1.5, 2, 2.0], [1.5, 1.88, 1, 1.0], [1.88, 2.2, 6, 1.5], [2.2, 2.46, 3, 4.0], [2.46, 2.68, 4, 7.0], [2.68, 2.86, 1, 9.0], [2.86, 3.05, 6, 4.0],
+];
+const Opening: React.FC<{ t: number }> = ({ t }) => {
+  const light = er(t, 0.15, 1.0); // vai clareando
+  const open = er(t, 0.25, 1.05); // a imagem abre do centro para as bordas
+  const glow = Math.sin(clamp01((t - 0.1) / 1.1) * Math.PI);
+  const cut = OPEN_CUTS.findIndex(([a, b]) => t >= a && t < b);
+  const since = cut >= 0 ? t - OPEN_CUTS[cut][0] : 1;
+  return (
+    <AbsoluteFill style={{ background: "#000" }}>
+      {OPEN_CUTS.map(([a, b, c, from], i) => (
+        <Sequence key={i} from={Math.round(a * FPS)} durationInFrames={Math.max(1, Math.round((b - a) * FPS) + 1)} layout="none">
+          <AbsoluteFill style={{ transform: `scale(${1.12 - 0.08 * clamp01((t - a) / Math.max(0.3, b - a))})` }}><Clip c={c} from={from} /></AbsoluteFill>
+        </Sequence>
+      ))}
+      {/* abertura: só a faixa do meio aparece no começo e vai abrindo */}
+      <AbsoluteFill style={{ background: "#000", clipPath: `polygon(0 0, ${50 - 50 * open}% 0, ${50 - 50 * open}% 100%, 0 100%)` }} />
+      <AbsoluteFill style={{ background: "#000", clipPath: `polygon(${50 + 50 * open}% 0, 100% 0, 100% 100%, ${50 + 50 * open}% 100%)` }} />
+      {/* luz quente na fresta */}
+      <AbsoluteFill style={{ background: `radial-gradient(ellipse ${10 + open * 60}% 60% at 50% 50%, rgba(255,190,110,${0.55 * glow}) 0%, rgba(255,150,60,0) 70%)`, mixBlendMode: "screen" }} />
+      <AbsoluteFill style={{ background: "#000", opacity: 1 - light }} />
+      <AbsoluteFill style={{ background: "#ffb070", mixBlendMode: "soft-light", opacity: 0.3 }} />
+      <AbsoluteFill style={{ background: "#fff", opacity: cut > 0 ? Math.max(0, 1 - since / 0.07) * 0.35 : 0 }} />
+    </AbsoluteFill>
+  );
+};
+
 const Intro: React.FC<{ t: number }> = ({ t }) => {
   // flashes nas viradas (túnel → letras → recuo) e piscadas rápidas durante o túnel
-  const flashAt = [0.0, T_A, T_B];
+  const flashAt = [T_A, T_B];
   const flash = Math.max(0, ...flashAt.map((a) => (t >= a && t < a + 0.12 ? 1 - (t - a) / 0.12 : 0))) * 0.6;
-  const tunnelBlink = t < T_A ? (Math.floor(t * 12) % 3 === 0 ? 0.08 : 0) : 0;
+  const tunnelBlink = 0;
   return (
     <AbsoluteFill style={{ background: "#0b0605" }}>
-      <Intro3D />
+      {t >= T_A - 0.04 ? <Intro3D /> : <Opening t={t} />}
       {/* luz quente nas bordas, como na referência */}
       <AbsoluteFill style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(0,0,0,.75) 100%)" }} />
-      <AbsoluteFill style={{ background: "#ffb070", mixBlendMode: "soft-light", opacity: 0.35 }} />
+      {t >= T_A && <AbsoluteFill style={{ background: "#ffb070", mixBlendMode: "soft-light", opacity: 0.35 }} />}
       <AbsoluteFill style={{ background: "#fff", opacity: flash + tunnelBlink }} />
       {/* "One life." no começo */}
       {t < 1.0 && (
