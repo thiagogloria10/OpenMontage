@@ -17,7 +17,7 @@ const GOLD = "#e8b04b", WHITE = "#f4f1ea", INK = "#0a0605";
 const BARLOW = "'Barlow Condensed', sans-serif";
 
 // duração de cada clipe (s) — para não passar do fim ao escolher o ponto de início
-const CLIP_LEN: Record<number, number> = { 1: 13.4, 2: 12.2, 3: 15.0, 4: 14.4, 5: 7.0, 6: 7.4 };
+const CLIP_LEN: Record<number, number> = { 1: 13.4, 2: 12.2, 3: 15.0, 4: 14.4, 5: 7.0, 6: 7.4, 7: 17.7, 8: 17.0 };
 
 // --- abertura: cortes acelerando (duração de cada corte) e de qual clipe/ponto
 const FLIPS: [number, number][] = (() => {
@@ -35,16 +35,18 @@ const flipFrom = (i: number) => { const c = flipClip(i); return ((i * 2.3) % Mat
 
 // --- parte principal: [início, fim, clipe, ponto de início no clipe]
 const SHOTS: [number, number, number, number][] = [
-  [INTRO, 8.3, 1, 0.0],
-  [8.3, 10.6, 4, 0.5],
-  [10.6, 12.3, 2, 1.0],
-  [12.3, 14.2, 5, 0.5],
-  [14.2, 16.9, 6, 0.0],
-  [16.9, 19.25, 3, 2.0],
-  [19.25, 21.0, 1, 6.0],
-  [21.0, 23.3, 5, 3.5],
-  [23.3, 24.95, 4, 6.0],
-  [24.95, TOTAL, 3, 9.0],
+  [INTRO, 7.45, 1, 0.0],     // "Why aren't we running"
+  [7.45, 8.35, 7, 2.0],      // "like we're on fire" — carro girando na fumaça com fogos (v6)
+  [8.35, 10.6, 4, 0.5],      // "towards our wildest dreams"
+  [10.6, 11.45, 2, 1.0],     // "We got one shot"
+  [11.45, 12.3, 5, 0.5],     // "at this"
+  [12.3, 14.2, 7, 7.0],      // "like the crazy ones" — close do carro na fumaça, fogos vermelhos (v6)
+  [14.2, 16.9, 6, 0.0],      // "That guy is nuts"
+  [16.9, 19.25, 8, 2.4],     // "Good! I got one shot at this life" — piloto comemorando em cima do carro (v6)
+  [19.25, 21.0, 1, 6.0],     // "call me crazy"
+  [21.0, 23.3, 3, 9.0],      // "and a dreamer than a settler"
+  [23.3, 24.95, 4, 6.0],     // "You're not made to stand in line"
+  [24.95, TOTAL, 8, 4.3],    // "You're made to stand out" — punhos para cima com fogos (v6)
 ];
 
 // --- legenda em português (tradução da legenda do próprio reel), por frase, nos tempos da fala em inglês
